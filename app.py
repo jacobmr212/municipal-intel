@@ -8,13 +8,15 @@ import logging
 import time
 from pathlib import Path
 from datetime import datetime
+from collections import namedtuple
 
 import streamlit as st
 
-from src.discovery import SourceDiscovery
+from src.discovery import SourceDiscovery, DiscoveredSource
 from src.scraper import MunicipalScraper
 from src.analyzer import DocumentAnalyzer
 from src.reporter import ReportGenerator
+from src.database import SessionLocal, Municipality, MunicipalSource
 
 # --- Page Config ---
 st.set_page_config(
@@ -56,23 +58,56 @@ CASELLE_TERRITORY = ["UT", "ID", "WY", "MT", "CO", "NV", "NM", "ND", "SD", "OR",
 
 @st.cache_data
 def load_municipalities():
-    """Load the municipality database."""
-    db_path = DATA_DIR / "municipalities.json"
-    if not db_path.exists():
-        st.error("Municipality database not found. Ensure data/municipalities.json exists.")
-        st.stop()
-    with open(db_path) as f:
-        return json.load(f)
+    """Load municipalities from database."""
+    db = SessionLocal()
+    try:
+        municipalities = db.query(Municipality).all()
+
+        # Convert to JSON-like structure for compatibility with existing UI code
+        # Group by state
+        states = {}
+        for muni in municipalities:
+            if muni.state not in states:
+                states[muni.state] = {
+                    "name": muni.state,  # State name lookup could be added later
+                    "municipalities": []
+                }
+
+            states[muni.state]["municipalities"].append({
+                "id": muni.id,
+                "name": muni.name,
+                "state": muni.state,
+                "population": muni.population,
+                "domain": muni.domain,
+                "domain_status": muni.domain_status,
+                "resolved_url": muni.resolved_url,
+            })
+
+        return {"states": states}
+    finally:
+        db.close()
 
 
 def get_state_options(db: dict) -> dict:
-    """Build state selection options."""
-    states = db.get("states", {})
-    options = {}
-    for abbr, info in sorted(states.items(), key=lambda x: x[1]["name"]):
-        count = len(info.get("municipalities", []))
-        options[abbr] = f"{info['name']} ({count} cities)"
-    return options
+    """Build state selection options with enrichment status."""
+    session = SessionLocal()
+    try:
+        states = db.get("states", {})
+        options = {}
+        for abbr, info in sorted(states.items(), key=lambda x: x[0]):
+            count = len(info.get("municipalities", []))
+
+            # Count verified cities
+            verified_count = session.query(Municipality).filter_by(
+                state=abbr,
+                domain_status="verified"
+            ).count()
+
+            enrichment_pct = int((verified_count / count * 100)) if count > 0 else 0
+            options[abbr] = f"{abbr} ({count} cities, {enrichment_pct}% enriched)"
+        return options
+    finally:
+        session.close()
 
 
 # --- Custom CSS ---
@@ -735,52 +770,72 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     phase_times = {}
 
     # ==========================================================
-    # PHASE 1: Source Discovery (Meeting Minutes + Procurement)
+    # PHASE 1: Load Sources from Database (NEW ARCHITECTURE)
     # ==========================================================
     phase1_start = time.time()
-    status.markdown('<div class="phase active">Phase 1/3 — Discovering sources (meetings + procurement)</div>', unsafe_allow_html=True)
+    status.markdown('<div class="phase active">Phase 1/3 — Loading pre-discovered sources from database</div>', unsafe_allow_html=True)
     discovery_log = st.empty()
 
-    # Optimized for speed: 1.0s delay, 8s timeout
-    discovery = SourceDiscovery(request_delay=1.0, timeout=8)
+    # NEW: Load sources from database instead of probing
+    db = SessionLocal()
     discovered_sources = []
+    enriched_cities = []
+    unenriched_cities = []
     failed_cities = []
 
-    for i, muni in enumerate(cities):
-        pct = int((i / len(cities)) * 33)
-        progress.progress(pct)
-        discovery_log.text(f"Probing {muni['name']}, {muni.get('state', 'N/A')} ({i+1}/{len(cities)})")
+    try:
+        for i, muni in enumerate(cities):
+            pct = int((i / len(cities)) * 33)
+            progress.progress(pct)
+            discovery_log.text(f"Loading sources for {muni['name']}, {muni.get('state', 'N/A')} ({i+1}/{len(cities)})")
 
-        # Discover meeting minutes
-        meeting_sources = discovery.discover_municipality(
-            name=muni["name"],
-            state=muni.get("state", ""),
-            domain=muni.get("domain", ""),
-            population=muni.get("population", 0),
-        )
+            muni_id = muni.get("id")
+            if not muni_id:
+                failed_cities.append(muni["name"])
+                continue
 
-        # Also discover procurement portals
-        procurement_sources = discovery.discover_procurement(
-            name=muni["name"],
-            state=muni.get("state", ""),
-            domain=muni.get("domain", ""),
-            population=muni.get("population", 0),
-        )
+            # Check if city is enriched (has verified domain and sources)
+            municipality = db.query(Municipality).filter_by(id=muni_id).first()
+            if not municipality or municipality.domain_status != "verified":
+                unenriched_cities.append(muni["name"])
+                continue
 
-        all_sources = meeting_sources + procurement_sources
-        if all_sources:
-            discovered_sources.extend(all_sources)
-        else:
-            failed_cities.append(muni["name"])
+            # Load sources from database
+            sources = db.query(MunicipalSource).filter_by(municipality_id=muni_id).all()
+
+            if not sources:
+                unenriched_cities.append(muni["name"])
+                continue
+
+            # Convert MunicipalSource objects to DiscoveredSource objects (for compatibility)
+            enriched_cities.append(muni["name"])
+            for source in sources:
+                discovered_source = DiscoveredSource(
+                    municipality=muni["name"],
+                    state=muni.get("state", ""),
+                    url=source.url,
+                    source_type=source.platform or source.source_type,
+                    confidence=source.confidence,
+                    population=muni.get("population", 0),
+                )
+                discovered_sources.append(discovered_source)
+
+    finally:
+        db.close()
 
     discovery_log.empty()
 
     # Count by source type
-    meeting_count = sum(1 for s in discovered_sources if s.source_type in ["civicplus", "granicus", "html", "unknown"])
+    meeting_count = sum(1 for s in discovered_sources if s.source_type in ["civicplus", "granicus", "html", "unknown", "boarddocs"])
     procurement_count = sum(1 for s in discovered_sources if s.source_type == "procurement")
 
-    phase_times["Phase 1: Discovery"] = time.time() - phase1_start
-    status.markdown(f'<div class="phase done">Phase 1/3 — Found {len(discovered_sources)} sources ({meeting_count} meetings, {procurement_count} procurement) in {phase_times["Phase 1: Discovery"]:.1f}s</div>', unsafe_allow_html=True)
+    phase_times["Phase 1: Load Sources"] = time.time() - phase1_start
+
+    # Show enrichment status
+    if unenriched_cities:
+        st.warning(f"⚠️ {len(unenriched_cities)} cities not enriched yet: {', '.join(unenriched_cities[:5])}{'...' if len(unenriched_cities) > 5 else ''}. Run enrichment first for better results.")
+
+    status.markdown(f'<div class="phase done">Phase 1/3 — Loaded {len(discovered_sources)} sources from {len(enriched_cities)} cities ({meeting_count} meetings, {procurement_count} procurement) in {phase_times["Phase 1: Load Sources"]:.1f}s</div>', unsafe_allow_html=True)
 
     if not discovered_sources:
         st.warning("No meeting minutes sources could be discovered. The municipalities in this state may not have publicly accessible meeting minutes, or their websites may use non-standard formats.")
