@@ -111,6 +111,10 @@ class MunicipalScraper:
             "minute", "agenda", "meeting", "council", "commission",
             "board", "session", "packet", "regular meeting",
             "special meeting", "work session", "public hearing",
+            "workshop", "hearing", "executive", "legislative",
+            "assembly", "proceedings", "record", "summary",
+            "approved minutes", "draft minutes", "official minutes",
+            "meeting packet", "agenda packet", "council packet",
         ]
         return any(ind in combined for ind in indicators)
 
@@ -124,10 +128,11 @@ class MunicipalScraper:
         links = soup.find_all("a", href=True)
         scraped_count = 0
 
-        for link in links:
-            if scraped_count >= self.max_docs:
-                break
+        # Separate PDF links from HTML links - prioritize PDFs
+        pdf_links = []
+        html_links = []
 
+        for link in links:
             href = link["href"]
             text = link.get_text(strip=True)
 
@@ -139,6 +144,18 @@ class MunicipalScraper:
             # Skip anchor links and javascript
             if full_url.startswith(("#", "javascript:")):
                 continue
+
+            if self._is_pdf_link(href):
+                pdf_links.append((link, full_url, text))
+            else:
+                html_links.append((link, full_url, text))
+
+        # Process PDF links first (they're more likely to have actual content)
+        all_links = pdf_links + html_links
+
+        for link, full_url, text in all_links:
+            if scraped_count >= self.max_docs:
+                break
 
             # Fetch the linked document
             resp = self._fetch(full_url)
