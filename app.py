@@ -730,13 +730,19 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     progress = st.progress(0)
     status = st.empty()
 
+    # Track timing for performance monitoring
+    scan_start = time.time()
+    phase_times = {}
+
     # ==========================================================
     # PHASE 1: Source Discovery (Meeting Minutes + Procurement)
     # ==========================================================
+    phase1_start = time.time()
     status.markdown('<div class="phase active">Phase 1/3 — Discovering sources (meetings + procurement)</div>', unsafe_allow_html=True)
     discovery_log = st.empty()
 
-    discovery = SourceDiscovery(request_delay=0.25, timeout=10)
+    # Optimized for speed: 1.0s delay, 8s timeout
+    discovery = SourceDiscovery(request_delay=1.0, timeout=8)
     discovered_sources = []
     failed_cities = []
 
@@ -773,7 +779,8 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     meeting_count = sum(1 for s in discovered_sources if s.source_type in ["civicplus", "granicus", "html", "unknown"])
     procurement_count = sum(1 for s in discovered_sources if s.source_type == "procurement")
 
-    status.markdown(f'<div class="phase done">Phase 1/3 — Found {len(discovered_sources)} sources ({meeting_count} meetings, {procurement_count} procurement) across {len(cities) - len(failed_cities)} municipalities</div>', unsafe_allow_html=True)
+    phase_times["Phase 1: Discovery"] = time.time() - phase1_start
+    status.markdown(f'<div class="phase done">Phase 1/3 — Found {len(discovered_sources)} sources ({meeting_count} meetings, {procurement_count} procurement) in {phase_times["Phase 1: Discovery"]:.1f}s</div>', unsafe_allow_html=True)
 
     if not discovered_sources:
         st.warning("No meeting minutes sources could be discovered. The municipalities in this state may not have publicly accessible meeting minutes, or their websites may use non-standard formats.")
@@ -783,11 +790,13 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     # ==========================================================
     # PHASE 2: Scraping
     # ==========================================================
+    phase2_start = time.time()
     status2 = st.empty()
     status2.markdown('<div class="phase active">Phase 2/3 — Scraping meeting documents</div>', unsafe_allow_html=True)
     scrape_log = st.empty()
 
-    scraper = MunicipalScraper(delay=0.5, timeout=15, max_docs=10)
+    # Optimized for speed: 0.5s delay, 8s timeout
+    scraper = MunicipalScraper(delay=0.5, timeout=8, max_docs=10)
     all_docs = []
 
     for i, source in enumerate(discovered_sources):
@@ -802,7 +811,8 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
             logger.error(f"Scraping error for {source.url}: {e}")
 
     scrape_log.empty()
-    status2.markdown(f'<div class="phase done">Phase 2/3 — Scraped {len(all_docs)} documents</div>', unsafe_allow_html=True)
+    phase_times["Phase 2: Scraping"] = time.time() - phase2_start
+    status2.markdown(f'<div class="phase done">Phase 2/3 — Scraped {len(all_docs)} documents in {phase_times["Phase 2: Scraping"]:.1f}s</div>', unsafe_allow_html=True)
 
     if not all_docs:
         st.warning("Documents were found but could not be extracted. This often happens with JavaScript-heavy sites or non-standard PDF formats.")
@@ -812,6 +822,7 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     # ==========================================================
     # PHASE 3: Analysis
     # ==========================================================
+    phase3_start = time.time()
     status3 = st.empty()
     status3.markdown('<div class="phase active">Phase 3/3 — Analyzing for lead signals</div>', unsafe_allow_html=True)
 
@@ -839,10 +850,20 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     results.sort(key=lambda r: r.relevance_score, reverse=True)
     progress.progress(100)
 
+    phase_times["Phase 3: Analysis"] = time.time() - phase3_start
+    total_time = time.time() - scan_start
+
     hot = sum(1 for r in results if r.lead_type == "hot")
     warm = sum(1 for r in results if r.lead_type == "warm")
     cold = sum(1 for r in results if r.lead_type == "cold")
-    status3.markdown(f'<div class="phase done">Phase 3/3 — Found {len(results)} leads ({hot} hot, {warm} warm, {cold} cold)</div>', unsafe_allow_html=True)
+    status3.markdown(f'<div class="phase done">Phase 3/3 — Found {len(results)} leads ({hot} hot, {warm} warm, {cold} cold) in {phase_times["Phase 3: Analysis"]:.1f}s</div>', unsafe_allow_html=True)
+
+    # Print timing summary
+    timing_summary = st.empty()
+    mins, secs = divmod(int(total_time), 60)
+    timing_details = " | ".join([f"{phase}: {time:.1f}s" for phase, time in phase_times.items()])
+    timing_summary.markdown(f'<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 14px;"><strong>⏱️ Total Time:</strong> {mins}m {secs}s | {timing_details}</div>', unsafe_allow_html=True)
+    logger.info(f"Scan completed in {mins}m {secs}s | {timing_details}")
 
     return results, len(all_docs), len(discovered_sources), len(failed_cities)
 

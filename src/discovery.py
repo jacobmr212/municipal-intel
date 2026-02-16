@@ -36,7 +36,7 @@ class DiscoveredSource:
 class SourceDiscovery:
     """Discovers meeting minutes pages for municipalities."""
 
-    def __init__(self, request_delay: float = 1.5, timeout: int = 15):
+    def __init__(self, request_delay: float = 1.0, timeout: int = 8):
         self.delay = request_delay
         self.timeout = timeout
         self.session = requests.Session()
@@ -124,9 +124,15 @@ class SourceDiscovery:
 
         checked_count = 0
 
-        # First: Try own domain with common patterns
+        # First: Try own domain with common patterns (limit to 8 for speed)
+        max_patterns_to_check = 8
         for base_url in base_urls:
             for pattern in ordered_patterns:
+                # Hard limit: stop after checking 8 patterns
+                if checked_count >= max_patterns_to_check:
+                    logger.info(f"  Checked {checked_count} patterns — moving on")
+                    break
+
                 url = f"{base_url}{pattern}"
 
                 # Minimal delay to be respectful, but fast
@@ -162,11 +168,17 @@ class SourceDiscovery:
 
                     # If we found a high-confidence source, stop immediately
                     if confidence >= 0.85:
+                        logger.info(f"  High confidence source found — stopping search for {name}")
                         return discovered
 
-                    # If we found any source and checked enough patterns, stop
-                    if len(discovered) >= 1 and checked_count >= 15:
+                    # If we found any source and checked 5+ patterns, stop
+                    if len(discovered) >= 1 and checked_count >= 5:
+                        logger.info(f"  Source found after {checked_count} checks — stopping")
                         return discovered
+
+            # Break outer loop too if we hit the limit
+            if checked_count >= max_patterns_to_check:
+                break
 
         # Second: Try third-party platforms if nothing found on own domain
         if not discovered:

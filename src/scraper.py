@@ -166,6 +166,11 @@ class MunicipalScraper:
             doc_text = ""
 
             if self._is_pdf_link(href, content_type):
+                # Skip PDFs over 2MB for performance
+                pdf_size_mb = len(resp.content) / (1024 * 1024)
+                if pdf_size_mb > 2.0:
+                    logger.info(f"  Skipping large PDF ({pdf_size_mb:.1f}MB): {full_url}")
+                    continue
                 doc_text = self._extract_pdf_text(resp.content)
             elif "html" in content_type:
                 page_soup = BeautifulSoup(resp.text, "lxml")
