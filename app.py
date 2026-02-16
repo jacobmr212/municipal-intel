@@ -282,16 +282,49 @@ def main():
         st.markdown("### ⚙️ Scan Settings")
         st.markdown("---")
 
-        selected_state = st.selectbox(
-            "Select State",
-            options=list(state_options.keys()),
-            format_func=lambda x: state_options[x],
-            index=list(state_options.keys()).index("UT") if "UT" in state_options else 0,
+        # Multi-state selection mode toggle
+        multi_state_mode = st.checkbox(
+            "🗺️ Multi-State Scan",
+            value=False,
+            help="Scan multiple states in one run"
         )
 
-        state_info = db["states"][selected_state]
-        state_name = state_info["name"]
-        munis = state_info.get("municipalities", [])
+        if multi_state_mode:
+            # Multi-select for states
+            selected_states = st.multiselect(
+                "Select States",
+                options=list(state_options.keys()),
+                format_func=lambda x: state_options[x],
+                default=["UT"] if "UT" in state_options else [list(state_options.keys())[0]],
+                help="Select one or more states to scan together"
+            )
+
+            # Combine municipalities from all selected states
+            munis = []
+            state_name = ", ".join([db["states"][s]["name"] for s in selected_states]) if selected_states else "None"
+            for state_abbr in selected_states:
+                state_munis = db["states"][state_abbr].get("municipalities", [])
+                # Add state info to each municipality
+                for m in state_munis:
+                    m_copy = m.copy()
+                    m_copy["state"] = state_abbr
+                    munis.append(m_copy)
+        else:
+            # Single state selection
+            selected_state = st.selectbox(
+                "Select State",
+                options=list(state_options.keys()),
+                format_func=lambda x: state_options[x],
+                index=list(state_options.keys()).index("UT") if "UT" in state_options else 0,
+            )
+            selected_states = [selected_state]
+
+            state_info = db["states"][selected_state]
+            state_name = state_info["name"]
+            munis = state_info.get("municipalities", [])
+            # Add state info to each municipality
+            for m in munis:
+                m["state"] = selected_state
 
         max_cities = st.slider(
             "Max Cities to Scan",
@@ -360,6 +393,15 @@ def main():
             help="Choose how to prioritize cities in scan"
         )
 
+        # Quick city search
+        st.markdown("**🔍 Quick Search**")
+        city_search = st.text_input(
+            "Find specific city",
+            placeholder="Type city name...",
+            help="Search for a specific city by name",
+            label_visibility="collapsed"
+        )
+
         st.markdown("---")
         st.markdown("### 📊 About")
         st.markdown(
@@ -385,8 +427,19 @@ def main():
         if min_population <= m.get("population", 0) <= max_population
     ]
 
+    # Apply city search filter
+    if city_search and city_search.strip():
+        search_term = city_search.strip().lower()
+        filtered_munis = [
+            m for m in filtered_munis
+            if search_term in m.get("name", "").lower()
+        ]
+
     if not filtered_munis:
-        st.warning(f"No municipalities in {state_name} with population between {min_population:,} and {max_population:,}.")
+        if city_search and city_search.strip():
+            st.warning(f"No cities matching '{city_search}' found in selected state(s).")
+        else:
+            st.warning(f"No municipalities in {state_name} with population between {min_population:,} and {max_population:,}.")
         return
 
     # Sort municipalities
@@ -435,20 +488,23 @@ def main():
             # Generate downloadable reports
             reporter = ReportGenerator(str(REPORT_DIR))
             html_path = reporter.generate_html(
-                results, state_name, selected_state,
+                results, state_name, ", ".join(selected_states) if multi_state_mode else selected_state,
                 total_docs, len(cities_to_scan), sources_found,
             )
             json_path = reporter.generate_json(
-                results, state_name, selected_state,
+                results, state_name, ", ".join(selected_states) if multi_state_mode else selected_state,
                 total_docs, len(cities_to_scan), sources_found,
+            )
+            csv_path = reporter.generate_csv(
+                results, state_name, ", ".join(selected_states) if multi_state_mode else selected_state,
             )
 
             # Download buttons
-            col_dl1, col_dl2 = st.columns(2)
+            col_dl1, col_dl2, col_dl3 = st.columns(3)
             with col_dl1:
                 with open(html_path, "r") as f:
                     st.download_button(
-                        "📥 Download HTML Report",
+                        "📥 HTML Report",
                         f.read(),
                         file_name=Path(html_path).name,
                         mime="text/html",
@@ -457,11 +513,21 @@ def main():
             with col_dl2:
                 with open(json_path, "r") as f:
                     st.download_button(
-                        "📥 Download JSON Data",
+                        "📥 JSON Data",
                         f.read(),
                         file_name=Path(json_path).name,
                         mime="application/json",
                         use_container_width=True,
+                    )
+            with col_dl3:
+                with open(csv_path, "r") as f:
+                    st.download_button(
+                        "📥 CSV (Sales Tracker)",
+                        f.read(),
+                        file_name=Path(csv_path).name,
+                        mime="text/csv",
+                        use_container_width=True,
+                        help="Download leads as CSV with tracking columns for Excel"
                     )
 
             st.markdown("---")

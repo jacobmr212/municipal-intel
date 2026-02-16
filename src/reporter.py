@@ -3,6 +3,7 @@ Report Generator
 Produces detailed HTML intelligence reports and JSON exports.
 """
 
+import csv
 import json
 import logging
 from datetime import datetime
@@ -281,4 +282,74 @@ class ReportGenerator:
         filepath = self.report_dir / filename
         filepath.write_text(json.dumps(data, indent=2))
         logger.info(f"JSON report saved: {filepath}")
+        return str(filepath)
+
+    def generate_csv(self, results: list, state_name: str, state_abbr: str) -> str:
+        """
+        Generate CSV export with sales tracking columns.
+        Returns filepath.
+        """
+        filename = f"intel_{state_abbr}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        filepath = self.report_dir / filename
+
+        # Define columns for sales tracking
+        fieldnames = [
+            # Lead Info
+            "city",
+            "state",
+            "population",
+            "lead_type",
+            "score",
+            "signals_found",
+            # Document Info
+            "document_title",
+            "document_date",
+            "document_url",
+            # Recommended Action
+            "recommended_action",
+            # Sales Tracking Columns
+            "contact_name",
+            "contact_title",
+            "contact_email",
+            "contact_phone",
+            "last_contacted",
+            "next_follow_up",
+            "status",
+            "notes",
+        ]
+
+        with open(filepath, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for r in results:
+                # Get top signals
+                signals = ", ".join(r.signal_labels_found[:3])
+
+                writer.writerow({
+                    # Lead Info
+                    "city": r.municipality,
+                    "state": r.state,
+                    "population": r.population,
+                    "lead_type": r.lead_type.upper(),
+                    "score": r.relevance_score,
+                    "signals_found": signals,
+                    # Document Info
+                    "document_title": r.title,
+                    "document_date": r.date,
+                    "document_url": r.url,
+                    # Recommended Action
+                    "recommended_action": r.recommended_action,
+                    # Sales Tracking Columns (empty for sales team to fill)
+                    "contact_name": "",
+                    "contact_title": "",
+                    "contact_email": "",
+                    "contact_phone": "",
+                    "last_contacted": "",
+                    "next_follow_up": "",
+                    "status": "",  # e.g., "New", "Contacted", "Qualified", "Lost"
+                    "notes": "",
+                })
+
+        logger.info(f"CSV report saved: {filepath}")
         return str(filepath)

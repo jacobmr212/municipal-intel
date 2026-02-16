@@ -3,6 +3,7 @@
     "description": "Comprehensive municipality database for Municipal Intel",
     "last_updated": "2026-02-15",
     "sources": "US Census Bureau 2020, municipal website surveys",
+    "data_year": "2020",
     "min_population": 5000
   },
   "states": {
