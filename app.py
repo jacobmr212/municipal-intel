@@ -1067,8 +1067,15 @@ def main():
     else:  # Name (A-Z)
         filtered_munis.sort(key=lambda m: m.get("name", ""))
 
-    # All filtered cities will be scanned (no max_cities slider)
-    cities_to_scan = filtered_munis
+    # Apply 200-city hard limit to prevent accidental hour-long scans
+    MAX_CITIES_PER_SCAN = 200
+
+    if len(filtered_munis) > MAX_CITIES_PER_SCAN:
+        st.warning(f"⚠️ **200-city limit reached**. Showing first {MAX_CITIES_PER_SCAN} of {len(filtered_munis):,} cities. Narrow your filters to scan more specifically.")
+        cities_to_scan = filtered_munis[:MAX_CITIES_PER_SCAN]
+    else:
+        cities_to_scan = filtered_munis
+
     num_cities = len(cities_to_scan)
 
     # Calculate estimated time (~4 seconds per city)
