@@ -137,6 +137,34 @@ SIGNALS = {
             "technology investment",
         ],
     },
+    "active_rfp_signals": {
+        "label": "Active RFP",
+        "weight": 10,
+        "description": "Active procurement with due date — HOT buying signal",
+        "keywords": [
+            "due date",
+            "submission deadline",
+            "bid deadline",
+            "proposal deadline",
+            "closing date",
+            "must be received by",
+            "proposals due",
+            "bids due",
+            "submit by",
+            "deadline for submission",
+            "pre-bid conference",
+            "pre-proposal meeting",
+            "mandatory meeting",
+            "bid bond required",
+            "proposal bond",
+            "currently accepting",
+            "now accepting proposals",
+            "solicitation number",
+            "bid number",
+            "rfp number",
+            "project number",
+        ],
+    },
     "pain_signals": {
         "label": "Pain Point",
         "weight": 5,
@@ -184,6 +212,41 @@ SIGNALS = {
         ],
     },
 }
+
+# ============================================================
+# PROCUREMENT PORTAL URL PATTERNS
+# Used to find RFP, bid, and purchasing pages.
+# ============================================================
+
+PROCUREMENT_PATTERNS = [
+    # Common procurement page paths
+    "/bids",
+    "/rfps",
+    "/rfp",
+    "/purchasing",
+    "/procurement",
+    "/bid-opportunities",
+    "/requests-for-proposals",
+    "/open-bids",
+    "/current-bids",
+    "/solicitations",
+    "/vendor-opportunities",
+    # Department-specific
+    "/departments/purchasing",
+    "/departments/procurement",
+    "/finance/purchasing",
+    "/finance/bids",
+    # Government paths
+    "/government/purchasing",
+    "/government/procurement",
+    "/government/bids",
+    # Business/vendor paths
+    "/business/bids",
+    "/business/purchasing",
+    "/doing-business/bids",
+    "/vendors/opportunities",
+    "/vendor-center",
+]
 
 # ============================================================
 # COMMON MEETING MINUTES URL PATTERNS
@@ -272,16 +335,26 @@ URL_PATTERNS = [
 # LEAD CLASSIFICATION RULES
 # ============================================================
 
-def classify_lead(score: float, signal_types: set) -> tuple[str, str]:
+def classify_lead(score: float, signal_types: set, source_type: str = "meeting_minutes") -> tuple[str, str]:
     """
-    Classify a lead based on score and signal types.
+    Classify a lead based on score, signal types, and source type.
     Returns (lead_type, recommended_action).
     """
+    # HOT: Active RFP with deadline (HIGHEST PRIORITY)
+    if "active_rfp_signals" in signal_types:
+        if "erp_signals" in signal_types or "budget_signals" in signal_types:
+            return "hot", "URGENT: Active RFP with deadline detected — review immediately and prepare response. Time-sensitive opportunity"
+        return "hot", "HIGH PRIORITY: Active procurement with deadline — review to determine if ERP-related"
+
     # HOT: Direct Caselle mention
     if "direct_mentions" in signal_types:
         if "budget_signals" in signal_types or "erp_signals" in signal_types:
             return "hot", "IMMEDIATE ACTION: Caselle mentioned in budget/ERP context — contact city IT director and account manager ASAP"
         return "hot", "IMMEDIATE ACTION: Caselle mentioned directly — review full document and coordinate with account team"
+
+    # HOT: Procurement source with ERP signals
+    if source_type == "procurement" and "erp_signals" in signal_types:
+        return "hot", "HIGH PRIORITY: ERP-related procurement posting found — city is actively seeking software. Engage now"
 
     # HOT: Competitor + procurement activity
     if "competitor_mentions" in signal_types and ("budget_signals" in signal_types or "erp_signals" in signal_types):
@@ -290,6 +363,10 @@ def classify_lead(score: float, signal_types: set) -> tuple[str, str]:
     # HOT: Active RFP (even without competitor names)
     if "budget_signals" in signal_types and "erp_signals" in signal_types and score >= 50:
         return "hot", "HIGH PRIORITY: Active ERP procurement discussion — likely issuing or planning an RFP. Get on their radar now"
+
+    # WARM: Procurement source (even without strong ERP signals)
+    if source_type == "procurement":
+        return "warm", "FOLLOW UP: Procurement posting found — review for software/technology relevance"
 
     # WARM: ERP or budget discussion
     if "erp_signals" in signal_types:

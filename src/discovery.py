@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
 
-from .signals import URL_PATTERNS
+from .signals import URL_PATTERNS, PROCUREMENT_PATTERNS
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +215,71 @@ class SourceDiscovery:
         # Log if nothing found
         if not discovered:
             logger.warning(f"  ✗ No sources found for {name}, {state} ({domain}) — checked {checked_count} URLs")
+
+        return discovered
+
+    def discover_procurement(self, name: str, state: str, domain: str,
+                             population: int = 0) -> list[DiscoveredSource]:
+        """
+        Discover procurement/bidding pages for a municipality.
+        Returns list of procurement sources found.
+        """
+        discovered = []
+        base_urls = [
+            f"https://www.{domain}",
+            f"https://{domain}",
+        ]
+
+        checked_count = 0
+        for base_url in base_urls:
+            for pattern in PROCUREMENT_PATTERNS:
+                url = f"{base_url}{pattern}"
+
+                if checked_count > 0:
+                    time.sleep(self.delay)
+                checked_count += 1
+
+                try:
+                    response = self.session.get(url, timeout=self.timeout, allow_redirects=True)
+                    if response.status_code != 200:
+                        continue
+
+                    content_type = response.headers.get("content-type", "")
+                    if "html" not in content_type:
+                        continue
+
+                    html_lower = response.text.lower()
+
+                    # Check for procurement-related content
+                    procurement_indicators = [
+                        "bid", "rfp", "request for proposal", "procurement",
+                        "solicitation", "vendor", "purchasing", "opportunity",
+                    ]
+
+                    indicator_count = sum(1 for ind in procurement_indicators if ind in html_lower)
+                    if indicator_count < 2:
+                        continue
+
+                    # Found a procurement page
+                    source = DiscoveredSource(
+                        municipality=name,
+                        state=state,
+                        url=response.url,
+                        source_type="procurement",
+                        confidence=0.85,
+                        population=population,
+                    )
+                    discovered.append(source)
+                    logger.info(f"  ✓ Found procurement portal: {response.url}")
+
+                    # Stop after finding one procurement portal
+                    return discovered
+
+                except (requests.exceptions.RequestException, Exception):
+                    continue
+
+        if not discovered:
+            logger.info(f"  ✗ No procurement portal found for {name}, {state}")
 
         return discovered
 

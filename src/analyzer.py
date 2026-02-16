@@ -34,6 +34,7 @@ class AnalysisResult:
     url: str
     date: Optional[str]
     relevance_score: float
+    source_type: str = "meeting_minutes"  # meeting_minutes, procurement, budget, job_posting, agenda_packet, audit
     signal_matches: list[SignalMatch] = field(default_factory=list)
     summary: str = ""
     lead_type: str = ""
@@ -160,7 +161,7 @@ Reply with ONLY the sales brief."""
             return ""
 
     def analyze_document(self, doc, population: int = 0,
-                          min_score: float = 10) -> Optional[AnalysisResult]:
+                          min_score: float = 10, source_type: str = "meeting_minutes") -> Optional[AnalysisResult]:
         """Analyze a single document for lead signals."""
         matches = self._find_matches(doc.text)
         if not matches:
@@ -171,7 +172,7 @@ Reply with ONLY the sales brief."""
             return None
 
         signal_types = {m.signal_type for m in matches}
-        lead_type, action = classify_lead(score, signal_types)
+        lead_type, action = classify_lead(score, signal_types, source_type)
 
         # Build summary
         unique_kws = list(dict.fromkeys(m.keyword for m in matches))[:6]
@@ -190,6 +191,7 @@ Reply with ONLY the sales brief."""
             url=doc.url,
             date=doc.date.strftime("%Y-%m-%d") if doc.date else "Unknown",
             relevance_score=score,
+            source_type=source_type,
             signal_matches=matches,
             summary=summary,
             lead_type=lead_type,
