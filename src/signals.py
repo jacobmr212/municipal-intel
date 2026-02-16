@@ -141,28 +141,33 @@ SIGNALS = {
         "label": "Active RFP",
         "weight": 10,
         "description": "Active procurement with due date — HOT buying signal",
+        "requires_context": True,  # Must validate context
         "keywords": [
-            "due date",
+            # Specific deadline phrases
             "submission deadline",
             "bid deadline",
             "proposal deadline",
-            "closing date",
-            "must be received by",
             "proposals due",
             "bids due",
-            "submit by",
             "deadline for submission",
+            # Procurement-specific events
             "pre-bid conference",
             "pre-proposal meeting",
-            "mandatory meeting",
+            "mandatory pre-bid",
             "bid bond required",
             "proposal bond",
-            "currently accepting",
-            "now accepting proposals",
+            # Specific procurement identifiers
             "solicitation number",
             "bid number",
             "rfp number",
             "project number",
+            "sealed bid",
+            "bid opening",
+            # Removed overly generic:
+            # - "currently accepting" (matches volunteers, jobs, etc.)
+            # - "now accepting proposals" (too generic)
+            # - "due date" (appears in all contexts)
+            # - "closing date" (too generic)
         ],
     },
     "pain_signals": {
@@ -335,13 +340,20 @@ URL_PATTERNS = [
 # LEAD CLASSIFICATION RULES
 # ============================================================
 
-def classify_lead(score: float, signal_types: set, source_type: str = "meeting_minutes") -> tuple[str, str]:
+def classify_lead(score: float, signal_types: set, source_type: str = "meeting_minutes",
+                  high_confidence_signals: set = None) -> tuple[str, str]:
     """
-    Classify a lead based on score, signal types, and source type.
+    Classify a lead based on score, signal types, source type, and signal confidence.
     Returns (lead_type, recommended_action).
+
+    high_confidence_signals: set of signal_types that had high-confidence matches
     """
-    # HOT: Active RFP with deadline (HIGHEST PRIORITY)
-    if "active_rfp_signals" in signal_types:
+    # Default to treating all signals as high confidence if not specified
+    if high_confidence_signals is None:
+        high_confidence_signals = signal_types
+
+    # HOT: Active RFP with deadline (HIGHEST PRIORITY) - but only if HIGH confidence
+    if "active_rfp_signals" in high_confidence_signals:
         if "erp_signals" in signal_types or "budget_signals" in signal_types:
             return "hot", "URGENT: Active RFP with deadline detected — review immediately and prepare response. Time-sensitive opportunity"
         return "hot", "HIGH PRIORITY: Active procurement with deadline — review to determine if ERP-related"

@@ -22,6 +22,7 @@ class SignalMatch:
     context: str
     weight: int
     position: int
+    confidence: str = "high"  # "high" or "low" - used for context validation
 
 
 @dataclass
@@ -78,6 +79,7 @@ class DocumentAnalyzer:
                 "patterns": patterns,
                 "weight": sig_cfg["weight"],
                 "label": sig_cfg["label"],
+                "requires_context": sig_cfg.get("requires_context", False),
             }
 
     def _extract_context(self, text: str, pos: int, window: int = 250) -> str:
@@ -92,12 +94,43 @@ class DocumentAnalyzer:
             ctx = ctx + "..."
         return ctx
 
+    def _validate_procurement_context(self, text: str, pos: int) -> bool:
+        """
+        Validate that procurement keywords appear in relevant context.
+        Returns True if supporting procurement terms found within ±50 words.
+        """
+        # Extract ±50 words around the match
+        words_per_char = 0.16  # ~6 chars per word average
+        char_window = int(50 / words_per_char)  # ~300 chars = ~50 words
+        start = max(0, pos - char_window)
+        end = min(len(text), pos + char_window)
+        context = text[start:end].lower()
+
+        # Supporting procurement terms that validate this is real procurement content
+        supporting_terms = [
+            "proposal", "bid", "rfp", "rfi", "rfq", "vendor", "contract",
+            "software", "system", "technology", "erp", "financial",
+            "implementation", "procurement", "purchase", "solicitation",
+            "submit", "response", "qualification", "requirement",
+        ]
+
+        # Return True if at least one supporting term appears in context
+        return any(term in context for term in supporting_terms)
+
     def _find_matches(self, text: str) -> list[SignalMatch]:
         """Run keyword matching across all signal categories."""
         matches = []
         for sig_type, sig_data in self._compiled.items():
+            requires_context = sig_data.get("requires_context", False)
+
             for kw, pattern in sig_data["patterns"]:
                 for match in pattern.finditer(text):
+                    # For signals that require context validation, check for supporting terms
+                    confidence = "high"
+                    if requires_context:
+                        if not self._validate_procurement_context(text, match.start()):
+                            confidence = "low"
+
                     matches.append(SignalMatch(
                         signal_type=sig_type,
                         signal_label=sig_data["label"],
@@ -105,6 +138,7 @@ class DocumentAnalyzer:
                         context=self._extract_context(text, match.start()),
                         weight=sig_data["weight"],
                         position=match.start(),
+                        confidence=confidence,
                     ))
         return matches
 
@@ -172,7 +206,8 @@ Reply with ONLY the sales brief."""
             return None
 
         signal_types = {m.signal_type for m in matches}
-        lead_type, action = classify_lead(score, signal_types, source_type)
+        high_confidence_signals = {m.signal_type for m in matches if m.confidence == "high"}
+        lead_type, action = classify_lead(score, signal_types, source_type, high_confidence_signals)
 
         # Build summary
         unique_kws = list(dict.fromkeys(m.keyword for m in matches))[:6]
