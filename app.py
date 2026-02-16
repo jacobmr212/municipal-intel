@@ -22,6 +22,11 @@ st.set_page_config(
     page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
 )
 
 # --- Logging ---
@@ -32,6 +37,20 @@ logger = logging.getLogger(__name__)
 DATA_DIR = Path(__file__).parent / "data"
 REPORT_DIR = Path(__file__).parent / "reports"
 REPORT_DIR.mkdir(exist_ok=True)
+
+# --- Population Tiers (Government ERP Sales Segments) ---
+POPULATION_TIERS = {
+    "Micro": (0, 2500, "Tiny towns, minimal budgets"),
+    "Small": (2500, 10000, "Core market, need fund accounting"),
+    "Small-Mid": (10000, 25000, "Sweet spot, real IT staff and budgets"),
+    "Mid-Market": (25000, 75000, "Competitive zone, head-to-head with Tyler/CentralSquare"),
+    "Upper-Mid": (75000, 150000, "Stretch targets"),
+    "Large": (150000, 10000000, "Enterprise, monitor for competitor intel"),
+    "Custom": (0, 10000000, "Manual min/max entry"),
+}
+
+# --- Caselle Territory States ---
+CASELLE_TERRITORY = ["UT", "ID", "WY", "MT", "CO", "NV", "NM", "ND", "SD", "OR", "WA"]
 
 
 @st.cache_data
@@ -58,59 +77,523 @@ def get_state_options(db: dict) -> dict:
 # --- Custom CSS ---
 st.markdown("""
 <style>
-    /* Global */
-    .stApp { background-color: #0b0d11; }
-    section[data-testid="stSidebar"] { background-color: #111520; }
+    /* === Global Reset & Base === */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    /* Header */
+    .stApp {
+        background-color: #09090B;
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: #1A1A1F;
+        border-right: 1px solid #1F1F23;
+    }
+
+    section[data-testid="stSidebar"] > div {
+        padding-top: 2rem;
+    }
+
+    /* === Top Accent Bar === */
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4F6AFF 0%, #6B7FFF 100%);
+        z-index: 999999;
+    }
+
+    /* === Typography === */
+    body, .stMarkdown, .stText {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+    }
+
+    /* === Header === */
     .main-header {
-        font-size: 36px; font-weight: 800; letter-spacing: -1px;
-        background: linear-gradient(135deg, #5e8aff 0%, #a78bfa 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 4px;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #E5E7EB;
+        margin-bottom: 6px;
+        margin-top: 1rem;
     }
-    .sub-header { color: #7a809e; font-size: 15px; margin-bottom: 24px; }
 
-    /* Stat boxes */
-    .stat-row { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+    .main-header .accent {
+        color: #4F6AFF;
+        font-weight: 800;
+    }
+
+    .sub-header {
+        color: #6B7280;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.5;
+        margin-bottom: 32px;
+    }
+
+    /* === Sidebar === */
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #9CA3AF;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        font-size: 13px;
+        color: #6B7280;
+        line-height: 1.6;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6B7280;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    /* === Stat Boxes === */
+    .stat-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 16px;
+        margin: 24px 0 32px 0;
+    }
+
     .stat-box {
-        flex: 1; min-width: 130px; background: #141720; border: 1px solid #2a3050;
-        border-radius: 12px; padding: 16px 18px;
+        background: #111113;
+        border: 1px solid #1F1F23;
+        border-radius: 8px;
+        padding: 20px;
+        position: relative;
     }
-    .stat-box .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7a809e; }
-    .stat-box .value { font-size: 30px; font-weight: 800; margin-top: 2px; }
-    .stat-box.hot .value { color: #ff4466; }
-    .stat-box.warm .value { color: #ffb040; }
-    .stat-box.cold .value { color: #40b8ff; }
-    .stat-box.total .value { color: #5e8aff; }
 
-    /* Lead cards */
+    .stat-box::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        border-radius: 8px 0 0 8px;
+    }
+
+    .stat-box.total::before { background: #4F6AFF; }
+    .stat-box.hot::before { background: #DC3545; }
+    .stat-box.warm::before { background: #D97706; }
+    .stat-box.cold::before { background: #3B82F6; }
+
+    .stat-box .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6B7280;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    .stat-box .value {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+        color: #E5E7EB;
+    }
+
+    /* === Pre-Scan Briefing === */
+    .pre-scan-briefing {
+        background: #111113;
+        border: 1px solid #1F1F23;
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin: 24px 0;
+    }
+
+    .pre-scan-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #E5E7EB;
+        margin-bottom: 16px;
+    }
+
+    .scan-info-row {
+        display: flex;
+        gap: 40px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .scan-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .scan-info-item .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6B7280;
+        font-weight: 500;
+    }
+
+    .scan-info-item .value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #E5E7EB;
+    }
+
+    .scan-summary-line {
+        font-size: 14px;
+        color: #9CA3AF;
+        line-height: 1.5;
+        padding-top: 12px;
+        border-top: 1px solid #1F1F23;
+    }
+
+    .scan-summary-line strong {
+        color: #E5E7EB;
+        font-weight: 600;
+    }
+
+    /* === Empty State === */
+    .empty-state {
+        text-align: center;
+        padding: 80px 40px;
+        color: #6B7280;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #9CA3AF;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+        line-height: 1.6;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* === Lead Cards (CRM Style) === */
     .lead-card {
-        background: #141720; border: 1px solid #2a3050; border-radius: 12px;
-        padding: 20px; margin-bottom: 12px; border-left: 4px solid transparent;
+        background: #111113;
+        border: 1px solid #1F1F23;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 12px;
+        position: relative;
+        transition: border-color 0.2s ease;
     }
-    .lead-card.hot { border-left-color: #ff4466; }
-    .lead-card.warm { border-left-color: #ffb040; }
-    .lead-card.cold { border-left-color: #40b8ff; }
 
-    /* Phase indicators */
-    .phase { padding: 8px 16px; border-radius: 8px; margin: 6px 0; font-size: 14px; }
-    .phase.active { background: rgba(94,138,255,.12); color: #5e8aff; }
-    .phase.done { background: rgba(76,217,123,.12); color: #4cd97b; }
-    .phase.waiting { background: rgba(122,128,158,.08); color: #7a809e; }
+    .lead-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        border-radius: 8px 0 0 8px;
+    }
 
-    /* Hide streamlit branding */
+    .lead-card.hot::before { background: #DC3545; }
+    .lead-card.warm::before { background: #D97706; }
+    .lead-card.cold::before { background: #3B82F6; }
+
+    .lead-card:hover {
+        border-color: #2F2F33;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 14px;
+    }
+
+    .card-title {
+        font-size: 17px;
+        font-weight: 600;
+        color: #E5E7EB;
+        line-height: 1.3;
+    }
+
+    .card-meta {
+        font-size: 13px;
+        color: #6B7280;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    .lead-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .lead-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .lead-badge.hot { color: #DC3545; background: rgba(220, 53, 69, 0.08); }
+    .lead-badge.hot::before { background: #DC3545; }
+
+    .lead-badge.warm { color: #D97706; background: rgba(217, 119, 6, 0.08); }
+    .lead-badge.warm::before { background: #D97706; }
+
+    .lead-badge.cold { color: #3B82F6; background: rgba(59, 130, 246, 0.08); }
+    .lead-badge.cold::before { background: #3B82F6; }
+
+    .card-score {
+        font-size: 13px;
+        color: #6B7280;
+        margin-top: 6px;
+        text-align: right;
+    }
+
+    .card-score .number {
+        font-weight: 600;
+        color: #9CA3AF;
+    }
+
+    .action-callout {
+        background: #0F0F11;
+        border-left: 3px solid #4F6AFF;
+        border-radius: 4px;
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #D1D5DB;
+        margin: 12px 0;
+        line-height: 1.5;
+    }
+
+    .signal-tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+    }
+
+    .signal-tag {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        background: #1A1A1F;
+        color: #9CA3AF;
+        border: 1px solid #1F1F23;
+        font-weight: 500;
+    }
+
+    .source-link {
+        display: inline-block;
+        margin-top: 12px;
+        color: #4F6AFF;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .source-link:hover {
+        color: #6B7FFF;
+        text-decoration: underline;
+    }
+
+    /* === Table View === */
+    .results-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 20px 0;
+    }
+
+    .results-table thead {
+        background: #111113;
+        border: 1px solid #1F1F23;
+    }
+
+    .results-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9CA3AF;
+        border-bottom: 1px solid #1F1F23;
+    }
+
+    .results-table tbody tr {
+        background: #111113;
+        border: 1px solid #1F1F23;
+        border-top: none;
+    }
+
+    .results-table tbody tr:hover {
+        background: #1A1A1F;
+    }
+
+    .results-table td {
+        padding: 14px 16px;
+        font-size: 14px;
+        color: #D1D5DB;
+        border-bottom: 1px solid #1F1F23;
+    }
+
+    .results-table td:first-child {
+        font-weight: 600;
+    }
+
+    /* === Phase Indicators === */
+    .phase {
+        padding: 10px 16px;
+        border-radius: 6px;
+        margin: 8px 0;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .phase.active {
+        background: rgba(79, 106, 255, 0.08);
+        color: #4F6AFF;
+        border: 1px solid rgba(79, 106, 255, 0.2);
+    }
+
+    .phase.done {
+        background: rgba(34, 197, 94, 0.08);
+        color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .phase.waiting {
+        background: rgba(156, 163, 175, 0.05);
+        color: #6B7280;
+        border: 1px solid #1F1F23;
+    }
+
+    /* === Streamlit Component Overrides === */
+    .stButton > button {
+        background: #4F6AFF;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: 0.01em;
+        transition: all 0.2s ease;
+    }
+
+    .stButton > button:hover {
+        background: #6B7FFF;
+        border: none;
+    }
+
+    .stButton > button[kind="primary"] {
+        background: #4F6AFF;
+    }
+
+    .stButton > button[kind="primary"]:hover {
+        background: #6B7FFF;
+    }
+
+    /* Normal-sized button (not full-width by default) */
+    .stButton {
+        display: inline-block;
+    }
+
+    .stTextInput input {
+        background: #111113;
+        border: 1px solid #1F1F23;
+        border-radius: 6px;
+        color: #E5E7EB;
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    .stTextInput input:focus {
+        border-color: #4F6AFF;
+        box-shadow: 0 0 0 1px #4F6AFF;
+    }
+
+    .stSelectbox [data-baseweb="select"] {
+        background: #111113;
+        border-radius: 6px;
+    }
+
+    .stMultiSelect [data-baseweb="select"] {
+        background: #111113;
+        border-radius: 6px;
+    }
+
+    .stSlider {
+        padding: 8px 0;
+    }
+
+    /* === Hide Streamlit Branding === */
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     .stDeployButton { display: none; }
+    header { visibility: hidden; }
+
+    /* === Dividers === */
+    hr {
+        border: none;
+        border-top: 1px solid #1F1F23;
+        margin: 24px 0;
+    }
+
+    /* === Results Header === */
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 32px 0 16px 0;
+    }
+
+    .results-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #E5E7EB;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 
 def render_header():
     """Render app header."""
-    st.markdown('<div class="main-header">🏛️ Municipal Intel</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">Government ERP Lead Intelligence — Scan municipal meeting minutes for sales signals</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="main-header">Municipal <span class="accent">Intel</span></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<div class="sub-header">Government ERP lead intelligence platform — Scan municipal meeting minutes for sales signals</div>',
+        unsafe_allow_html=True
+    )
 
 
 def render_stats(results: list, total_docs: int, sources: int, munis: int):
@@ -121,53 +604,90 @@ def render_stats(results: list, total_docs: int, sources: int, munis: int):
 
     st.markdown(f"""
     <div class="stat-row">
-        <div class="stat-box total"><div class="label">Total Leads</div><div class="value">{len(results)}</div></div>
-        <div class="stat-box hot"><div class="label">Hot</div><div class="value">{hot}</div></div>
-        <div class="stat-box warm"><div class="label">Warm</div><div class="value">{warm}</div></div>
-        <div class="stat-box cold"><div class="label">Cold</div><div class="value">{cold}</div></div>
+        <div class="stat-box total">
+            <div class="label">Total Leads</div>
+            <div class="value">{len(results)}</div>
+        </div>
+        <div class="stat-box hot">
+            <div class="label">Hot</div>
+            <div class="value">{hot}</div>
+        </div>
+        <div class="stat-box warm">
+            <div class="label">Warm</div>
+            <div class="value">{warm}</div>
+        </div>
+        <div class="stat-box cold">
+            <div class="label">Cold</div>
+            <div class="value">{cold}</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
 
 def render_lead_card(result):
-    """Render a single lead card."""
-    badge_colors = {"hot": "#ff4466", "warm": "#ffb040", "cold": "#40b8ff"}
-    badge_bg = {"hot": "rgba(255,68,102,.12)", "warm": "rgba(255,176,64,.12)", "cold": "rgba(64,184,255,.12)"}
-    color = badge_colors.get(result.lead_type, "#7a809e")
-    bg = badge_bg.get(result.lead_type, "rgba(122,128,158,.08)")
-
+    """Render a single lead card in CRM style."""
     pop_str = f" · Pop. {result.population:,}" if result.population else ""
 
-    tags_html = " ".join(
-        f'<span style="display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;background:#1c2030;color:#7a809e;margin-right:4px">{lbl}</span>'
+    tags_html = "".join(
+        f'<span class="signal-tag">{lbl}</span>'
         for lbl in result.signal_labels_found
     )
 
     st.markdown(f"""
     <div class="lead-card {result.lead_type}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="card-header">
             <div>
-                <div style="font-size:17px;font-weight:600">{result.municipality}, {result.state}</div>
-                <div style="font-size:12px;color:#7a809e;margin-top:2px">{result.title} · {result.date}{pop_str}</div>
+                <div class="card-title">{result.municipality}, {result.state}</div>
+                <div class="card-meta">{result.title} · {result.date}{pop_str}</div>
             </div>
-            <div style="text-align:right">
-                <span style="display:inline-block;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;background:{bg};color:{color}">{result.lead_type}</span>
-                <div style="font-size:12px;color:#7a809e;margin-top:4px">Score: {result.relevance_score}</div>
+            <div style="text-align: right;">
+                <span class="lead-badge {result.lead_type}">{result.lead_type}</span>
+                <div class="card-score">Score: <span class="number">{result.relevance_score}</span></div>
             </div>
         </div>
-        <div style="width:100%;height:4px;background:#252a3a;border-radius:2px;margin:10px 0;overflow:hidden">
-            <div style="height:100%;width:{result.relevance_score}%;background:{color};border-radius:2px"></div>
-        </div>
-        <div style="background:#1c2030;border-radius:8px;padding:10px 14px;font-size:13px;border-left:3px solid #5e8aff;margin:8px 0">
-            <strong style="color:#5e8aff">→</strong> {result.recommended_action}
-        </div>
-        <div style="margin:8px 0">{tags_html}</div>
-        <a href="{result.url}" target="_blank" style="color:#5e8aff;font-size:12px;text-decoration:none">View source →</a>
+        <div class="action-callout">{result.recommended_action}</div>
+        <div class="signal-tags">{tags_html}</div>
+        <a class="source-link" href="{result.url}" target="_blank" rel="noopener">View source document</a>
     </div>
     """, unsafe_allow_html=True)
 
 
-def run_scan(state_abbr: str, state_name: str, municipalities: list,
+def render_table_view(results: list):
+    """Render results as a table."""
+    table_html = """
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Municipality</th>
+                <th>State</th>
+                <th>Type</th>
+                <th>Score</th>
+                <th>Signals</th>
+                <th>Document</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+
+    for r in results:
+        signals = ", ".join(r.signal_labels_found[:2])
+        badge_class = r.lead_type
+        table_html += f"""
+            <tr>
+                <td><strong>{r.municipality}</strong></td>
+                <td>{r.state}</td>
+                <td><span class="lead-badge {badge_class}">{r.lead_type}</span></td>
+                <td>{r.relevance_score}</td>
+                <td>{signals}</td>
+                <td><a class="source-link" href="{r.url}" target="_blank">{r.title[:40]}...</a></td>
+            </tr>
+        """
+
+    table_html += "</tbody></table>"
+    st.markdown(table_html, unsafe_allow_html=True)
+
+
+def run_scan(selected_states: list, state_name: str, municipalities: list,
              max_cities: int, use_llm: bool):
     """Execute the full scan pipeline."""
 
@@ -182,7 +702,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     # ==========================================================
     # PHASE 1: Source Discovery
     # ==========================================================
-    status.markdown('<div class="phase active">🔍 Phase 1/3 — Discovering meeting minutes sources...</div>', unsafe_allow_html=True)
+    status.markdown('<div class="phase active">Phase 1/3 — Discovering meeting minutes sources</div>', unsafe_allow_html=True)
     discovery_log = st.empty()
 
     discovery = SourceDiscovery(request_delay=0.25, timeout=10)
@@ -192,11 +712,11 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     for i, muni in enumerate(cities):
         pct = int((i / len(cities)) * 33)
         progress.progress(pct)
-        discovery_log.text(f"  Probing {muni['name']}, {state_abbr} ({i+1}/{len(cities)})...")
+        discovery_log.text(f"Probing {muni['name']}, {muni.get('state', 'N/A')} ({i+1}/{len(cities)})")
 
         sources = discovery.discover_municipality(
             name=muni["name"],
-            state=state_abbr,
+            state=muni.get("state", ""),
             domain=muni.get("domain", ""),
             population=muni.get("population", 0),
         )
@@ -206,7 +726,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
             failed_cities.append(muni["name"])
 
     discovery_log.empty()
-    status.markdown(f'<div class="phase done">✅ Phase 1/3 — Found {len(discovered_sources)} sources across {len(cities) - len(failed_cities)} municipalities</div>', unsafe_allow_html=True)
+    status.markdown(f'<div class="phase done">Phase 1/3 — Found {len(discovered_sources)} sources across {len(cities) - len(failed_cities)} municipalities</div>', unsafe_allow_html=True)
 
     if not discovered_sources:
         st.warning("No meeting minutes sources could be discovered. The municipalities in this state may not have publicly accessible meeting minutes, or their websites may use non-standard formats.")
@@ -217,7 +737,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     # PHASE 2: Scraping
     # ==========================================================
     status2 = st.empty()
-    status2.markdown('<div class="phase active">📄 Phase 2/3 — Scraping meeting documents...</div>', unsafe_allow_html=True)
+    status2.markdown('<div class="phase active">Phase 2/3 — Scraping meeting documents</div>', unsafe_allow_html=True)
     scrape_log = st.empty()
 
     scraper = MunicipalScraper(delay=0.5, timeout=15, max_docs=10)
@@ -226,7 +746,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     for i, source in enumerate(discovered_sources):
         pct = 33 + int((i / len(discovered_sources)) * 33)
         progress.progress(pct)
-        scrape_log.text(f"  Scraping {source.municipality}, {source.state} ({i+1}/{len(discovered_sources)})...")
+        scrape_log.text(f"Scraping {source.municipality}, {source.state} ({i+1}/{len(discovered_sources)})")
 
         try:
             docs = scraper.scrape_source(source)
@@ -235,7 +755,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
             logger.error(f"Scraping error for {source.url}: {e}")
 
     scrape_log.empty()
-    status2.markdown(f'<div class="phase done">✅ Phase 2/3 — Scraped {len(all_docs)} documents</div>', unsafe_allow_html=True)
+    status2.markdown(f'<div class="phase done">Phase 2/3 — Scraped {len(all_docs)} documents</div>', unsafe_allow_html=True)
 
     if not all_docs:
         st.warning("Documents were found but could not be extracted. This often happens with JavaScript-heavy sites or non-standard PDF formats.")
@@ -246,7 +766,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     # PHASE 3: Analysis
     # ==========================================================
     status3 = st.empty()
-    status3.markdown('<div class="phase active">🧠 Phase 3/3 — Analyzing for lead signals...</div>', unsafe_allow_html=True)
+    status3.markdown('<div class="phase active">Phase 3/3 — Analyzing for lead signals</div>', unsafe_allow_html=True)
 
     analyzer = DocumentAnalyzer(use_llm=use_llm)
     results = []
@@ -266,7 +786,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     hot = sum(1 for r in results if r.lead_type == "hot")
     warm = sum(1 for r in results if r.lead_type == "warm")
     cold = sum(1 for r in results if r.lead_type == "cold")
-    status3.markdown(f'<div class="phase done">✅ Phase 3/3 — Found {len(results)} leads (🔥{hot} 🟡{warm} 🔵{cold})</div>', unsafe_allow_html=True)
+    status3.markdown(f'<div class="phase done">Phase 3/3 — Found {len(results)} leads ({hot} hot, {warm} warm, {cold} cold)</div>', unsafe_allow_html=True)
 
     return results, len(all_docs), len(discovered_sources), len(failed_cities)
 
@@ -279,147 +799,125 @@ def main():
 
     # --- Sidebar ---
     with st.sidebar:
-        st.markdown("### ⚙️ Scan Settings")
-        st.markdown("---")
+        st.markdown("### Scan Settings")
 
-        # Multi-state selection mode toggle
-        multi_state_mode = st.checkbox(
-            "🗺️ Multi-State Scan",
-            value=False,
-            help="Scan multiple states in one run"
+        # State selection (always multiselect)
+        selected_states = st.multiselect(
+            "Select States",
+            options=list(state_options.keys()),
+            format_func=lambda x: state_options[x],
+            default=["UT"] if "UT" in state_options else [list(state_options.keys())[0]],
         )
+        st.markdown('<div class="help-text">Select one or more states to scan. Selecting multiple states runs a multi-state scan.</div>', unsafe_allow_html=True)
 
-        if multi_state_mode:
-            # Multi-select for states
-            selected_states = st.multiselect(
-                "Select States",
-                options=list(state_options.keys()),
-                format_func=lambda x: state_options[x],
-                default=["UT"] if "UT" in state_options else [list(state_options.keys())[0]],
-                help="Select one or more states to scan together"
-            )
+        # Caselle Territory quick-select
+        if st.button("Select Caselle Territory", use_container_width=True):
+            available_territory = [s for s in CASELLE_TERRITORY if s in state_options]
+            st.session_state['caselle_territory_selected'] = available_territory
+            st.rerun()
 
-            # Combine municipalities from all selected states
-            munis = []
-            state_name = ", ".join([db["states"][s]["name"] for s in selected_states]) if selected_states else "None"
+        # Apply Caselle Territory selection if button was clicked
+        if 'caselle_territory_selected' in st.session_state:
+            selected_states = st.session_state['caselle_territory_selected']
+            del st.session_state['caselle_territory_selected']
+
+        # Combine municipalities from all selected states
+        munis = []
+        if selected_states:
+            state_name = ", ".join([db["states"][s]["name"] for s in selected_states])
             for state_abbr in selected_states:
                 state_munis = db["states"][state_abbr].get("municipalities", [])
-                # Add state info to each municipality
                 for m in state_munis:
                     m_copy = m.copy()
                     m_copy["state"] = state_abbr
                     munis.append(m_copy)
         else:
-            # Single state selection
-            selected_state = st.selectbox(
-                "Select State",
-                options=list(state_options.keys()),
-                format_func=lambda x: state_options[x],
-                index=list(state_options.keys()).index("UT") if "UT" in state_options else 0,
-            )
-            selected_states = [selected_state]
-
-            state_info = db["states"][selected_state]
-            state_name = state_info["name"]
-            munis = state_info.get("municipalities", [])
-            # Add state info to each municipality
-            for m in munis:
-                m["state"] = selected_state
+            state_name = "None"
 
         max_cities = st.slider(
             "Max Cities to Scan",
             min_value=1,
-            max_value=min(len(munis), 50),
-            value=min(len(munis), 10),
-            help="More cities = more comprehensive but slower scan",
+            max_value=min(len(munis), 50) if munis else 50,
+            value=min(len(munis), 10) if munis else 10,
         )
+        st.markdown('<div class="help-text">More cities = more comprehensive but slower scan</div>', unsafe_allow_html=True)
 
-        st.markdown("---")
-        st.markdown("### 🔬 Advanced")
+        # Filters Section (Collapsible)
+        with st.expander("Filters", expanded=False):
+            st.markdown("**Population Tier**")
 
-        use_llm = st.toggle(
-            "AI-Enhanced Analysis",
-            value=False,
-            help="Use Claude to generate contextual sales briefs for hot/warm leads. Requires ANTHROPIC_API_KEY environment variable.",
-        )
-
-        st.markdown("**Population Filters**")
-
-        # Quick preset buttons
-        preset = st.radio(
-            "Target Market",
-            ["All Cities", "Small (< 25K)", "Medium (25K-100K)", "Large (> 100K)", "Custom"],
-            horizontal=True,
-            help="Quick filters for your target market segment"
-        )
-
-        # Set defaults based on preset
-        if preset == "Small (< 25K)":
-            default_min, default_max = 0, 25000
-        elif preset == "Medium (25K-100K)":
-            default_min, default_max = 25000, 100000
-        elif preset == "Large (> 100K)":
-            default_min, default_max = 100000, 10000000
-        elif preset == "Custom":
-            default_min, default_max = 0, 10000000
-        else:  # All Cities
-            default_min, default_max = 0, 10000000
-
-        col_min, col_max = st.columns(2)
-        with col_min:
-            min_population = st.number_input(
-                "Min. Population",
-                min_value=0,
-                max_value=10000000,
-                value=default_min if preset == "Custom" else default_min,
-                step=5000,
-                help="Minimum city population",
-                disabled=(preset != "Custom")
-            )
-        with col_max:
-            max_population = st.number_input(
-                "Max. Population",
-                min_value=0,
-                max_value=10000000,
-                value=default_max if preset == "Custom" else default_max,
-                step=5000,
-                help="Maximum city population",
-                disabled=(preset != "Custom")
+            # Population tier presets
+            tier_options = list(POPULATION_TIERS.keys())
+            preset = st.radio(
+                "Target Market Segment",
+                tier_options,
+                index=2,  # Default to "Small-Mid" (sweet spot)
+                label_visibility="collapsed"
             )
 
-        sort_by = st.selectbox(
-            "Sort Cities By",
-            ["Population (Smallest First)", "Population (Largest First)", "Name (A-Z)"],
-            help="Choose how to prioritize cities in scan"
-        )
+            # Get tier values
+            tier_min, tier_max, tier_desc = POPULATION_TIERS[preset]
 
-        # Quick city search
-        st.markdown("**🔍 Quick Search**")
-        city_search = st.text_input(
-            "Find specific city",
-            placeholder="Type city name...",
-            help="Search for a specific city by name",
-            label_visibility="collapsed"
-        )
+            # Show tier description
+            st.markdown(f'<div class="help-text">{tier_desc}</div>', unsafe_allow_html=True)
 
-        st.markdown("---")
-        st.markdown("### 📊 About")
-        st.markdown(
-            "Municipal Intel scans public meeting minutes for signals "
-            "related to ERP software procurement, vendor evaluations, "
-            "system pain points, and budget discussions."
-        )
-        st.markdown(
-            "**Signal Categories:**\n"
-            "- 🔴 Direct mentions (Caselle)\n"
-            "- 🟠 Competitor mentions\n"
-            "- 🟡 ERP/software signals\n"
-            "- 🔵 Budget/procurement\n"
-            "- ⚪ System pain points"
-        )
+            # Custom min/max inputs (only enabled for Custom tier)
+            if preset == "Custom":
+                col_min, col_max = st.columns(2)
+                with col_min:
+                    min_population = st.number_input(
+                        "Min. Population",
+                        min_value=0,
+                        max_value=10000000,
+                        value=tier_min,
+                        step=1000,
+                    )
+                with col_max:
+                    max_population = st.number_input(
+                        "Max. Population",
+                        min_value=0,
+                        max_value=10000000,
+                        value=tier_max,
+                        step=1000,
+                    )
+            else:
+                min_population = tier_min
+                max_population = tier_max
+
+            st.markdown("**Sorting**")
+            sort_by = st.selectbox(
+                "Sort Cities By",
+                ["Population (Smallest First)", "Population (Largest First)", "Name (A-Z)"],
+                label_visibility="collapsed"
+            )
+
+            st.markdown("**City Search**")
+            city_search = st.text_input(
+                "Find specific city",
+                placeholder="Type city name",
+                label_visibility="collapsed"
+            )
+
+        # Advanced Section (Collapsible)
+        with st.expander("Advanced", expanded=False):
+            use_llm = st.toggle(
+                "AI-Enhanced Analysis",
+                value=False,
+            )
+            st.markdown('<div class="help-text">Use Claude to generate contextual sales briefs for hot/warm leads. Requires ANTHROPIC_API_KEY environment variable.</div>', unsafe_allow_html=True)
 
     # --- Main Content ---
     render_header()
+
+    # Show empty state if no states selected
+    if not selected_states:
+        st.markdown("""
+        <div class="empty-state">
+            <h3>No states selected</h3>
+            <p>Select one or more states from the sidebar to begin scanning for leads.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        return
 
     # Filter municipalities by population range
     filtered_munis = [
@@ -450,29 +948,68 @@ def main():
     else:  # Name (A-Z)
         filtered_munis.sort(key=lambda m: m.get("name", ""))
 
-    # Info bar
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("State", state_name)
-    with col2:
-        st.metric("Cities Available", len(filtered_munis))
-    with col3:
-        st.metric("Will Scan", min(max_cities, len(filtered_munis)))
-    with col4:
-        if filtered_munis:
-            pop_min = min(m.get("population", 0) for m in filtered_munis[:max_cities])
-            pop_max = max(m.get("population", 0) for m in filtered_munis[:max_cities])
-            st.metric("Pop. Range", f"{pop_min//1000}K-{pop_max//1000}K")
+    # Pre-scan briefing
+    cities_to_scan = filtered_munis[:max_cities]
+    num_cities = len(cities_to_scan)
 
-    st.markdown("---")
+    # Calculate estimated time (rough: ~3 seconds per city)
+    estimated_seconds = num_cities * 3
+    if estimated_seconds < 60:
+        estimated_time = f"{estimated_seconds} seconds"
+    else:
+        estimated_minutes = estimated_seconds // 60
+        if estimated_minutes == 1:
+            estimated_time = "1 minute"
+        else:
+            estimated_time = f"{estimated_minutes}-{estimated_minutes + 1} minutes"
 
-    # Run button
-    if st.button("🚀 Run Intelligence Scan", type="primary", use_container_width=True):
-        cities_to_scan = filtered_munis[:max_cities]
+    # Get population range
+    if cities_to_scan:
+        pop_values = [m.get("population", 0) for m in cities_to_scan]
+        pop_min = min(pop_values) if pop_values else 0
+        pop_max = max(pop_values) if pop_values else 0
+        if pop_min == pop_max:
+            pop_range_str = f"{pop_min:,}"
+        else:
+            pop_range_str = f"{pop_min:,} - {pop_max:,}"
+    else:
+        pop_range_str = "N/A"
 
+    # Get tier name
+    tier_name = preset if preset != "Custom" else f"{min_population:,} - {max_population:,}"
+
+    st.markdown(f"""
+    <div class="pre-scan-briefing">
+        <div class="pre-scan-title">Scan Configuration</div>
+        <div class="scan-info-row">
+            <div class="scan-info-item">
+                <div class="label">States</div>
+                <div class="value">{state_name}</div>
+            </div>
+            <div class="scan-info-item">
+                <div class="label">Population Tier</div>
+                <div class="value">{tier_name}</div>
+            </div>
+            <div class="scan-info-item">
+                <div class="label">Cities to Scan</div>
+                <div class="value">{num_cities}</div>
+            </div>
+            <div class="scan-info-item">
+                <div class="label">Population Range</div>
+                <div class="value">{pop_range_str}</div>
+            </div>
+        </div>
+        <div class="scan-summary-line">
+            Scanning <strong>{num_cities} cities</strong> across <strong>{state_name}</strong> — estimated <strong>{estimated_time}</strong>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Run button (normal-sized, not full-width)
+    if st.button("Run Scan", type="primary"):
         with st.spinner(""):
             results, total_docs, sources_found, failed = run_scan(
-                state_abbr=selected_state,
+                selected_states=selected_states,
                 state_name=state_name,
                 municipalities=cities_to_scan,
                 max_cities=max_cities,
@@ -487,91 +1024,113 @@ def main():
 
             # Generate downloadable reports
             reporter = ReportGenerator(str(REPORT_DIR))
+            state_abbr_str = ", ".join(selected_states)
             html_path = reporter.generate_html(
-                results, state_name, ", ".join(selected_states) if multi_state_mode else selected_state,
+                results, state_name, state_abbr_str,
                 total_docs, len(cities_to_scan), sources_found,
             )
             json_path = reporter.generate_json(
-                results, state_name, ", ".join(selected_states) if multi_state_mode else selected_state,
+                results, state_name, state_abbr_str,
                 total_docs, len(cities_to_scan), sources_found,
             )
             csv_path = reporter.generate_csv(
-                results, state_name, ", ".join(selected_states) if multi_state_mode else selected_state,
+                results, state_name, state_abbr_str,
             )
 
-            # Download buttons
-            col_dl1, col_dl2, col_dl3 = st.columns(3)
-            with col_dl1:
-                with open(html_path, "r") as f:
-                    st.download_button(
-                        "📥 HTML Report",
-                        f.read(),
-                        file_name=Path(html_path).name,
-                        mime="text/html",
-                        use_container_width=True,
-                    )
-            with col_dl2:
-                with open(json_path, "r") as f:
-                    st.download_button(
-                        "📥 JSON Data",
-                        f.read(),
-                        file_name=Path(json_path).name,
-                        mime="application/json",
-                        use_container_width=True,
-                    )
-            with col_dl3:
-                with open(csv_path, "r") as f:
-                    st.download_button(
-                        "📥 CSV (Sales Tracker)",
-                        f.read(),
-                        file_name=Path(csv_path).name,
-                        mime="text/csv",
-                        use_container_width=True,
-                        help="Download leads as CSV with tracking columns for Excel"
-                    )
+            # Results header with export buttons
+            st.markdown('<div class="results-header">', unsafe_allow_html=True)
+            col_title, col_exports = st.columns([2, 1])
+            with col_title:
+                st.markdown('<div class="results-title">Lead Results</div>', unsafe_allow_html=True)
+            with col_exports:
+                export_col1, export_col2, export_col3 = st.columns(3)
+                with export_col1:
+                    with open(html_path, "r") as f:
+                        st.download_button(
+                            "HTML",
+                            f.read(),
+                            file_name=Path(html_path).name,
+                            mime="text/html",
+                            use_container_width=True,
+                        )
+                with export_col2:
+                    with open(json_path, "r") as f:
+                        st.download_button(
+                            "JSON",
+                            f.read(),
+                            file_name=Path(json_path).name,
+                            mime="application/json",
+                            use_container_width=True,
+                        )
+                with export_col3:
+                    with open(csv_path, "r") as f:
+                        st.download_button(
+                            "CSV",
+                            f.read(),
+                            file_name=Path(csv_path).name,
+                            mime="text/csv",
+                            use_container_width=True,
+                        )
+            st.markdown('</div>', unsafe_allow_html=True)
 
-            st.markdown("---")
-            st.markdown("### 📋 Lead Details")
-
-            # Filter tabs
-            filter_type = st.radio(
-                "Filter",
-                ["All", "🔥 Hot", "🟡 Warm", "🔵 Cold"],
+            # View mode toggle
+            view_mode = st.radio(
+                "View Mode",
+                ["Cards", "Table"],
                 horizontal=True,
                 label_visibility="collapsed",
             )
 
-            type_map = {"All": None, "🔥 Hot": "hot", "🟡 Warm": "warm", "🔵 Cold": "cold"}
+            # Filter controls
+            col_filter, col_spacer = st.columns([1, 3])
+            with col_filter:
+                filter_type = st.radio(
+                    "Filter",
+                    ["All", "Hot", "Warm", "Cold"],
+                    horizontal=True,
+                    label_visibility="collapsed",
+                )
+
+            type_map = {"All": None, "Hot": "hot", "Warm": "warm", "Cold": "cold"}
             active_filter = type_map[filter_type]
 
-            for result in results:
-                if active_filter and result.lead_type != active_filter:
-                    continue
-                render_lead_card(result)
+            # Filter results
+            filtered_results = [
+                r for r in results
+                if not active_filter or r.lead_type == active_filter
+            ]
 
-                # Expandable context
-                with st.expander(f"View match contexts ({result.match_count} signals)"):
-                    seen = set()
-                    for m in result.signal_matches:
-                        if m.keyword not in seen:
-                            seen.add(m.keyword)
-                            st.markdown(f"**{m.keyword}** ({m.signal_label})")
-                            st.markdown(f"> {m.context}")
-                            st.markdown("---")
+            # Render based on view mode
+            if view_mode == "Table":
+                render_table_view(filtered_results)
+            else:
+                for result in filtered_results:
+                    render_lead_card(result)
 
-                if result.llm_analysis:
-                    with st.expander("🤖 AI Sales Brief"):
-                        st.markdown(result.llm_analysis)
+                    # Expandable context
+                    with st.expander(f"View match contexts ({result.match_count} signals)"):
+                        seen = set()
+                        for m in result.signal_matches:
+                            if m.keyword not in seen:
+                                seen.add(m.keyword)
+                                st.markdown(f"**{m.keyword}** ({m.signal_label})")
+                                st.markdown(f"> {m.context}")
+                                st.markdown("---")
+
+                    if result.llm_analysis:
+                        with st.expander("AI Sales Brief"):
+                            st.markdown(result.llm_analysis)
 
         else:
-            st.info(
-                f"No ERP-related signals were found in the meeting documents scanned for {state_name}. "
-                "This could mean the municipalities' documents aren't publicly accessible in standard formats, "
-                "or there simply weren't relevant discussions in recent documents."
-            )
+            st.markdown("""
+            <div class="empty-state">
+                <h3>No signals detected</h3>
+                <p>None of the documents analyzed contained ERP-related signals. This is common — most meeting minutes don't discuss software.</p>
+            </div>
+            """, unsafe_allow_html=True)
 
         if failed:
-            with st.expander(f"⚠️ {failed} cities with no discoverable sources"):
+            with st.expander(f"{failed} cities with no discoverable sources"):
                 st.write("These cities either don't have publicly posted meeting minutes or use non-standard website platforms.")
 
 
