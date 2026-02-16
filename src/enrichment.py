@@ -40,6 +40,9 @@ class EnrichmentEngine:
         """
         Try to verify a domain works. Returns resolved URL or None.
         Tests: domain, www.domain, and follows redirects.
+
+        Tries both HEAD and GET requests (some servers block HEAD).
+        Logs all failures for debugging.
         """
         variants = [
             f"https://{domain}",
@@ -49,12 +52,39 @@ class EnrichmentEngine:
         ]
 
         for url in variants:
+            # Try HEAD first (faster)
             try:
-                response = self.session.head(url, timeout=2, allow_redirects=True)
+                response = self.session.head(url, timeout=5, allow_redirects=True)
                 if response.status_code < 400:
-                    return response.url  # Return final URL after redirects
-            except:
-                continue
+                    logger.debug(f"      HEAD {url} → {response.status_code} → {response.url}")
+                    return response.url
+                else:
+                    logger.debug(f"      HEAD {url} → {response.status_code} (rejected)")
+            except requests.exceptions.SSLError as e:
+                logger.debug(f"      HEAD {url} → SSL Error: {str(e)[:80]}")
+            except requests.exceptions.Timeout:
+                logger.debug(f"      HEAD {url} → Timeout (5s)")
+            except requests.exceptions.ConnectionError as e:
+                logger.debug(f"      HEAD {url} → Connection Error")
+            except Exception as e:
+                logger.debug(f"      HEAD {url} → {type(e).__name__}: {str(e)[:80]}")
+
+            # Try GET if HEAD failed (some servers block HEAD)
+            try:
+                response = self.session.get(url, timeout=5, allow_redirects=True)
+                if response.status_code < 400:
+                    logger.debug(f"      GET {url} → {response.status_code} → {response.url}")
+                    return response.url
+                else:
+                    logger.debug(f"      GET {url} → {response.status_code} (rejected)")
+            except requests.exceptions.SSLError as e:
+                logger.debug(f"      GET {url} → SSL Error")
+            except requests.exceptions.Timeout:
+                logger.debug(f"      GET {url} → Timeout (5s)")
+            except requests.exceptions.ConnectionError as e:
+                logger.debug(f"      GET {url} → Connection Error")
+            except Exception as e:
+                logger.debug(f"      GET {url} → {type(e).__name__}: {str(e)[:80]}")
 
         return None
 
