@@ -1,0 +1,587 @@
+{
+  "metadata": {
+    "description": "Municipality database for Municipal Intel. Cities with population >5,000 in Caselle core territory, >15,000 elsewhere.",
+    "last_updated": "2025-01-01",
+    "sources": "US Census Bureau, municipal website surveys"
+  },
+  "states": {
+    "AL": {
+      "name": "Alabama",
+      "municipalities": [
+        {"name": "Birmingham", "population": 200733, "domain": "birminghamal.gov"},
+        {"name": "Montgomery", "population": 200603, "domain": "montgomeryal.gov"},
+        {"name": "Huntsville", "population": 215006, "domain": "huntsvilleal.gov"},
+        {"name": "Mobile", "population": 187041, "domain": "cityofmobile.org"},
+        {"name": "Tuscaloosa", "population": 99600, "domain": "tuscaloosa.com"},
+        {"name": "Hoover", "population": 92606, "domain": "hooveral.org"},
+        {"name": "Dothan", "population": 71072, "domain": "dothan.org"},
+        {"name": "Auburn", "population": 76143, "domain": "auburnalabama.org"},
+        {"name": "Decatur", "population": 57938, "domain": "decaturalabamausa.com"},
+        {"name": "Madison", "population": 56933, "domain": "madisonal.gov"}
+      ]
+    },
+    "AK": {
+      "name": "Alaska",
+      "municipalities": [
+        {"name": "Anchorage", "population": 291247, "domain": "muni.org"},
+        {"name": "Fairbanks", "population": 31535, "domain": "fairbanksalaska.us"},
+        {"name": "Juneau", "population": 32255, "domain": "juneau.org"},
+        {"name": "Sitka", "population": 8588, "domain": "cityofsitka.com"},
+        {"name": "Ketchikan", "population": 8368, "domain": "ktn-ak.us"},
+        {"name": "Wasilla", "population": 12256, "domain": "cityofwasilla.com"},
+        {"name": "Kenai", "population": 7845, "domain": "kenai.city"},
+        {"name": "Palmer", "population": 7306, "domain": "palmerak.org"}
+      ]
+    },
+    "AZ": {
+      "name": "Arizona",
+      "municipalities": [
+        {"name": "Phoenix", "population": 1608139, "domain": "phoenix.gov"},
+        {"name": "Tucson", "population": 542629, "domain": "tucsonaz.gov"},
+        {"name": "Mesa", "population": 504258, "domain": "mesaaz.gov"},
+        {"name": "Chandler", "population": 275987, "domain": "chandleraz.gov"},
+        {"name": "Scottsdale", "population": 241361, "domain": "scottsdaleaz.gov"},
+        {"name": "Gilbert", "population": 267918, "domain": "gilbertaz.gov"},
+        {"name": "Glendale", "population": 248325, "domain": "glendaleaz.com"},
+        {"name": "Tempe", "population": 180587, "domain": "tempe.gov"},
+        {"name": "Peoria", "population": 190985, "domain": "peoriaaz.gov"},
+        {"name": "Surprise", "population": 141664, "domain": "surpriseaz.gov"},
+        {"name": "Flagstaff", "population": 72512, "domain": "flagstaff.az.gov"},
+        {"name": "Yuma", "population": 95548, "domain": "yumaaz.gov"},
+        {"name": "Goodyear", "population": 95294, "domain": "goodyearaz.gov"},
+        {"name": "Lake Havasu City", "population": 57301, "domain": "lhcaz.gov"},
+        {"name": "Prescott", "population": 45827, "domain": "prescott-az.gov"},
+        {"name": "Casa Grande", "population": 55477, "domain": "casagrandeaz.gov"},
+        {"name": "Sierra Vista", "population": 44304, "domain": "sierravistaaz.gov"},
+        {"name": "Oro Valley", "population": 47070, "domain": "orovalleyaz.gov"},
+        {"name": "Sedona", "population": 10336, "domain": "sedonaaz.gov"},
+        {"name": "Show Low", "population": 11732, "domain": "showlowaz.gov"}
+      ]
+    },
+    "AR": {
+      "name": "Arkansas",
+      "municipalities": [
+        {"name": "Little Rock", "population": 202591, "domain": "littlerock.gov"},
+        {"name": "Fort Smith", "population": 89142, "domain": "fortsmithar.gov"},
+        {"name": "Fayetteville", "population": 93949, "domain": "fayetteville-ar.gov"},
+        {"name": "Springdale", "population": 80433, "domain": "springdalear.gov"},
+        {"name": "Jonesboro", "population": 78576, "domain": "jonesboro.org"},
+        {"name": "Conway", "population": 67336, "domain": "cityofconway.org"},
+        {"name": "Rogers", "population": 68669, "domain": "rogersar.gov"},
+        {"name": "North Little Rock", "population": 64591, "domain": "nlr.ar.gov"},
+        {"name": "Bentonville", "population": 54164, "domain": "bentonvillear.com"},
+        {"name": "Pine Bluff", "population": 41474, "domain": "cityofpinebluff.com"}
+      ]
+    },
+    "CA": {
+      "name": "California",
+      "municipalities": [
+        {"name": "Los Angeles", "population": 3898747, "domain": "lacity.org"},
+        {"name": "San Diego", "population": 1386932, "domain": "sandiego.gov"},
+        {"name": "San Jose", "population": 1013240, "domain": "sanjoseca.gov"},
+        {"name": "San Francisco", "population": 873965, "domain": "sf.gov"},
+        {"name": "Fresno", "population": 542107, "domain": "fresno.gov"},
+        {"name": "Sacramento", "population": 524943, "domain": "cityofsacramento.org"},
+        {"name": "Long Beach", "population": 466742, "domain": "longbeach.gov"},
+        {"name": "Oakland", "population": 433031, "domain": "oaklandca.gov"},
+        {"name": "Bakersfield", "population": 403455, "domain": "bakersfieldcity.us"},
+        {"name": "Anaheim", "population": 350365, "domain": "anaheim.net"},
+        {"name": "Santa Ana", "population": 309441, "domain": "santa-ana.org"},
+        {"name": "Riverside", "population": 314998, "domain": "riversideca.gov"},
+        {"name": "Stockton", "population": 320804, "domain": "stocktonca.gov"},
+        {"name": "Irvine", "population": 307670, "domain": "cityofirvine.org"},
+        {"name": "Santa Clarita", "population": 228673, "domain": "santa-clarita.com"},
+        {"name": "Chula Vista", "population": 275487, "domain": "chulavistaca.gov"},
+        {"name": "Fremont", "population": 230504, "domain": "fremont.gov"},
+        {"name": "Modesto", "population": 218464, "domain": "modestogov.com"},
+        {"name": "San Bernardino", "population": 222101, "domain": "sbcity.org"},
+        {"name": "Fontana", "population": 214547, "domain": "fontana.org"}
+      ]
+    },
+    "CO": {
+      "name": "Colorado",
+      "municipalities": [
+        {"name": "Denver", "population": 715522, "domain": "denvergov.org"},
+        {"name": "Colorado Springs", "population": 478961, "domain": "coloradosprings.gov"},
+        {"name": "Aurora", "population": 386261, "domain": "auroragov.org"},
+        {"name": "Fort Collins", "population": 169810, "domain": "fcgov.com"},
+        {"name": "Lakewood", "population": 155984, "domain": "lakewood.org"},
+        {"name": "Thornton", "population": 141867, "domain": "thorntonco.gov"},
+        {"name": "Arvada", "population": 124402, "domain": "arvada.org"},
+        {"name": "Westminster", "population": 116317, "domain": "cityofwestminster.us"},
+        {"name": "Pueblo", "population": 111876, "domain": "pueblo.us"},
+        {"name": "Centennial", "population": 108418, "domain": "centennialco.gov"},
+        {"name": "Boulder", "population": 105673, "domain": "bouldercolorado.gov"},
+        {"name": "Greeley", "population": 108795, "domain": "greeleygov.com"},
+        {"name": "Longmont", "population": 98885, "domain": "longmontcolorado.gov"},
+        {"name": "Loveland", "population": 76378, "domain": "lovgov.org"},
+        {"name": "Grand Junction", "population": 65991, "domain": "gjcity.org"},
+        {"name": "Castle Rock", "population": 73158, "domain": "crgov.com"},
+        {"name": "Commerce City", "population": 62939, "domain": "c3gov.com"},
+        {"name": "Parker", "population": 57706, "domain": "parkeronline.org"},
+        {"name": "Montrose", "population": 21053, "domain": "cityofmontrose.org"},
+        {"name": "Durango", "population": 19071, "domain": "durangogov.org"},
+        {"name": "Glenwood Springs", "population": 10005, "domain": "cogs.us"},
+        {"name": "Steamboat Springs", "population": 13500, "domain": "steamboatsprings.net"},
+        {"name": "Craig", "population": 9000, "domain": "ci.craig.co.us"},
+        {"name": "Delta", "population": 9100, "domain": "cityofdelta.net"},
+        {"name": "Cortez", "population": 8700, "domain": "cityofcortez.com"},
+        {"name": "Rifle", "population": 10000, "domain": "rifleco.org"}
+      ]
+    },
+    "CT": {
+      "name": "Connecticut",
+      "municipalities": [
+        {"name": "Bridgeport", "population": 148529, "domain": "bridgeportct.gov"},
+        {"name": "New Haven", "population": 134023, "domain": "newhavenct.gov"},
+        {"name": "Stamford", "population": 135470, "domain": "stamfordct.gov"},
+        {"name": "Hartford", "population": 121054, "domain": "hartfordct.gov"},
+        {"name": "Waterbury", "population": 114403, "domain": "waterburyct.org"},
+        {"name": "Norwalk", "population": 91184, "domain": "norwalkct.org"},
+        {"name": "Danbury", "population": 86518, "domain": "danbury-ct.gov"},
+        {"name": "New Britain", "population": 74135, "domain": "newbritainct.gov"},
+        {"name": "West Hartford", "population": 64083, "domain": "westhartfordct.gov"},
+        {"name": "Greenwich", "population": 63518, "domain": "greenwichct.gov"}
+      ]
+    },
+    "DE": {
+      "name": "Delaware",
+      "municipalities": [
+        {"name": "Wilmington", "population": 70898, "domain": "wilmingtonde.gov"},
+        {"name": "Dover", "population": 39403, "domain": "dover.de.gov"},
+        {"name": "Newark", "population": 33042, "domain": "newarkde.gov"},
+        {"name": "Middletown", "population": 24024, "domain": "middletownde.org"},
+        {"name": "Smyrna", "population": 14325, "domain": "smyrna.de.gov"}
+      ]
+    },
+    "FL": {
+      "name": "Florida",
+      "municipalities": [
+        {"name": "Jacksonville", "population": 949611, "domain": "coj.net"},
+        {"name": "Miami", "population": 442241, "domain": "miamigov.com"},
+        {"name": "Tampa", "population": 384959, "domain": "tampa.gov"},
+        {"name": "Orlando", "population": 307573, "domain": "orlando.gov"},
+        {"name": "St. Petersburg", "population": 258308, "domain": "stpete.org"},
+        {"name": "Hialeah", "population": 223109, "domain": "hialeahfl.gov"},
+        {"name": "Tallahassee", "population": 196169, "domain": "talgov.com"},
+        {"name": "Fort Lauderdale", "population": 182760, "domain": "fortlauderdale.gov"},
+        {"name": "Port St. Lucie", "population": 204851, "domain": "cityofpsl.com"},
+        {"name": "Cape Coral", "population": 194016, "domain": "capecoral.gov"},
+        {"name": "Pembroke Pines", "population": 171178, "domain": "ppines.com"},
+        {"name": "Gainesville", "population": 141085, "domain": "gainesvillefl.gov"},
+        {"name": "Lakeland", "population": 112641, "domain": "lakelandgov.net"},
+        {"name": "Clearwater", "population": 117295, "domain": "myclearwater.com"},
+        {"name": "Palm Bay", "population": 119760, "domain": "palmbayflorida.org"}
+      ]
+    },
+    "GA": {
+      "name": "Georgia",
+      "municipalities": [
+        {"name": "Atlanta", "population": 498715, "domain": "atlantaga.gov"},
+        {"name": "Augusta", "population": 202081, "domain": "augustaga.gov"},
+        {"name": "Columbus", "population": 206922, "domain": "columbusga.gov"},
+        {"name": "Macon", "population": 157346, "domain": "maconbibb.us"},
+        {"name": "Savannah", "population": 147780, "domain": "savannahga.gov"},
+        {"name": "Athens", "population": 127064, "domain": "athensclarkecounty.com"},
+        {"name": "Sandy Springs", "population": 108080, "domain": "sandyspringsga.gov"},
+        {"name": "Roswell", "population": 92833, "domain": "roswellgov.com"},
+        {"name": "Warner Robins", "population": 80308, "domain": "wrga.gov"},
+        {"name": "Albany", "population": 69654, "domain": "albany.ga.us"}
+      ]
+    },
+    "HI": {
+      "name": "Hawaii",
+      "municipalities": [
+        {"name": "Honolulu", "population": 350964, "domain": "honolulu.gov"},
+        {"name": "Hilo", "population": 45703, "domain": "hawaiicounty.gov"},
+        {"name": "Kailua", "population": 40514, "domain": "honolulu.gov"},
+        {"name": "Kapolei", "population": 21541, "domain": "honolulu.gov"}
+      ]
+    },
+    "ID": {
+      "name": "Idaho",
+      "municipalities": [
+        {"name": "Boise", "population": 235684, "domain": "cityofboise.org"},
+        {"name": "Meridian", "population": 117635, "domain": "meridiancity.org"},
+        {"name": "Nampa", "population": 100200, "domain": "cityofnampa.us"},
+        {"name": "Idaho Falls", "population": 64820, "domain": "idahofallsidaho.gov"},
+        {"name": "Caldwell", "population": 62520, "domain": "cityofcaldwell.org"},
+        {"name": "Pocatello", "population": 56320, "domain": "pocatello.us"},
+        {"name": "Coeur d'Alene", "population": 53400, "domain": "cdaid.org"},
+        {"name": "Twin Falls", "population": 51807, "domain": "tfid.org"},
+        {"name": "Post Falls", "population": 39000, "domain": "postfallsidaho.org"},
+        {"name": "Eagle", "population": 30700, "domain": "cityofeagle.org"},
+        {"name": "Lewiston", "population": 33530, "domain": "cityoflewiston.org"},
+        {"name": "Rexburg", "population": 35400, "domain": "rexburg.org"},
+        {"name": "Moscow", "population": 25735, "domain": "ci.moscow.id.us"},
+        {"name": "Kuna", "population": 24500, "domain": "kunacity.id.gov"},
+        {"name": "Ammon", "population": 18200, "domain": "cityofammon.us"},
+        {"name": "Mountain Home", "population": 16300, "domain": "mountain-home.us"},
+        {"name": "Blackfoot", "population": 12100, "domain": "cityofblackfoot.org"},
+        {"name": "Garden City", "population": 12000, "domain": "gardencityidaho.org"},
+        {"name": "Jerome", "population": 12400, "domain": "ci.jerome.id.us"},
+        {"name": "Burley", "population": 10600, "domain": "burleyidaho.org"},
+        {"name": "Hailey", "population": 9200, "domain": "haileycityhall.org"},
+        {"name": "Sandpoint", "population": 8900, "domain": "sandpointidaho.gov"},
+        {"name": "Emmett", "population": 7200, "domain": "cityofemmett.org"},
+        {"name": "Rupert", "population": 5900, "domain": "rupert-id.gov"},
+        {"name": "Gooding", "population": 3600, "domain": "goodingidaho.org"},
+        {"name": "Shoshone", "population": 1600, "domain": "shoshonecity.com"}
+      ]
+    },
+    "IL": {
+      "name": "Illinois",
+      "municipalities": [
+        {"name": "Chicago", "population": 2696555, "domain": "chicago.gov"},
+        {"name": "Aurora", "population": 180542, "domain": "aurora-il.org"},
+        {"name": "Naperville", "population": 149540, "domain": "naperville.il.us"},
+        {"name": "Joliet", "population": 150362, "domain": "joliet.gov"},
+        {"name": "Rockford", "population": 148655, "domain": "rockfordil.gov"},
+        {"name": "Springfield", "population": 114394, "domain": "springfield.il.us"},
+        {"name": "Elgin", "population": 114797, "domain": "cityofelgin.org"},
+        {"name": "Peoria", "population": 113150, "domain": "peoriagov.org"},
+        {"name": "Champaign", "population": 88302, "domain": "champaignil.gov"},
+        {"name": "Waukegan", "population": 89321, "domain": "waukeganil.gov"}
+      ]
+    },
+    "IN": {
+      "name": "Indiana",
+      "municipalities": [
+        {"name": "Indianapolis", "population": 887642, "domain": "indy.gov"},
+        {"name": "Fort Wayne", "population": 263886, "domain": "cityoffortwayne.org"},
+        {"name": "Evansville", "population": 117429, "domain": "evansville.in.gov"},
+        {"name": "South Bend", "population": 103453, "domain": "southbendin.gov"},
+        {"name": "Carmel", "population": 99757, "domain": "carmel.in.gov"},
+        {"name": "Fishers", "population": 98977, "domain": "fishers.in.us"},
+        {"name": "Bloomington", "population": 79168, "domain": "bloomington.in.gov"},
+        {"name": "Hammond", "population": 77879, "domain": "gohammond.com"},
+        {"name": "Lafayette", "population": 70783, "domain": "lafayette.in.gov"},
+        {"name": "Muncie", "population": 65194, "domain": "cityofmuncie.com"}
+      ]
+    },
+    "IA": {
+      "name": "Iowa",
+      "municipalities": [
+        {"name": "Des Moines", "population": 214133, "domain": "dsm.city"},
+        {"name": "Cedar Rapids", "population": 137710, "domain": "cedar-rapids.org"},
+        {"name": "Davenport", "population": 101724, "domain": "davenportiowa.com"},
+        {"name": "Sioux City", "population": 85797, "domain": "sioux-city.org"},
+        {"name": "Iowa City", "population": 74828, "domain": "icgov.org"},
+        {"name": "Waterloo", "population": 67314, "domain": "waterloo-ia.org"},
+        {"name": "Ames", "population": 66427, "domain": "cityofames.org"},
+        {"name": "West Des Moines", "population": 67899, "domain": "wdm.iowa.gov"},
+        {"name": "Council Bluffs", "population": 62230, "domain": "councilbluffs-ia.gov"},
+        {"name": "Dubuque", "population": 59667, "domain": "cityofdubuque.org"}
+      ]
+    },
+    "KS": {
+      "name": "Kansas",
+      "municipalities": [
+        {"name": "Wichita", "population": 397532, "domain": "wichita.gov"},
+        {"name": "Overland Park", "population": 197238, "domain": "opkansas.org"},
+        {"name": "Kansas City", "population": 156607, "domain": "wycokck.org"},
+        {"name": "Olathe", "population": 141290, "domain": "olatheks.org"},
+        {"name": "Topeka", "population": 126587, "domain": "topeka.org"},
+        {"name": "Lawrence", "population": 94934, "domain": "lawrenceks.org"},
+        {"name": "Shawnee", "population": 65894, "domain": "cityofshawnee.org"},
+        {"name": "Manhattan", "population": 54832, "domain": "cityofmhk.com"},
+        {"name": "Lenexa", "population": 55625, "domain": "lenexa.com"},
+        {"name": "Salina", "population": 46994, "domain": "salina.org"}
+      ]
+    },
+    "MT": {
+      "name": "Montana",
+      "municipalities": [
+        {"name": "Billings", "population": 117116, "domain": "billingsmt.gov"},
+        {"name": "Missoula", "population": 73489, "domain": "ci.missoula.mt.us"},
+        {"name": "Great Falls", "population": 60442, "domain": "greatfallsmt.net"},
+        {"name": "Bozeman", "population": 53293, "domain": "bozeman.net"},
+        {"name": "Helena", "population": 32091, "domain": "helenamt.gov"},
+        {"name": "Butte", "population": 34494, "domain": "co.silverbow.mt.us"},
+        {"name": "Kalispell", "population": 24558, "domain": "kalispell.com"},
+        {"name": "Havre", "population": 9846, "domain": "ci.havre.mt.us"},
+        {"name": "Anaconda", "population": 9421, "domain": "adlc.us"},
+        {"name": "Miles City", "population": 8410, "domain": "milescity-mt.org"},
+        {"name": "Belgrade", "population": 11400, "domain": "cityofbelgrade.net"},
+        {"name": "Livingston", "population": 8000, "domain": "livingstonmontana.org"},
+        {"name": "Whitefish", "population": 8000, "domain": "cityofwhitefish.org"},
+        {"name": "Laurel", "population": 7300, "domain": "laurelmt.org"},
+        {"name": "Sidney", "population": 6500, "domain": "cityofsidney.com"},
+        {"name": "Glendive", "population": 5000, "domain": "cityofglendive.com"},
+        {"name": "Lewistown", "population": 5900, "domain": "cityoflewistown.com"},
+        {"name": "Polson", "population": 5200, "domain": "cityofpolson.com"},
+        {"name": "Hamilton", "population": 4800, "domain": "hamiltonmt.com"},
+        {"name": "Dillon", "population": 4400, "domain": "dillonmt.org"},
+        {"name": "Colstrip", "population": 2100, "domain": "colstripmt.org"}
+      ]
+    },
+    "NE": {
+      "name": "Nebraska",
+      "municipalities": [
+        {"name": "Omaha", "population": 486051, "domain": "cityofomaha.org"},
+        {"name": "Lincoln", "population": 291082, "domain": "lincoln.ne.gov"},
+        {"name": "Bellevue", "population": 64176, "domain": "bellevue.net"},
+        {"name": "Grand Island", "population": 53131, "domain": "grand-island.com"},
+        {"name": "Kearney", "population": 33464, "domain": "kearneygov.org"},
+        {"name": "Fremont", "population": 26397, "domain": "fremontne.gov"},
+        {"name": "Hastings", "population": 25216, "domain": "cityofhastings.org"},
+        {"name": "Norfolk", "population": 24523, "domain": "ci.norfolk.ne.us"},
+        {"name": "North Platte", "population": 23880, "domain": "ci.north-platte.ne.us"},
+        {"name": "Columbus", "population": 23291, "domain": "columbusne.us"},
+        {"name": "Scottsbluff", "population": 14800, "domain": "scottsbluff.org"}
+      ]
+    },
+    "NV": {
+      "name": "Nevada",
+      "municipalities": [
+        {"name": "Las Vegas", "population": 641903, "domain": "lasvegasnevada.gov"},
+        {"name": "Henderson", "population": 320189, "domain": "cityofhenderson.com"},
+        {"name": "Reno", "population": 264165, "domain": "reno.gov"},
+        {"name": "North Las Vegas", "population": 262527, "domain": "cityofnorthlasvegas.com"},
+        {"name": "Sparks", "population": 108445, "domain": "cityofsparks.us"},
+        {"name": "Carson City", "population": 58639, "domain": "carson.org"},
+        {"name": "Fernley", "population": 22000, "domain": "cityoffernley.org"},
+        {"name": "Elko", "population": 21000, "domain": "elkocity.com"},
+        {"name": "Mesquite", "population": 19500, "domain": "mesquitenv.gov"},
+        {"name": "Boulder City", "population": 16500, "domain": "bcnv.org"},
+        {"name": "Fallon", "population": 9500, "domain": "fallonnevada.gov"},
+        {"name": "Winnemucca", "population": 8300, "domain": "winnemuccacity.org"},
+        {"name": "West Wendover", "population": 4600, "domain": "westwendovercity.com"},
+        {"name": "Ely", "population": 3900, "domain": "cityofelynevada.org"},
+        {"name": "Lovelock", "population": 2100, "domain": "pershing-county.net"},
+        {"name": "Carlin", "population": 2600, "domain": "carlinnevada.com"}
+      ]
+    },
+    "NM": {
+      "name": "New Mexico",
+      "municipalities": [
+        {"name": "Albuquerque", "population": 564559, "domain": "cabq.gov"},
+        {"name": "Las Cruces", "population": 111385, "domain": "las-cruces.org"},
+        {"name": "Rio Rancho", "population": 104046, "domain": "rrnm.gov"},
+        {"name": "Santa Fe", "population": 87505, "domain": "santafenm.gov"},
+        {"name": "Roswell", "population": 48422, "domain": "roswell-nm.gov"},
+        {"name": "Farmington", "population": 45877, "domain": "fmtn.org"},
+        {"name": "Hobbs", "population": 40508, "domain": "hobbsnm.org"},
+        {"name": "Clovis", "population": 39860, "domain": "cityofclovis.org"},
+        {"name": "Alamogordo", "population": 32026, "domain": "ci.alamogordo.nm.us"},
+        {"name": "Carlsbad", "population": 32238, "domain": "cityofcarlsbadnm.com"},
+        {"name": "Gallup", "population": 21678, "domain": "gallupnm.gov"},
+        {"name": "Las Vegas", "population": 13200, "domain": "lasvegasnm.gov"},
+        {"name": "Silver City", "population": 9600, "domain": "townofsilvercity.org"},
+        {"name": "Raton", "population": 6300, "domain": "ratoncomet.com"}
+      ]
+    },
+    "ND": {
+      "name": "North Dakota",
+      "municipalities": [
+        {"name": "Fargo", "population": 125990, "domain": "fargond.gov"},
+        {"name": "Bismarck", "population": 73529, "domain": "bismarcknd.gov"},
+        {"name": "Grand Forks", "population": 55839, "domain": "grandforksgov.com"},
+        {"name": "Minot", "population": 48743, "domain": "minotnd.org"},
+        {"name": "West Fargo", "population": 37878, "domain": "westfargond.gov"},
+        {"name": "Dickinson", "population": 23133, "domain": "dickinsonnd.com"},
+        {"name": "Mandan", "population": 22752, "domain": "cityofmandan.com"},
+        {"name": "Williston", "population": 29040, "domain": "cityofwilliston.com"},
+        {"name": "Jamestown", "population": 15427, "domain": "jamestownnd.org"},
+        {"name": "Wahpeton", "population": 7766, "domain": "wahpeton.com"},
+        {"name": "Devils Lake", "population": 7300, "domain": "devilslakend.com"},
+        {"name": "Valley City", "population": 6400, "domain": "valleycitynd.org"},
+        {"name": "Grafton", "population": 4100, "domain": "graftonnd.com"},
+        {"name": "Beulah", "population": 3400, "domain": "beulahnd.org"}
+      ]
+    },
+    "OK": {
+      "name": "Oklahoma",
+      "municipalities": [
+        {"name": "Oklahoma City", "population": 681054, "domain": "okc.gov"},
+        {"name": "Tulsa", "population": 413066, "domain": "cityoftulsa.org"},
+        {"name": "Norman", "population": 128026, "domain": "normanok.gov"},
+        {"name": "Broken Arrow", "population": 113540, "domain": "brokenarrowok.gov"},
+        {"name": "Edmond", "population": 94054, "domain": "edmondok.com"},
+        {"name": "Lawton", "population": 94653, "domain": "lawtonok.gov"},
+        {"name": "Moore", "population": 62793, "domain": "cityofmoore.com"},
+        {"name": "Midwest City", "population": 57887, "domain": "midwestcityok.org"},
+        {"name": "Enid", "population": 51376, "domain": "enid.org"},
+        {"name": "Stillwater", "population": 50612, "domain": "stillwater.org"}
+      ]
+    },
+    "OR": {
+      "name": "Oregon",
+      "municipalities": [
+        {"name": "Portland", "population": 652503, "domain": "portland.gov"},
+        {"name": "Salem", "population": 175535, "domain": "cityofsalem.net"},
+        {"name": "Eugene", "population": 176654, "domain": "eugene-or.gov"},
+        {"name": "Gresham", "population": 114247, "domain": "greshamoregon.gov"},
+        {"name": "Hillsboro", "population": 106447, "domain": "hillsboro-oregon.gov"},
+        {"name": "Bend", "population": 102059, "domain": "bendoregon.gov"},
+        {"name": "Beaverton", "population": 97590, "domain": "beavertonoregon.gov"},
+        {"name": "Medford", "population": 85824, "domain": "medfordoregon.gov"},
+        {"name": "Springfield", "population": 62256, "domain": "springfield-or.gov"},
+        {"name": "Corvallis", "population": 59922, "domain": "corvallisoregon.gov"},
+        {"name": "Albany", "population": 56828, "domain": "cityofalbany.net"},
+        {"name": "Grants Pass", "population": 39185, "domain": "grantspassoregon.gov"},
+        {"name": "Redmond", "population": 33274, "domain": "redmondoregon.gov"},
+        {"name": "Klamath Falls", "population": 21813, "domain": "klamathfalls.city"},
+        {"name": "Pendleton", "population": 16900, "domain": "pendleton.or.us"},
+        {"name": "Hermiston", "population": 19400, "domain": "hermiston.or.us"},
+        {"name": "La Grande", "population": 13400, "domain": "cityoflagrande.org"},
+        {"name": "Baker City", "population": 10100, "domain": "bakercity.com"},
+        {"name": "Ontario", "population": 11500, "domain": "ontariooregon.org"},
+        {"name": "Burns", "population": 2800, "domain": "burnsoregon.gov"}
+      ]
+    },
+    "SD": {
+      "name": "South Dakota",
+      "municipalities": [
+        {"name": "Sioux Falls", "population": 192517, "domain": "siouxfalls.org"},
+        {"name": "Rapid City", "population": 74703, "domain": "rcgov.org"},
+        {"name": "Aberdeen", "population": 28324, "domain": "aberdeen.sd.us"},
+        {"name": "Brookings", "population": 24194, "domain": "cityofbrookings.org"},
+        {"name": "Watertown", "population": 22655, "domain": "watertownsd.us"},
+        {"name": "Mitchell", "population": 15660, "domain": "cityofmitchell.org"},
+        {"name": "Huron", "population": 13864, "domain": "huronsd.com"},
+        {"name": "Pierre", "population": 14091, "domain": "pierre.sd.gov"},
+        {"name": "Yankton", "population": 15411, "domain": "cityofyankton.org"},
+        {"name": "Spearfish", "population": 12193, "domain": "cityofspearfish.com"},
+        {"name": "Vermillion", "population": 11696, "domain": "vermillion.us"},
+        {"name": "Box Elder", "population": 10200, "domain": "boxeldersd.com"},
+        {"name": "Sturgis", "population": 7000, "domain": "sturgis-sd.gov"},
+        {"name": "Hot Springs", "population": 3500, "domain": "cityofhotsprings.com"},
+        {"name": "Deadwood", "population": 1300, "domain": "deadwood.com"},
+        {"name": "Lead", "population": 3000, "domain": "cityoflead.com"}
+      ]
+    },
+    "TX": {
+      "name": "Texas",
+      "municipalities": [
+        {"name": "Houston", "population": 2304580, "domain": "houstontx.gov"},
+        {"name": "San Antonio", "population": 1434625, "domain": "sanantonio.gov"},
+        {"name": "Dallas", "population": 1304379, "domain": "dallascityhall.com"},
+        {"name": "Austin", "population": 979263, "domain": "austintexas.gov"},
+        {"name": "Fort Worth", "population": 918915, "domain": "fortworthtexas.gov"},
+        {"name": "El Paso", "population": 678815, "domain": "elpasotexas.gov"},
+        {"name": "Arlington", "population": 394266, "domain": "arlingtontx.gov"},
+        {"name": "Corpus Christi", "population": 317863, "domain": "cctexas.com"},
+        {"name": "Plano", "population": 285494, "domain": "plano.gov"},
+        {"name": "Lubbock", "population": 263930, "domain": "ci.lubbock.tx.us"},
+        {"name": "Laredo", "population": 255205, "domain": "ci.laredo.tx.us"},
+        {"name": "Irving", "population": 256684, "domain": "cityofirving.org"},
+        {"name": "Amarillo", "population": 200393, "domain": "amarillo.gov"},
+        {"name": "Grand Prairie", "population": 196100, "domain": "gptx.org"},
+        {"name": "McKinney", "population": 195308, "domain": "mckinneytexas.org"}
+      ]
+    },
+    "UT": {
+      "name": "Utah",
+      "municipalities": [
+        {"name": "Salt Lake City", "population": 199723, "domain": "slc.gov"},
+        {"name": "West Valley City", "population": 140230, "domain": "wvc-ut.gov"},
+        {"name": "West Jordan", "population": 116961, "domain": "westjordan.utah.gov"},
+        {"name": "Provo", "population": 115162, "domain": "provo.org"},
+        {"name": "Orem", "population": 97499, "domain": "orem.org"},
+        {"name": "Sandy", "population": 96904, "domain": "sandy.utah.gov"},
+        {"name": "St. George", "population": 95342, "domain": "sgcity.org"},
+        {"name": "Ogden", "population": 87321, "domain": "ogdencity.com"},
+        {"name": "Layton", "population": 78014, "domain": "laytoncity.org"},
+        {"name": "South Jordan", "population": 77487, "domain": "sjc.utah.gov"},
+        {"name": "Lehi", "population": 75907, "domain": "lehi-ut.gov"},
+        {"name": "Millcreek", "population": 63535, "domain": "millcreek.us"},
+        {"name": "Taylorsville", "population": 60850, "domain": "taylorsvilleut.gov"},
+        {"name": "Logan", "population": 55149, "domain": "loganutah.org"},
+        {"name": "Murray", "population": 52526, "domain": "murray.utah.gov"},
+        {"name": "Draper", "population": 51017, "domain": "draper.ut.us"},
+        {"name": "Bountiful", "population": 44820, "domain": "bountifulutah.gov"},
+        {"name": "Riverton", "population": 44680, "domain": "rivertoncity.com"},
+        {"name": "Roy", "population": 39776, "domain": "royutah.org"},
+        {"name": "Spanish Fork", "population": 41735, "domain": "spanishfork.org"},
+        {"name": "Pleasant Grove", "population": 38780, "domain": "pgcity.org"},
+        {"name": "Tooele", "population": 38922, "domain": "tooelecity.org"},
+        {"name": "Cedar City", "population": 38122, "domain": "cedarcity.org"},
+        {"name": "Springville", "population": 35365, "domain": "springville.org"},
+        {"name": "Eagle Mountain", "population": 45823, "domain": "eaglemountaincity.com"},
+        {"name": "Saratoga Springs", "population": 37696, "domain": "saratogaspringscity.com"},
+        {"name": "American Fork", "population": 33590, "domain": "americanfork.gov"},
+        {"name": "Kaysville", "population": 32515, "domain": "kaysvillecity.com"},
+        {"name": "Clearfield", "population": 31822, "domain": "clearfieldcity.org"},
+        {"name": "Cottonwood Heights", "population": 35000, "domain": "ch.utah.gov"},
+        {"name": "Syracuse", "population": 31000, "domain": "syracuseut.com"},
+        {"name": "Clinton", "population": 22500, "domain": "clintoncity.com"},
+        {"name": "North Ogden", "population": 20500, "domain": "northogdencity.com"},
+        {"name": "Payson", "population": 21000, "domain": "paysonutah.org"},
+        {"name": "Lindon", "population": 12000, "domain": "lindoncity.org"},
+        {"name": "Highland", "population": 19000, "domain": "highlandcity.org"},
+        {"name": "Centerville", "population": 17400, "domain": "centervilleutah.gov"},
+        {"name": "Brigham City", "population": 19700, "domain": "brighamcity.utah.gov"},
+        {"name": "Smithfield", "population": 13000, "domain": "smithfieldcity.org"},
+        {"name": "North Logan", "population": 11400, "domain": "northlogancity.org"},
+        {"name": "Hyrum", "population": 9000, "domain": "hyrumcity.org"},
+        {"name": "Nephi", "population": 6100, "domain": "nephicity.org"},
+        {"name": "Richfield", "population": 8200, "domain": "richfieldcity.com"},
+        {"name": "Price", "population": 8700, "domain": "pricecityutah.com"},
+        {"name": "Moab", "population": 5300, "domain": "moabcity.org"},
+        {"name": "Vernal", "population": 10800, "domain": "vernalcity.org"},
+        {"name": "Roosevelt", "population": 7600, "domain": "rooseveltcity.com"},
+        {"name": "Ephraim", "population": 7300, "domain": "ephraimcity.org"},
+        {"name": "Manti", "population": 3600, "domain": "manticity.com"},
+        {"name": "Fillmore", "population": 2700, "domain": "fillmorecity.org"},
+        {"name": "Kanab", "population": 4800, "domain": "kanab.utah.gov"}
+      ]
+    },
+    "WA": {
+      "name": "Washington",
+      "municipalities": [
+        {"name": "Seattle", "population": 737015, "domain": "seattle.gov"},
+        {"name": "Spokane", "population": 228989, "domain": "my.spokanecity.org"},
+        {"name": "Tacoma", "population": 219346, "domain": "cityoftacoma.org"},
+        {"name": "Vancouver", "population": 190915, "domain": "cityofvancouver.us"},
+        {"name": "Bellevue", "population": 151854, "domain": "bellevuewa.gov"},
+        {"name": "Kent", "population": 136588, "domain": "kentwa.gov"},
+        {"name": "Everett", "population": 110629, "domain": "everettwa.gov"},
+        {"name": "Renton", "population": 104047, "domain": "rentonwa.gov"},
+        {"name": "Spokane Valley", "population": 103000, "domain": "spokanevalley.org"},
+        {"name": "Federal Way", "population": 99037, "domain": "cityoffederalway.com"},
+        {"name": "Yakima", "population": 93986, "domain": "yakimawa.gov"},
+        {"name": "Bellingham", "population": 91482, "domain": "cob.org"},
+        {"name": "Kennewick", "population": 82693, "domain": "go2kennewick.com"},
+        {"name": "Olympia", "population": 55605, "domain": "olympiawa.gov"},
+        {"name": "Walla Walla", "population": 33927, "domain": "wallawallawa.gov"},
+        {"name": "Wenatchee", "population": 34249, "domain": "wenatcheewa.gov"},
+        {"name": "Ellensburg", "population": 20977, "domain": "ci.ellensburg.wa.us"},
+        {"name": "Moses Lake", "population": 25117, "domain": "cityofml.com"},
+        {"name": "Pullman", "population": 34019, "domain": "pullman-wa.gov"},
+        {"name": "Ephrata", "population": 8100, "domain": "ephrata.org"}
+      ]
+    },
+    "WY": {
+      "name": "Wyoming",
+      "municipalities": [
+        {"name": "Cheyenne", "population": 63957, "domain": "cheyennecity.org"},
+        {"name": "Casper", "population": 58095, "domain": "casperwy.gov"},
+        {"name": "Laramie", "population": 32158, "domain": "cityoflaramie.org"},
+        {"name": "Gillette", "population": 33403, "domain": "gillettewy.gov"},
+        {"name": "Rock Springs", "population": 23036, "domain": "rswy.net"},
+        {"name": "Sheridan", "population": 17844, "domain": "sheridanwy.net"},
+        {"name": "Green River", "population": 12515, "domain": "cityofgreenriver.org"},
+        {"name": "Evanston", "population": 11879, "domain": "evanstonwy.org"},
+        {"name": "Riverton", "population": 10916, "domain": "rivertonwy.gov"},
+        {"name": "Jackson", "population": 10529, "domain": "townofjackson.com"},
+        {"name": "Cody", "population": 10014, "domain": "codywy.gov"},
+        {"name": "Rawlins", "population": 8725, "domain": "rawlinswy.org"},
+        {"name": "Lander", "population": 7651, "domain": "landerwyoming.org"},
+        {"name": "Torrington", "population": 6747, "domain": "torringtonwy.gov"},
+        {"name": "Powell", "population": 6314, "domain": "cityofpowell.com"},
+        {"name": "Douglas", "population": 6699, "domain": "cityofdouglas.org"},
+        {"name": "Worland", "population": 5250, "domain": "cityofworland.com"},
+        {"name": "Buffalo", "population": 4585, "domain": "buffalowy.com"},
+        {"name": "Thermopolis", "population": 2964, "domain": "thermopolis.com"},
+        {"name": "Newcastle", "population": 3532, "domain": "newcastlewyoming.org"},
+        {"name": "Wheatland", "population": 3627, "domain": "townofwheatland.com"},
+        {"name": "Lovell", "population": 2400, "domain": "lovellwy.org"},
+        {"name": "Glenrock", "population": 2576, "domain": "glenrock.org"},
+        {"name": "Saratoga", "population": 1690, "domain": "townof saratoga.com"},
+        {"name": "Pinedale", "population": 2032, "domain": "townofpinedale.us"},
+        {"name": "Sundance", "population": 1182, "domain": "townofsundance.com"}
+      ]
+    }
+  }
+}
