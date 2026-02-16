@@ -1,0 +1,433 @@
+"""
+Enrichment Pipeline for Municipal Intel
+
+This module runs OFFLINE to:
+1. Validate municipality domains (verify working URLs, handle redirects)
+2. Discover meeting minutes/procurement sources
+3. Store results in database for fast scanning
+
+Enrichment happens once per city. Scanning reads from the database.
+"""
+
+import time
+import logging
+from datetime import datetime
+from typing import Optional, Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import requests
+from sqlalchemy.orm import Session
+
+from .database import SessionLocal, Municipality, MunicipalSource
+from .signals import URL_PATTERNS, PROCUREMENT_PATTERNS
+
+logger = logging.getLogger(__name__)
+
+
+class EnrichmentEngine:
+    """Enriches municipality data: validates domains, discovers sources."""
+
+    def __init__(self, request_delay: float = 1.0, timeout: int = 8):
+        self.delay = request_delay
+        self.timeout = timeout
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "MunicipalIntel/1.0 (Government Meeting Research Tool)",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        })
+
+    def _try_domain(self, domain: str) -> Optional[str]:
+        """
+        Try to verify a domain works. Returns resolved URL or None.
+        Tests: domain, www.domain, and follows redirects.
+        """
+        variants = [
+            f"https://{domain}",
+            f"https://www.{domain}",
+            f"http://{domain}",
+            f"http://www.{domain}",
+        ]
+
+        for url in variants:
+            try:
+                response = self.session.head(url, timeout=2, allow_redirects=True)
+                if response.status_code < 400:
+                    return response.url  # Return final URL after redirects
+            except:
+                continue
+
+        return None
+
+    def _try_domain_alternatives(self, name: str, state: str, original_domain: str) -> Optional[str]:
+        """
+        Generate and test alternative domain patterns when original doesn't work.
+        Returns first working domain URL or None.
+        """
+        city_slug = name.lower().replace(" ", "").replace("-", "").replace(".", "")
+        state_lower = state.lower()
+
+        # Common municipal domain patterns (ordered by likelihood)
+        alternatives = [
+            f"cityof{city_slug}.com",
+            f"cityof{city_slug}.org",
+            f"{city_slug}{state_lower}.gov",
+            f"{city_slug}.{state_lower}.us",
+            f"ci.{city_slug}.{state_lower}.us",
+            f"{city_slug}city.org",
+            f"{city_slug}city.com",
+            f"cityof{city_slug}.gov",
+        ]
+
+        for alt_domain in alternatives:
+            resolved_url = self._try_domain(alt_domain)
+            if resolved_url:
+                logger.info(f"    ✓ Found alternative: {alt_domain} (replaced {original_domain})")
+                return resolved_url
+
+        return None
+
+    def _check_url_for_content(self, url: str) -> Optional[tuple[str, str]]:
+        """
+        Check if URL exists and contains meeting/procurement content.
+        Returns (url, source_type) or None.
+
+        source_type: "civicplus" | "granicus" | "boarddocs" | "html"
+        """
+        try:
+            response = self.session.get(url, timeout=self.timeout, allow_redirects=True)
+            if response.status_code != 200:
+                return None
+
+            content_type = response.headers.get("content-type", "")
+            if "html" not in content_type:
+                return None
+
+            html_lower = response.text.lower()
+
+            # Check for meeting-related content
+            meeting_indicators = [
+                "meeting", "agenda", "minutes", "council",
+                "session", "public hearing", "regular meeting",
+                "board meeting", "commission meeting",
+            ]
+
+            indicator_count = sum(1 for ind in meeting_indicators if ind in html_lower)
+            if indicator_count < 2:
+                return None
+
+            # Identify platform
+            source_type = "html"
+            if "agendacenter" in url.lower() or "civicplus" in html_lower or "civicengage" in html_lower:
+                source_type = "civicplus"
+            elif "granicus" in html_lower or "legistar" in html_lower:
+                source_type = "granicus"
+            elif "boarddocs" in html_lower:
+                source_type = "boarddocs"
+
+            return (response.url, source_type)
+
+        except (requests.exceptions.RequestException, Exception):
+            return None
+
+    def _check_url_for_procurement(self, url: str) -> bool:
+        """Check if URL contains procurement/bidding content."""
+        try:
+            response = self.session.get(url, timeout=self.timeout, allow_redirects=True)
+            if response.status_code != 200:
+                return False
+
+            content_type = response.headers.get("content-type", "")
+            if "html" not in content_type:
+                return False
+
+            html_lower = response.text.lower()
+
+            # Check for procurement-related content
+            procurement_indicators = [
+                "bid", "rfp", "request for proposal", "procurement",
+                "solicitation", "vendor", "purchasing", "opportunity",
+            ]
+
+            indicator_count = sum(1 for ind in procurement_indicators if ind in html_lower)
+            return indicator_count >= 2
+
+        except (requests.exceptions.RequestException, Exception):
+            return False
+
+    def enrich_municipality(self, municipality: Municipality, db: Session,
+                           progress_callback: Optional[Callable] = None) -> dict:
+        """
+        Enrich a single municipality:
+        1. Validate domain (if unverified)
+        2. Discover sources (if domain verified)
+
+        Returns dict with stats: {"domain_verified": bool, "sources_found": int}
+        """
+        stats = {"domain_verified": False, "sources_found": 0}
+
+        # Step 1: Validate domain if unverified
+        if municipality.domain_status == "unverified":
+            if not municipality.domain:
+                logger.warning(f"  {municipality.name}, {municipality.state}: No domain in database — marking as dead")
+                municipality.domain_status = "dead"
+                municipality.domain_verified_at = datetime.utcnow()
+                db.commit()
+                return stats
+
+            logger.info(f"  Validating domain for {municipality.name}, {municipality.state}: {municipality.domain}")
+
+            # Try original domain
+            resolved_url = self._try_domain(municipality.domain)
+
+            # If failed, try alternatives
+            if not resolved_url:
+                logger.info(f"    Original domain failed, trying alternatives...")
+                resolved_url = self._try_domain_alternatives(
+                    municipality.name,
+                    municipality.state,
+                    municipality.domain
+                )
+
+            if resolved_url:
+                municipality.domain_status = "verified"
+                municipality.resolved_url = resolved_url
+                municipality.domain_verified_at = datetime.utcnow()
+                db.commit()
+                stats["domain_verified"] = True
+                logger.info(f"    ✓ Domain verified: {resolved_url}")
+            else:
+                municipality.domain_status = "dead"
+                municipality.domain_verified_at = datetime.utcnow()
+                db.commit()
+                logger.warning(f"    ✗ Domain dead: {municipality.domain}")
+                return stats
+
+        # Step 2: Discover sources if domain is verified
+        if municipality.domain_status == "verified":
+            base_url = municipality.resolved_url or f"https://{municipality.domain}"
+
+            # Extract city name for third-party platform checks
+            city_slug = municipality.name.lower().replace(" ", "").replace("-", "")
+
+            # Priority patterns to check first (most common)
+            priority_patterns = [
+                "/AgendaCenter", "/agendacenter",
+                "/Archive.aspx", "/archive.aspx",
+                "/DocumentCenter", "/documentcenter",
+                "/Meetings.aspx", "/Calendar.aspx",
+                "/meetings", "/city-council/meetings", "/council/meetings",
+            ]
+
+            remaining_patterns = [p for p in URL_PATTERNS if p not in priority_patterns]
+            ordered_patterns = priority_patterns + remaining_patterns
+
+            # Limit checks for speed (max 8 patterns)
+            max_patterns_to_check = 8
+            checked_count = 0
+            sources_found = 0
+
+            logger.info(f"  Discovering sources for {municipality.name}, {municipality.state}...")
+
+            for pattern in ordered_patterns:
+                if checked_count >= max_patterns_to_check:
+                    break
+
+                url = f"{base_url.rstrip('/')}{pattern}"
+
+                if checked_count > 0:
+                    time.sleep(self.delay)
+                checked_count += 1
+
+                result = self._check_url_for_content(url)
+                if result:
+                    found_url, platform = result
+
+                    # Check if we already have this source
+                    existing = db.query(MunicipalSource).filter_by(url=found_url).first()
+                    if existing:
+                        continue
+
+                    # Determine confidence
+                    confidence = 0.7
+                    if platform == "civicplus":
+                        confidence = 0.9
+                    elif platform == "granicus":
+                        confidence = 0.85
+
+                    # Create source record
+                    source = MunicipalSource(
+                        municipality_id=municipality.id,
+                        url=found_url,
+                        source_type="meeting_minutes",
+                        platform=platform,
+                        confidence=confidence,
+                        discovered_by_pattern=pattern,
+                    )
+                    db.add(source)
+                    db.commit()
+                    sources_found += 1
+                    stats["sources_found"] += 1
+
+                    logger.info(f"    ✓ Source found: {found_url} ({platform}) — pattern: {pattern}")
+
+                    # Early stopping: if high confidence source found, stop
+                    if confidence >= 0.85:
+                        logger.info(f"    High confidence source found — stopping search")
+                        break
+
+                    # If found any source and checked 5+ patterns, stop
+                    if sources_found >= 1 and checked_count >= 5:
+                        logger.info(f"    Source found after {checked_count} checks — stopping")
+                        break
+
+            # Also check for procurement sources (quick check)
+            for pattern in PROCUREMENT_PATTERNS[:5]:  # Only check first 5 procurement patterns
+                url = f"{base_url.rstrip('/')}{pattern}"
+                time.sleep(self.delay)
+
+                if self._check_url_for_procurement(url):
+                    # Check if already exists
+                    existing = db.query(MunicipalSource).filter_by(url=url).first()
+                    if not existing:
+                        source = MunicipalSource(
+                            municipality_id=municipality.id,
+                            url=url,
+                            source_type="procurement",
+                            platform="html",
+                            confidence=0.85,
+                            discovered_by_pattern=pattern,
+                        )
+                        db.add(source)
+                        db.commit()
+                        stats["sources_found"] += 1
+                        logger.info(f"    ✓ Procurement source found: {url}")
+                    break  # Only need one procurement source
+
+            if stats["sources_found"] == 0:
+                logger.warning(f"    ✗ No sources found for {municipality.name}, {municipality.state}")
+
+        return stats
+
+    def enrich_state(self, state_abbr: str, progress_callback: Optional[Callable] = None) -> dict:
+        """
+        Enrich all municipalities in a state.
+        Returns dict with summary stats.
+        """
+        db = SessionLocal()
+
+        try:
+            # Get all municipalities for this state
+            municipalities = db.query(Municipality).filter_by(state=state_abbr).order_by(
+                Municipality.population.desc()
+            ).all()
+
+            total = len(municipalities)
+            if total == 0:
+                logger.warning(f"No municipalities found for state: {state_abbr}")
+                return {}
+
+            logger.info("=" * 70)
+            logger.info(f"ENRICHMENT: {state_abbr} ({total} municipalities)")
+            logger.info("=" * 70)
+
+            stats = {
+                "total": total,
+                "domains_verified": 0,
+                "domains_dead": 0,
+                "sources_found": 0,
+                "already_verified": 0,
+            }
+
+            for i, municipality in enumerate(municipalities):
+                if progress_callback:
+                    progress_callback(i, total, f"Enriching: {municipality.name}, {state_abbr}")
+
+                # Skip if already verified
+                if municipality.domain_status == "verified" and db.query(MunicipalSource).filter_by(
+                    municipality_id=municipality.id
+                ).count() > 0:
+                    stats["already_verified"] += 1
+                    logger.info(f"[{i + 1}/{total}] {municipality.name}: Already enriched — skipping")
+                    continue
+
+                logger.info(f"[{i + 1}/{total}] Enriching {municipality.name}, {state_abbr}...")
+
+                result = self.enrich_municipality(municipality, db, progress_callback)
+
+                if result["domain_verified"]:
+                    stats["domains_verified"] += 1
+                elif municipality.domain_status == "dead":
+                    stats["domains_dead"] += 1
+
+                stats["sources_found"] += result["sources_found"]
+
+            # Summary
+            logger.info("=" * 70)
+            logger.info(f"ENRICHMENT SUMMARY: {state_abbr}")
+            logger.info(f"  Total municipalities: {stats['total']}")
+            logger.info(f"  Already enriched: {stats['already_verified']}")
+            logger.info(f"  Domains verified: {stats['domains_verified']}")
+            logger.info(f"  Domains dead: {stats['domains_dead']}")
+            logger.info(f"  Sources discovered: {stats['sources_found']}")
+
+            hit_rate = (stats['sources_found'] / stats['total'] * 100) if stats['total'] > 0 else 0
+            logger.info(f"  Discovery rate: {hit_rate:.1f}%")
+            logger.info("=" * 70)
+
+            return stats
+
+        finally:
+            db.close()
+
+    def enrich_states(self, state_abbrs: list[str], progress_callback: Optional[Callable] = None) -> dict:
+        """
+        Enrich municipalities across multiple states.
+        Returns dict with combined stats.
+        """
+        logger.info("=" * 70)
+        logger.info(f"MULTI-STATE ENRICHMENT: {', '.join(state_abbrs)}")
+        logger.info("=" * 70)
+
+        combined_stats = {
+            "total": 0,
+            "domains_verified": 0,
+            "domains_dead": 0,
+            "sources_found": 0,
+            "already_verified": 0,
+        }
+
+        for state in state_abbrs:
+            logger.info(f"\nStarting enrichment for {state}...")
+            state_stats = self.enrich_state(state, progress_callback)
+
+            # Aggregate stats
+            for key in combined_stats:
+                combined_stats[key] += state_stats.get(key, 0)
+
+        # Final summary
+        logger.info("\n" + "=" * 70)
+        logger.info("MULTI-STATE ENRICHMENT COMPLETE")
+        logger.info("=" * 70)
+        logger.info(f"States processed: {', '.join(state_abbrs)}")
+        logger.info(f"Total municipalities: {combined_stats['total']}")
+        logger.info(f"Already enriched: {combined_stats['already_verified']}")
+        logger.info(f"Domains verified: {combined_stats['domains_verified']}")
+        logger.info(f"Domains dead: {combined_stats['domains_dead']}")
+        logger.info(f"Sources discovered: {combined_stats['sources_found']}")
+
+        hit_rate = (combined_stats['sources_found'] / combined_stats['total'] * 100) if combined_stats['total'] > 0 else 0
+        logger.info(f"Overall discovery rate: {hit_rate:.1f}%")
+        logger.info("=" * 70)
+
+        return combined_stats
+
+
+def enrich_caselle_territory(progress_callback: Optional[Callable] = None) -> dict:
+    """
+    Convenience function to enrich all Caselle territory states.
+    These are the core states where Caselle has strong market presence.
+    """
+    caselle_states = ["UT", "ID", "WY", "MT", "CO", "NV", "NM", "ND", "SD", "OR", "WA"]
+
+    engine = EnrichmentEngine(request_delay=1.0, timeout=8)
+    return engine.enrich_states(caselle_states, progress_callback)
