@@ -16,8 +16,20 @@ from sqlalchemy.orm import sessionmaker, relationship
 import os
 import uuid
 
-DATABASE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "municipal_intel.db")
-DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+# Database configuration
+# For Vercel: Use PostgreSQL via DATABASE_URL environment variable
+# For local development: Use SQLite
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    # Production: PostgreSQL from environment
+    # Vercel Postgres URLs start with postgres:// but SQLAlchemy needs postgresql://
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+else:
+    # Local development: SQLite
+    DATABASE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "municipal_intel.db")
+    DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
 Base = declarative_base()
 
@@ -219,9 +231,16 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     """Initialize database: create tables if they don't exist."""
-    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+    # Only create directories for SQLite (local development)
+    if not os.getenv("DATABASE_URL"):
+        os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+
     Base.metadata.create_all(bind=engine)
-    print(f"✓ Database initialized at: {DATABASE_PATH}")
+
+    if os.getenv("DATABASE_URL"):
+        print(f"✓ Database initialized at: {os.getenv('DATABASE_URL')[:30]}...")
+    else:
+        print(f"✓ Database initialized at: {DATABASE_PATH}")
 
 
 def get_db():
