@@ -18,18 +18,39 @@ def fetch_census_cities():
     """
     print("Fetching cities from US Census Bureau API...")
 
-    # Census API endpoint for incorporated places
-    # Using 2020 Census data
-    url = "https://api.census.gov/data/2020/dec/pl"
+    # Try 2023 Population Estimates first (most recent)
+    print("Attempting to fetch 2023 Population Estimates...")
+    url_2023 = "https://api.census.gov/data/2023/pep/population"
 
-    params = {
+    params_2023 = {
+        "get": "NAME,POP_2023",  # Name and 2023 population estimate
+        "for": "place:*",         # All places
+        "in": "state:*",          # All states
+    }
+
+    try:
+        response = requests.get(url_2023, params=params_2023, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        headers = data[0]
+        rows = data[1:]
+        print(f"✓ Fetched {len(rows)} places from 2023 Population Estimates")
+        return headers, rows, "2023"
+    except Exception as e:
+        print(f"✗ 2023 estimates failed: {e}")
+        print("Falling back to 2020 Census data...")
+
+    # Fallback to 2020 Census data
+    url_2020 = "https://api.census.gov/data/2020/dec/pl"
+
+    params_2020 = {
         "get": "NAME,P1_001N",  # Name and total population
         "for": "place:*",        # All places
         "in": "state:*",         # All states
     }
 
     try:
-        response = requests.get(url, params=params, timeout=30)
+        response = requests.get(url_2020, params=params_2020, timeout=30)
         response.raise_for_status()
         data = response.json()
 
@@ -37,12 +58,12 @@ def fetch_census_cities():
         headers = data[0]
         rows = data[1:]
 
-        print(f"✓ Fetched {len(rows)} places from Census")
-        return headers, rows
+        print(f"✓ Fetched {len(rows)} places from 2020 Census")
+        return headers, rows, "2020"
 
     except Exception as e:
         print(f"✗ Census API failed: {e}")
-        return None, None
+        return None, None, None
 
 
 def parse_census_data(headers, rows):
@@ -50,7 +71,19 @@ def parse_census_data(headers, rows):
     cities_by_state = {}
 
     name_idx = headers.index("NAME")
-    pop_idx = headers.index("P1_001N")
+
+   # Try different population field names (depends on data source)
+    pop_field = None
+    for field in ["POP_2023", "POP_2022", "P1_001N"]:
+        if field in headers:
+            pop_field = field
+            break
+
+    if not pop_field:
+        print("ERROR: Could not find population field in data")
+        return cities_by_state
+
+    pop_idx = headers.index(pop_field)
     state_idx = headers.index("state")
 
     state_fips = {
@@ -138,14 +171,14 @@ def main():
     print()
 
     # Fetch Census data
-    headers, rows = fetch_census_cities()
+    headers, rows, data_year = fetch_census_cities()
 
     if not headers or not rows:
         print("Failed to fetch Census data")
         return
 
     # Parse data
-    print("\nParsing Census data...")
+    print(f"\nParsing {data_year} Census data...")
     cities_by_state = parse_census_data(headers, rows)
 
     total_cities = sum(len(cities) for cities in cities_by_state.values())
@@ -190,7 +223,8 @@ def main():
         "metadata": {
             "description": "Comprehensive municipality database for Municipal Intel",
             "last_updated": "2026-02-15",
-            "sources": "US Census Bureau 2020, municipal website surveys",
+            "sources": f"US Census Bureau {data_year}, municipal website surveys",
+            "data_year": data_year,
             "min_population": MIN_POPULATION
         },
         "states": {}
