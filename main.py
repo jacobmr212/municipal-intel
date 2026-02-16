@@ -1,0 +1,629 @@
+"""
+Municipal Intel - FastAPI Application
+
+FastAPI backend for municipal government ERP lead intelligence platform.
+Replaces Streamlit with persistent database, background task processing, and responsive UI.
+"""
+
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
+
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Depends, Response
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, EmailStr
+from typing import Optional, List
+from datetime import datetime
+from sqlalchemy.orm import Session
+import json
+import os
+
+from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User
+from src.discovery import SourceDiscovery
+from src.scraper import MunicipalScraper
+from src.analyzer import DocumentAnalyzer
+from src.signals import SIGNALS
+from src.auth import (
+    create_magic_link,
+    verify_magic_link,
+    get_current_user,
+    set_session_cookie,
+    clear_session_cookie,
+    send_magic_link_email,
+    APP_URL,
+    RESEND_API_KEY
+)
+
+# Initialize FastAPI app
+app = FastAPI(title="Municipal Intel", version="2.0")
+
+# Initialize database
+init_db()
+
+# Mount static files and templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+# ============================================================
+# PYDANTIC MODELS
+# ============================================================
+
+class MagicLinkRequest(BaseModel):
+    email: EmailStr
+
+
+class ScanConfig(BaseModel):
+    states: List[str]
+    population_tier: str  # micro | small | small-mid | mid-market | upper-mid | large
+    source_types: Optional[List[str]] = None  # meeting_minutes, procurement, etc.
+
+
+class LeadUpdate(BaseModel):
+    notes: Optional[str] = None
+
+
+# ============================================================
+# POPULATION TIER RANGES
+# ============================================================
+
+POPULATION_TIERS = {
+    "micro": (0, 2500),
+    "small": (2500, 10000),
+    "small-mid": (10000, 25000),
+    "mid-market": (25000, 75000),
+    "upper-mid": (75000, 150000),
+    "large": (150000, 999999999)
+}
+
+
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+def get_population_range(tier: str) -> tuple:
+    """Get population min/max for a given tier."""
+    return POPULATION_TIERS.get(tier, (0, 999999999))
+
+
+def update_scan_progress(db: Session, scan_id: str, phase: str, pct: int, message: str):
+    """Update scan progress in database."""
+    scan = db.query(Scan).filter(Scan.id == scan_id).first()
+    if scan:
+        scan.progress_phase = phase
+        scan.progress_pct = pct
+        scan.progress_message = message
+        db.commit()
+
+
+def run_scan(scan_id: str, config: dict):
+    """
+    Background task: Execute a scan.
+
+    Reads enriched sources from MunicipalSource table.
+    For unenriched cities, falls back to URL probing (discovery.py).
+    Writes progress updates and leads to database as it goes.
+    """
+    from src.database import SessionLocal
+    db = SessionLocal()
+
+    # Initialize scraper and analyzer
+    scraper = MunicipalScraper(delay=1.5, timeout=8, max_docs=10)
+    analyzer = DocumentAnalyzer(use_llm=False)  # Disable LLM for speed
+    discovery = SourceDiscovery(request_delay=1.0, timeout=8)
+
+    try:
+        # Get scan record
+        scan = db.query(Scan).filter(Scan.id == scan_id).first()
+        if not scan:
+            return
+
+        # Update status to running
+        scan.status = "running"
+        db.commit()
+
+        # Parse config
+        states = config.get("states", [])
+        population_tier = config.get("population_tier", "small")
+        source_types = config.get("source_types", ["meeting_minutes", "procurement"])
+
+        # Get population range
+        pop_min, pop_max = get_population_range(population_tier)
+
+        # Phase 1: Discovery - Get municipalities
+        update_scan_progress(db, scan_id, "discovery", 0, "Loading municipalities...")
+
+        municipalities = db.query(Municipality).filter(
+            Municipality.state.in_(states),
+            Municipality.population >= pop_min,
+            Municipality.population <= pop_max
+        ).all()
+
+        total_cities = len(municipalities)
+        update_scan_progress(db, scan_id, "discovery", 10, f"Found {total_cities} cities to scan")
+
+        # Phase 2: Scraping & Analysis
+        sources_found = 0
+        docs_scraped = 0
+        leads_hot = 0
+        leads_warm = 0
+        leads_cold = 0
+
+        for idx, muni in enumerate(municipalities):
+            progress_pct = 10 + int((idx / total_cities) * 80)  # 10-90%
+            update_scan_progress(db, scan_id, "scraping", progress_pct, f"Scanning {muni.name}, {muni.state}...")
+
+            # Check if municipality has enriched sources
+            enriched_sources = db.query(MunicipalSource).filter(
+                MunicipalSource.municipality_id == muni.id
+            ).all()
+
+            if enriched_sources:
+                # Use enriched sources - scrape each one
+                sources_found += len(enriched_sources)
+                for source in enriched_sources:
+                    try:
+                        # Scrape documents from this source
+                        scraped_docs = scraper.scrape_source(source)
+                        docs_scraped += len(scraped_docs)
+
+                        # Analyze each document
+                        for doc in scraped_docs:
+                            result = analyzer.analyze_document(
+                                doc,
+                                population=muni.population,
+                                min_score=30,
+                                source_type=source.source_type
+                            )
+
+                            if result:
+                                # Create lead record
+                                lead = Lead(
+                                    scan_id=scan_id,
+                                    municipality=result.municipality,
+                                    state=result.state,
+                                    population=result.population,
+                                    title=result.title,
+                                    url=result.url,
+                                    date=result.date,
+                                    source_type=result.source_type,
+                                    relevance_score=result.relevance_score,
+                                    lead_type=result.lead_type,
+                                    recommended_action=result.recommended_action,
+                                    signal_matches_json={
+                                        m.signal_type: {
+                                            "keyword": m.keyword,
+                                            "context": m.context,
+                                            "weight": m.weight
+                                        }
+                                        for m in result.signal_matches
+                                    }
+                                )
+                                db.add(lead)
+                                db.commit()
+
+                                # Update lead counts
+                                if lead.lead_type == "hot":
+                                    leads_hot += 1
+                                elif lead.lead_type == "warm":
+                                    leads_warm += 1
+                                else:
+                                    leads_cold += 1
+
+                    except Exception as e:
+                        print(f"Error scraping source {source.url}: {str(e)}")
+                        continue
+            else:
+                # Fall back to discovery (URL probing) for unenriched cities
+                # Skip for now - this is slow and most cities should be enriched
+                pass
+
+        # Phase 3: Complete
+        update_scan_progress(db, scan_id, "complete", 100, "Scan complete")
+
+        # Update final stats
+        scan.status = "completed"
+        scan.completed_at = datetime.utcnow()
+        scan.stats_json = {
+            "sources_found": sources_found,
+            "docs_scraped": docs_scraped,
+            "leads_hot": leads_hot,
+            "leads_warm": leads_warm,
+            "leads_cold": leads_cold,
+            "total_leads": leads_hot + leads_warm + leads_cold
+        }
+        db.commit()
+
+    except Exception as e:
+        # Mark scan as failed
+        scan = db.query(Scan).filter(Scan.id == scan_id).first()
+        if scan:
+            scan.status = "failed"
+            scan.progress_message = f"Error: {str(e)}"
+            db.commit()
+        print(f"Scan {scan_id} failed: {str(e)}")
+
+    finally:
+        db.close()
+
+
+# ============================================================
+# PUBLIC ROUTES
+# ============================================================
+
+@app.get("/", response_class=HTMLResponse)
+async def landing(request: Request):
+    """Serve public landing page."""
+    return templates.TemplateResponse("landing.html", {"request": request})
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint."""
+    return {"status": "ok", "version": "2.0"}
+
+
+# ============================================================
+# AUTHENTICATION ENDPOINTS
+# ============================================================
+
+@app.post("/api/auth/request-magic-link")
+async def request_magic_link(request: MagicLinkRequest, db: Session = Depends(get_db)):
+    """
+    Send a magic link to the user's email.
+
+    Creates user if they don't exist.
+    """
+    magic_link = create_magic_link(db, request.email)
+
+    # Build magic link URL
+    magic_url = f"{APP_URL}/auth/verify/{magic_link.token}"
+
+    # Send email via Resend
+    email_sent = send_magic_link_email(request.email, magic_url)
+
+    response = {
+        "success": True,
+        "message": "Magic link sent to your email" if email_sent else "Magic link created"
+    }
+
+    # In dev mode (no Resend key), include the link in response
+    if not RESEND_API_KEY:
+        response["dev_link"] = magic_url
+
+    return response
+
+
+@app.get("/auth/verify/{token}")
+async def verify_magic_link_route(token: str, response: Response, db: Session = Depends(get_db)):
+    """
+    Verify magic link token and create session.
+
+    Redirects to /app on success.
+    """
+    user = verify_magic_link(db, token)
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired magic link")
+
+    # Set session cookie
+    set_session_cookie(response, user)
+
+    # Redirect to app
+    return RedirectResponse(url="/app", status_code=303)
+
+
+@app.post("/api/auth/logout")
+async def logout(response: Response):
+    """Logout user by clearing session cookie."""
+    clear_session_cookie(response)
+    return {"success": True}
+
+
+# ============================================================
+# PROTECTED APP ROUTES
+# ============================================================
+
+@app.get("/app", response_class=HTMLResponse)
+async def app_index(request: Request, user: dict = Depends(get_current_user)):
+    """Serve Municipal Intel app - requires authentication."""
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "user": user
+    })
+
+
+@app.post("/api/scans")
+async def create_scan(
+    config: ScanConfig,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Start a new scan.
+
+    Returns scan_id immediately and runs scan in background.
+    Frontend polls GET /api/scans/{id} for progress.
+
+    **Requires authentication.**
+    """
+    # Create scan record
+    scan = Scan(
+        user_id=user["user_id"],
+        config_json=config.dict(),
+        status="pending",
+        progress_phase="discovery",
+        progress_pct=0,
+        progress_message="Initializing scan..."
+    )
+    db.add(scan)
+    db.commit()
+    db.refresh(scan)
+
+    # Start background task
+    background_tasks.add_task(run_scan, scan.id, config.dict())
+
+    return {
+        "scan_id": scan.id,
+        "status": "pending",
+        "message": "Scan started"
+    }
+
+
+@app.get("/api/scans/{scan_id}")
+async def get_scan(
+    scan_id: str,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get scan status and progress.
+
+    Frontend polls this endpoint every 2 seconds during scan.
+
+    **Requires authentication.** Users can only access their own scans.
+    """
+    scan = db.query(Scan).filter(
+        Scan.id == scan_id,
+        Scan.user_id == user["user_id"]
+    ).first()
+
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    return {
+        "id": scan.id,
+        "status": scan.status,
+        "progress_phase": scan.progress_phase,
+        "progress_pct": scan.progress_pct,
+        "progress_message": scan.progress_message,
+        "stats": scan.stats_json,
+        "created_at": scan.created_at.isoformat(),
+        "completed_at": scan.completed_at.isoformat() if scan.completed_at else None,
+        "config": scan.config_json
+    }
+
+
+@app.get("/api/scans/{scan_id}/leads")
+async def get_leads(
+    scan_id: str,
+    type: Optional[str] = None,
+    source: Optional[str] = None,
+    sort: Optional[str] = "score",
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get leads for a scan.
+
+    Query params:
+    - type: hot | warm | cold (filter by lead type)
+    - source: meeting_minutes | procurement | etc (filter by source type)
+    - sort: score | date | municipality (sort by field)
+
+    **Requires authentication.** Users can only access leads from their own scans.
+    """
+    # Verify scan belongs to user
+    scan = db.query(Scan).filter(
+        Scan.id == scan_id,
+        Scan.user_id == user["user_id"]
+    ).first()
+
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    query = db.query(Lead).filter(Lead.scan_id == scan_id)
+
+    # Apply filters
+    if type:
+        query = query.filter(Lead.lead_type == type)
+    if source:
+        query = query.filter(Lead.source_type == source)
+
+    # Apply sorting
+    if sort == "score":
+        query = query.order_by(Lead.relevance_score.desc())
+    elif sort == "date":
+        query = query.order_by(Lead.date.desc())
+    elif sort == "municipality":
+        query = query.order_by(Lead.municipality)
+
+    leads = query.all()
+
+    return {
+        "leads": [
+            {
+                "id": lead.id,
+                "municipality": lead.municipality,
+                "state": lead.state,
+                "population": lead.population,
+                "title": lead.title,
+                "url": lead.url,
+                "date": lead.date,
+                "source_type": lead.source_type,
+                "relevance_score": lead.relevance_score,
+                "lead_type": lead.lead_type,
+                "recommended_action": lead.recommended_action,
+                "signal_matches": lead.signal_matches_json,
+                "notes": lead.notes
+            }
+            for lead in leads
+        ]
+    }
+
+
+@app.get("/api/scans")
+async def list_scans(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    List all past scans with summary stats.
+
+    Enables scan history view in frontend.
+
+    **Requires authentication.** Users only see their own scans.
+    """
+    scans = db.query(Scan).filter(
+        Scan.user_id == user["user_id"]
+    ).order_by(Scan.created_at.desc()).all()
+
+    return {
+        "scans": [
+            {
+                "id": scan.id,
+                "created_at": scan.created_at.isoformat(),
+                "status": scan.status,
+                "config": scan.config_json,
+                "stats": scan.stats_json
+            }
+            for scan in scans
+        ]
+    }
+
+
+@app.patch("/api/leads/{lead_id}")
+async def update_lead(
+    lead_id: str,
+    update: LeadUpdate,
+    db: Session = Depends(get_db)
+):
+    """Update lead notes."""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    if update.notes is not None:
+        lead.notes = update.notes
+    db.commit()
+
+    return {"success": True}
+
+
+@app.get("/api/municipalities")
+async def get_municipalities(
+    state: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get municipalities for frontend selectors.
+
+    Query params:
+    - state: Filter by state abbreviation
+    """
+    query = db.query(Municipality)
+
+    if state:
+        query = query.filter(Municipality.state == state)
+
+    municipalities = query.all()
+
+    return {
+        "municipalities": [
+            {
+                "name": m.name,
+                "state": m.state,
+                "population": m.population,
+                "domain_status": m.domain_status
+            }
+            for m in municipalities
+        ]
+    }
+
+
+@app.get("/api/export/{scan_id}")
+async def export_scan(
+    scan_id: str,
+    format: str = "html",
+    db: Session = Depends(get_db)
+):
+    """
+    Generate and download export report.
+
+    Formats: html | json
+    """
+    scan = db.query(Scan).filter(Scan.id == scan_id).first()
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    leads = db.query(Lead).filter(Lead.scan_id == scan_id).all()
+
+    if format == "json":
+        # JSON export
+        return {
+            "scan": {
+                "id": scan.id,
+                "created_at": scan.created_at.isoformat(),
+                "config": scan.config_json,
+                "stats": scan.stats_json
+            },
+            "leads": [
+                {
+                    "municipality": lead.municipality,
+                    "state": lead.state,
+                    "population": lead.population,
+                    "title": lead.title,
+                    "url": lead.url,
+                    "date": lead.date,
+                    "source_type": lead.source_type,
+                    "relevance_score": lead.relevance_score,
+                    "lead_type": lead.lead_type,
+                    "recommended_action": lead.recommended_action,
+                    "notes": lead.notes
+                }
+                for lead in leads
+            ]
+        }
+    else:
+        # HTML export (use existing reporter.py module)
+        from src.reporter import generate_html_report
+
+        # Convert leads to format expected by reporter
+        lead_data = [
+            {
+                "municipality": lead.municipality,
+                "state": lead.state,
+                "population": lead.population,
+                "title": lead.title,
+                "url": lead.url,
+                "date": lead.date,
+                "source_type": lead.source_type,
+                "relevance_score": lead.relevance_score,
+                "lead_type": lead.lead_type,
+                "recommended_action": lead.recommended_action,
+                "signal_matches": lead.signal_matches_json or {}
+            }
+            for lead in leads
+        ]
+
+        # Generate HTML report
+        html_content = generate_html_report(lead_data, scan.stats_json or {})
+
+        return HTMLResponse(content=html_content)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

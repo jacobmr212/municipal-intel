@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Municipal Intel</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Thin accent bar at top -->
+    <div class="accent-bar"></div>
+
+    <!-- Main container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Municipal Intel</h1>
+                <p class="version">v2.0</p>
+            </div>
+
+            <!-- State Selection -->
+            <section class="sidebar-section">
+                <label class="section-label">States</label>
+                <div class="state-grid" id="stateSelector">
+                    <!-- Will be populated by JS -->
+                </div>
+                <a href="#" class="quick-select" id="caselleTerritory">Caselle Territory</a>
+            </section>
+
+            <!-- Population Tier -->
+            <section class="sidebar-section">
+                <label class="section-label">Population Tier</label>
+                <div class="tier-radios" id="tierSelector">
+                    <label class="tier-option">
+                        <input type="radio" name="tier" value="micro">
+                        <span>Micro (&lt;2.5K)</span>
+                    </label>
+                    <label class="tier-option">
+                        <input type="radio" name="tier" value="small" checked>
+                        <span>Small (2.5K-10K)</span>
+                    </label>
+                    <label class="tier-option">
+                        <input type="radio" name="tier" value="small-mid">
+                        <span>Small-Mid (10K-25K)</span>
+                    </label>
+                    <label class="tier-option">
+                        <input type="radio" name="tier" value="mid-market">
+                        <span>Mid-Market (25K-75K)</span>
+                    </label>
+                    <label class="tier-option">
+                        <input type="radio" name="tier" value="upper-mid">
+                        <span>Upper-Mid (75K-150K)</span>
+                    </label>
+                    <label class="tier-option">
+                        <input type="radio" name="tier" value="large">
+                        <span>Large (150K+)</span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Advanced Options (collapsed by default) -->
+            <section class="sidebar-section collapsible">
+                <div class="section-header" onclick="toggleSection('advancedOptions')">
+                    <label class="section-label">Advanced</label>
+                    <span class="collapse-icon" id="advancedOptionsIcon">▼</span>
+                </div>
+                <div class="section-content collapsed" id="advancedOptions">
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="sourceTypeMeetings" checked>
+                        <span>Meeting Minutes</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="sourceTypeProcurement" checked>
+                        <span>Procurement Portals</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="sourceTypeBudget">
+                        <span>Budget Documents</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="sourceTypeJobs">
+                        <span>Job Postings</span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Scan History -->
+            <section class="sidebar-section scan-history">
+                <label class="section-label">Recent Scans</label>
+                <div id="scanHistory" class="scan-history-list">
+                    <!-- Will be populated by JS -->
+                </div>
+            </section>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Pre-Scan: Configuration Card -->
+            <div id="configView" class="view active">
+                <div class="card">
+                    <h2>Scan Configuration</h2>
+                    <div class="config-summary" id="configSummary">
+                        <div class="config-row">
+                            <span class="config-label">States:</span>
+                            <span class="config-value" id="selectedStates">None selected</span>
+                        </div>
+                        <div class="config-row">
+                            <span class="config-label">Population Tier:</span>
+                            <span class="config-value" id="selectedTier">Small (2,500-10,000)</span>
+                        </div>
+                        <div class="config-row">
+                            <span class="config-label">Cities Matched:</span>
+                            <span class="config-value" id="citiesMatched">0</span>
+                        </div>
+                        <div class="config-row">
+                            <span class="config-label">Estimated Time:</span>
+                            <span class="config-value" id="estimatedTime">--</span>
+                        </div>
+                    </div>
+                    <div class="scan-summary" id="scanSummaryText"></div>
+                    <button class="btn-primary" id="runScanBtn" onclick="startScan()">Run Scan</button>
+                </div>
+            </div>
+
+            <!-- During Scan: Progress View -->
+            <div id="progressView" class="view">
+                <div class="card">
+                    <h2>Scan in Progress</h2>
+
+                    <!-- Phase indicators -->
+                    <div class="phase-indicators">
+                        <div class="phase-indicator" data-phase="discovery">Discovery</div>
+                        <div class="phase-indicator" data-phase="scraping">Scraping</div>
+                        <div class="phase-indicator" data-phase="analysis">Analysis</div>
+                        <div class="phase-indicator" data-phase="complete">Complete</div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progressPct">0%</span>
+                        <span id="progressMessage">Initializing...</span>
+                    </div>
+
+                    <!-- Running stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statSources">0</div>
+                            <div class="stat-label">Sources Found</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statDocs">0</div>
+                            <div class="stat-label">Documents Scraped</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statLeads">0</div>
+                            <div class="stat-label">Signals Detected</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results View -->
+            <div id="resultsView" class="view">
+                <div class="results-header">
+                    <div class="results-summary" id="resultsSummary"></div>
+                    <div class="results-actions">
+                        <button class="btn-secondary" onclick="exportResults('html')">Export HTML</button>
+                        <button class="btn-secondary" onclick="exportResults('json')">Export JSON</button>
+                    </div>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="filter-bar">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-type="all" onclick="filterLeads('all')">All</button>
+                        <button class="filter-tab hot" data-type="hot" onclick="filterLeads('hot')">Hot</button>
+                        <button class="filter-tab warm" data-type="warm" onclick="filterLeads('warm')">Warm</button>
+                        <button class="filter-tab cold" data-type="cold" onclick="filterLeads('cold')">Cold</button>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="view-btn active" onclick="switchView('table')">Table</button>
+                        <button class="view-btn" onclick="switchView('card')">Cards</button>
+                    </div>
+                </div>
+
+                <!-- Table view -->
+                <div id="tableView" class="table-container active">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortLeads('municipality')">City</th>
+                                <th onclick="sortLeads('state')">State</th>
+                                <th onclick="sortLeads('population')">Pop</th>
+                                <th onclick="sortLeads('score')">Score</th>
+                                <th onclick="sortLeads('type')">Type</th>
+                                <th onclick="sortLeads('source')">Source</th>
+                                <th onclick="sortLeads('date')">Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Card view -->
+                <div id="cardView" class="card-grid">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

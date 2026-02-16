@@ -125,6 +125,10 @@ class MunicipalScraper:
     def _scrape_links_page(self, source, base_url: str, soup: BeautifulSoup) -> list[ScrapedDocument]:
         """Scrape meeting documents from a page containing links."""
         docs = []
+
+        # Access municipality through relationship
+        municipality = source.municipality
+
         links = soup.find_all("a", href=True)
         scraped_count = 0
 
@@ -188,8 +192,8 @@ class MunicipalScraper:
                 if doc_hash not in self.seen_hashes:
                     self.seen_hashes.add(doc_hash)
                     doc = ScrapedDocument(
-                        municipality=source.municipality,
-                        state=source.state,
+                        municipality=municipality.name,
+                        state=municipality.state,
                         title=text or "Meeting Document",
                         url=full_url,
                         text=doc_text,
@@ -201,11 +205,80 @@ class MunicipalScraper:
 
         return docs
 
+    def _scrape_utah_portal(self, source, soup: BeautifulSoup) -> list[ScrapedDocument]:
+        """Scrape meeting notices from Utah PMN portal pages."""
+        docs = []
+
+        # Access municipality through relationship
+        municipality = source.municipality
+
+        # Find the table containing meeting notices
+        table = soup.find('table')
+        if not table:
+            return docs
+
+        rows = table.find_all('tr')
+        for row in rows[1:]:  # Skip header row
+            cols = row.find_all('td')
+            if len(cols) < 2:
+                continue
+
+            # Extract notice title and date
+            notice_title = cols[0].get_text(strip=True) if cols[0] else ""
+            event_date = cols[1].get_text(strip=True) if len(cols) > 1 else ""
+
+            # Look for attachments (PDFs)
+            if len(cols) > 2:
+                attachment_cell = cols[2]
+                pdf_links = attachment_cell.find_all('a', href=True)
+
+                for link in pdf_links[:3]:  # Max 3 PDFs per notice
+                    href = link['href']
+                    if not href.endswith('.pdf'):
+                        continue
+
+                    full_url = urljoin(source.url, href)
+                    pdf_resp = self._fetch(full_url)
+
+                    if pdf_resp:
+                        text = self._extract_pdf_text(pdf_resp.content)
+                        if text and len(text) > 200:
+                            doc_hash = hashlib.md5(text.encode()).hexdigest()
+                            if doc_hash not in self.seen_hashes:
+                                self.seen_hashes.add(doc_hash)
+                                docs.append(ScrapedDocument(
+                                    municipality=municipality.name,
+                                    state=municipality.state,
+                                    title=f"{notice_title} - {link.get_text(strip=True)}",
+                                    url=full_url,
+                                    text=text,
+                                    date=self._parse_date(f"{event_date} {text[:500]}"),
+                                ))
+                                logger.debug(f"    Portal PDF: {notice_title[:40]}")
+
+            # If no PDFs, use the row text itself
+            if len(docs) == 0 and notice_title:
+                row_text = row.get_text(separator=" ", strip=True)
+                if len(row_text) > 100:
+                    docs.append(ScrapedDocument(
+                        municipality=municipality.name,
+                        state=municipality.state,
+                        title=notice_title,
+                        url=source.url,
+                        text=row_text,
+                        date=self._parse_date(event_date),
+                    ))
+
+        return docs
+
     def scrape_source(self, source) -> list[ScrapedDocument]:
         """Scrape all available meeting documents from a discovered source."""
         docs = []
 
-        logger.info(f"  Scraping {source.municipality}, {source.state}: {source.url}")
+        # Access municipality through relationship
+        municipality = source.municipality
+
+        logger.info(f"  Scraping {municipality.name}, {municipality.state}: {source.url}")
 
         resp = self._fetch(source.url)
         if not resp:
@@ -219,8 +292,8 @@ class MunicipalScraper:
             text = self._extract_pdf_text(resp.content)
             if text and len(text) > 200:
                 doc = ScrapedDocument(
-                    municipality=source.municipality,
-                    state=source.state,
+                    municipality=municipality.name,
+                    state=municipality.state,
                     title="Meeting Document",
                     url=source.url,
                     text=text,
@@ -234,6 +307,13 @@ class MunicipalScraper:
             return docs
 
         soup = BeautifulSoup(resp.text, "lxml")
+
+        # Portal sources: Use specialized portal scraper
+        if source.platform == "utah_pmn":
+            logger.info(f"    Using Utah PMN portal scraper")
+            docs = self._scrape_utah_portal(source, soup)
+            logger.info(f"    Found {len(docs)} documents from portal")
+            return docs
 
         # Strategy 1: Look for direct links to meeting documents
         docs = self._scrape_links_page(source, source.url, soup)
@@ -255,8 +335,8 @@ class MunicipalScraper:
                             if doc_hash not in self.seen_hashes:
                                 self.seen_hashes.add(doc_hash)
                                 docs.append(ScrapedDocument(
-                                    municipality=source.municipality,
-                                    state=source.state,
+                                    municipality=municipality.name,
+                                    state=municipality.state,
                                     title=link.get_text(strip=True) or "Meeting Document",
                                     url=full_url,
                                     text=text,
@@ -270,8 +350,8 @@ class MunicipalScraper:
                 meeting_words = ["council", "meeting", "agenda", "minutes", "motion", "vote"]
                 if sum(1 for w in meeting_words if w in page_text.lower()) >= 3:
                     docs.append(ScrapedDocument(
-                        municipality=source.municipality,
-                        state=source.state,
+                        municipality=municipality.name,
+                        state=municipality.state,
                         title=soup.title.string if soup.title else "Meeting Page",
                         url=source.url,
                         text=page_text,

@@ -11,6 +11,8 @@ reports/
 
 # Data cache
 data/seen_hashes.json
+data/*.db
+*.sqlite3
 
 # IDE
 .vscode/
@@ -21,6 +23,9 @@ data/seen_hashes.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
 
 # Env
 .env
