@@ -20,8 +20,8 @@ from src.database import SessionLocal, Municipality, MunicipalSource
 
 # --- Page Config ---
 st.set_page_config(
-    page_title="Municipal Intel",
-    page_icon="🏛️",
+    page_title="Scanner - Municipal Intel",
+    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
