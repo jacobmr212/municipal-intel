@@ -98,10 +98,24 @@ class SourceDiscovery:
             f"https://{domain}",
         ]
 
+        # Try most common patterns first (CivicPlus, Granicus, then general)
+        priority_patterns = [
+            "/AgendaCenter", "/agendacenter",
+            "/Meetings.aspx", "/Calendar.aspx",
+            "/meetings", "/city-council/meetings", "/council/meetings",
+        ]
+        remaining_patterns = [p for p in URL_PATTERNS if p not in priority_patterns]
+        ordered_patterns = priority_patterns + remaining_patterns
+
+        checked_count = 0
         for base_url in base_urls:
-            for pattern in URL_PATTERNS:
+            for pattern in ordered_patterns:
                 url = f"{base_url}{pattern}"
-                time.sleep(self.delay)
+
+                # Minimal delay to be respectful, but fast
+                if checked_count > 0:
+                    time.sleep(self.delay)
+                checked_count += 1
 
                 result = self._check_url(url)
                 if result:
@@ -129,8 +143,12 @@ class SourceDiscovery:
                     discovered.append(source)
                     logger.info(f"  ✓ Found: {found_url} ({source_type})")
 
-                    # If we found a high-confidence source, we can stop
+                    # If we found a high-confidence source, stop immediately
                     if confidence >= 0.85:
+                        return discovered
+
+                    # If we found any source and checked enough patterns, stop
+                    if len(discovered) >= 1 and checked_count >= 15:
                         return discovered
 
         if not discovered:

@@ -185,7 +185,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     status.markdown('<div class="phase active">🔍 Phase 1/3 — Discovering meeting minutes sources...</div>', unsafe_allow_html=True)
     discovery_log = st.empty()
 
-    discovery = SourceDiscovery(request_delay=1.0, timeout=12)
+    discovery = SourceDiscovery(request_delay=0.25, timeout=10)
     discovered_sources = []
     failed_cities = []
 
@@ -220,7 +220,7 @@ def run_scan(state_abbr: str, state_name: str, municipalities: list,
     status2.markdown('<div class="phase active">📄 Phase 2/3 — Scraping meeting documents...</div>', unsafe_allow_html=True)
     scrape_log = st.empty()
 
-    scraper = MunicipalScraper(delay=1.5, timeout=20, max_docs=10)
+    scraper = MunicipalScraper(delay=0.5, timeout=15, max_docs=10)
     all_docs = []
 
     for i, source in enumerate(discovered_sources):
@@ -310,13 +310,54 @@ def main():
             help="Use Claude to generate contextual sales briefs for hot/warm leads. Requires ANTHROPIC_API_KEY environment variable.",
         )
 
-        min_population = st.number_input(
-            "Min. Population",
-            min_value=0,
-            max_value=100000,
-            value=0,
-            step=1000,
-            help="Filter out cities below this population",
+        st.markdown("**Population Filters**")
+
+        # Quick preset buttons
+        preset = st.radio(
+            "Target Market",
+            ["All Cities", "Small (< 25K)", "Medium (25K-100K)", "Large (> 100K)", "Custom"],
+            horizontal=True,
+            help="Quick filters for your target market segment"
+        )
+
+        # Set defaults based on preset
+        if preset == "Small (< 25K)":
+            default_min, default_max = 0, 25000
+        elif preset == "Medium (25K-100K)":
+            default_min, default_max = 25000, 100000
+        elif preset == "Large (> 100K)":
+            default_min, default_max = 100000, 10000000
+        elif preset == "Custom":
+            default_min, default_max = 0, 10000000
+        else:  # All Cities
+            default_min, default_max = 0, 10000000
+
+        col_min, col_max = st.columns(2)
+        with col_min:
+            min_population = st.number_input(
+                "Min. Population",
+                min_value=0,
+                max_value=10000000,
+                value=default_min if preset == "Custom" else default_min,
+                step=5000,
+                help="Minimum city population",
+                disabled=(preset != "Custom")
+            )
+        with col_max:
+            max_population = st.number_input(
+                "Max. Population",
+                min_value=0,
+                max_value=10000000,
+                value=default_max if preset == "Custom" else default_max,
+                step=5000,
+                help="Maximum city population",
+                disabled=(preset != "Custom")
+            )
+
+        sort_by = st.selectbox(
+            "Sort Cities By",
+            ["Population (Smallest First)", "Population (Largest First)", "Name (A-Z)"],
+            help="Choose how to prioritize cities in scan"
         )
 
         st.markdown("---")
@@ -338,20 +379,37 @@ def main():
     # --- Main Content ---
     render_header()
 
-    # Filter municipalities by population
-    filtered_munis = [m for m in munis if m.get("population", 0) >= min_population]
+    # Filter municipalities by population range
+    filtered_munis = [
+        m for m in munis
+        if min_population <= m.get("population", 0) <= max_population
+    ]
+
     if not filtered_munis:
-        st.warning(f"No municipalities in {state_name} meet the minimum population filter of {min_population:,}.")
+        st.warning(f"No municipalities in {state_name} with population between {min_population:,} and {max_population:,}.")
         return
 
+    # Sort municipalities
+    if sort_by == "Population (Smallest First)":
+        filtered_munis.sort(key=lambda m: m.get("population", 0))
+    elif sort_by == "Population (Largest First)":
+        filtered_munis.sort(key=lambda m: m.get("population", 0), reverse=True)
+    else:  # Name (A-Z)
+        filtered_munis.sort(key=lambda m: m.get("name", ""))
+
     # Info bar
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("State", state_name)
     with col2:
         st.metric("Cities Available", len(filtered_munis))
     with col3:
         st.metric("Will Scan", min(max_cities, len(filtered_munis)))
+    with col4:
+        if filtered_munis:
+            pop_min = min(m.get("population", 0) for m in filtered_munis[:max_cities])
+            pop_max = max(m.get("population", 0) for m in filtered_munis[:max_cities])
+            st.metric("Pop. Range", f"{pop_min//1000}K-{pop_max//1000}K")
 
     st.markdown("---")
 
