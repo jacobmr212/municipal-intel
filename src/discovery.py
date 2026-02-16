@@ -86,6 +86,40 @@ class SourceDiscovery:
         except (requests.exceptions.RequestException, Exception):
             return None
 
+    def _try_domain_alternatives(self, name: str, state: str, provided_domain: str) -> list[str]:
+        """
+        Generate alternative domain patterns when the provided domain doesn't work.
+        Many municipal databases have outdated or incorrect domains - this tries common patterns.
+        """
+        city_slug = name.lower().replace(" ", "").replace("-", "").replace(".", "")
+        state_lower = state.lower()
+
+        # Common municipal domain patterns (ordered by likelihood)
+        alternatives = [
+            f"cityof{city_slug}.com",
+            f"cityof{city_slug}.org",
+            f"{city_slug}{state_lower}.gov",
+            f"{city_slug}.{state_lower}.us",
+            f"ci.{city_slug}.{state_lower}.us",
+            f"{city_slug}city.org",
+            f"{city_slug}city.com",
+            f"cityof{city_slug}.gov",
+        ]
+
+        # Quick test which alternative domains actually exist
+        working_domains = []
+        for alt_domain in alternatives:
+            try:
+                response = self.session.head(f"https://{alt_domain}", timeout=3, allow_redirects=True)
+                if response.status_code < 400:
+                    working_domains.append(alt_domain)
+                    logger.info(f"  Found alternative domain: {alt_domain} (replacing {provided_domain})")
+                    break  # Stop after finding first working domain
+            except:
+                continue
+
+        return working_domains
+
     def discover_municipality(self, name: str, state: str, domain: str,
                                population: int = 0, progress_callback=None) -> list[DiscoveredSource]:
         """
@@ -102,6 +136,23 @@ class SourceDiscovery:
             f"https://www.{domain}",
             f"https://{domain}",
         ]
+
+        # Try provided domain first
+        domain_works = False
+        try:
+            response = self.session.head(base_urls[0], timeout=3, allow_redirects=True)
+            if response.status_code < 400:
+                domain_works = True
+        except:
+            pass
+
+        # If provided domain doesn't work, try alternatives
+        if not domain_works:
+            logger.info(f"  Provided domain {domain} not responding — trying alternatives...")
+            alt_domains = self._try_domain_alternatives(name, state, domain)
+            if alt_domains:
+                # Replace base_urls with working alternative
+                base_urls = [f"https://www.{alt_domains[0]}", f"https://{alt_domains[0]}"]
 
         # Add third-party platform subdomains
         third_party_platforms = [
@@ -164,7 +215,7 @@ class SourceDiscovery:
                         population=population,
                     )
                     discovered.append(source)
-                    logger.info(f"  ✓ Found: {found_url} ({source_type})")
+                    logger.info(f"  ✓ Found: {found_url} ({source_type}) — pattern: {pattern}")
 
                     # If we found a high-confidence source, stop immediately
                     if confidence >= 0.85:
