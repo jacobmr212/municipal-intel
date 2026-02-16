@@ -731,9 +731,9 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     status = st.empty()
 
     # ==========================================================
-    # PHASE 1: Source Discovery
+    # PHASE 1: Source Discovery (Meeting Minutes + Procurement)
     # ==========================================================
-    status.markdown('<div class="phase active">Phase 1/3 — Discovering meeting minutes sources</div>', unsafe_allow_html=True)
+    status.markdown('<div class="phase active">Phase 1/3 — Discovering sources (meetings + procurement)</div>', unsafe_allow_html=True)
     discovery_log = st.empty()
 
     discovery = SourceDiscovery(request_delay=0.25, timeout=10)
@@ -745,19 +745,35 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
         progress.progress(pct)
         discovery_log.text(f"Probing {muni['name']}, {muni.get('state', 'N/A')} ({i+1}/{len(cities)})")
 
-        sources = discovery.discover_municipality(
+        # Discover meeting minutes
+        meeting_sources = discovery.discover_municipality(
             name=muni["name"],
             state=muni.get("state", ""),
             domain=muni.get("domain", ""),
             population=muni.get("population", 0),
         )
-        if sources:
-            discovered_sources.extend(sources)
+
+        # Also discover procurement portals
+        procurement_sources = discovery.discover_procurement(
+            name=muni["name"],
+            state=muni.get("state", ""),
+            domain=muni.get("domain", ""),
+            population=muni.get("population", 0),
+        )
+
+        all_sources = meeting_sources + procurement_sources
+        if all_sources:
+            discovered_sources.extend(all_sources)
         else:
             failed_cities.append(muni["name"])
 
     discovery_log.empty()
-    status.markdown(f'<div class="phase done">Phase 1/3 — Found {len(discovered_sources)} sources across {len(cities) - len(failed_cities)} municipalities</div>', unsafe_allow_html=True)
+
+    # Count by source type
+    meeting_count = sum(1 for s in discovered_sources if s.source_type in ["civicplus", "granicus", "html", "unknown"])
+    procurement_count = sum(1 for s in discovered_sources if s.source_type == "procurement")
+
+    status.markdown(f'<div class="phase done">Phase 1/3 — Found {len(discovered_sources)} sources ({meeting_count} meetings, {procurement_count} procurement) across {len(cities) - len(failed_cities)} municipalities</div>', unsafe_allow_html=True)
 
     if not discovered_sources:
         st.warning("No meeting minutes sources could be discovered. The municipalities in this state may not have publicly accessible meeting minutes, or their websites may use non-standard formats.")
@@ -799,6 +815,9 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
     status3 = st.empty()
     status3.markdown('<div class="phase active">Phase 3/3 — Analyzing for lead signals</div>', unsafe_allow_html=True)
 
+    # Build a mapping of source URLs to source types
+    source_type_map = {s.url: s.source_type for s in discovered_sources}
+
     analyzer = DocumentAnalyzer(use_llm=use_llm)
     results = []
 
@@ -807,7 +826,13 @@ def run_scan(selected_states: list, state_name: str, municipalities: list,
         progress.progress(min(pct, 99))
 
         pop = population_map.get(doc.municipality, 0)
-        result = analyzer.analyze_document(doc, population=pop, min_score=10)
+
+        # Determine source type from the document's source URL
+        source_type = source_type_map.get(doc.url, "meeting_minutes")
+        if source_type in ["civicplus", "granicus", "html", "unknown"]:
+            source_type = "meeting_minutes"
+
+        result = analyzer.analyze_document(doc, population=pop, min_score=10, source_type=source_type)
         if result:
             results.append(result)
 
