@@ -22,78 +22,329 @@ REPORT_TEMPLATE = """<!DOCTYPE html>
 <title>Municipal Intel Report — {{ state_name }} — {{ generated_at }}</title>
 <style>
 :root {
-  --bg: #0b0d11; --s1: #141720; --s2: #1c2030; --s3: #252a3a;
-  --border: #2a3050; --text: #dee1ef; --muted: #7a809e;
-  --accent: #5e8aff; --accent-dim: rgba(94,138,255,.12);
-  --hot: #ff4466; --hot-bg: rgba(255,68,102,.1);
-  --warm: #ffb040; --warm-bg: rgba(255,176,64,.1);
-  --cold: #40b8ff; --cold-bg: rgba(64,184,255,.1);
-  --green: #4cd97b;
+  --bg: #09090B; --card: #111113; --sidebar: #1A1A1F; --surface: #0F0F11;
+  --border: #1F1F23; --border-hover: #2F2F33;
+  --text: #E5E7EB; --text-dim: #D1D5DB; --muted: #9CA3AF; --subtle: #6B7280;
+  --primary: #4F6AFF; --primary-dim: rgba(79,106,255,0.08);
+  --hot: #DC3545; --hot-dim: rgba(220,53,69,0.08);
+  --warm: #D97706; --warm-dim: rgba(217,119,6,0.08);
+  --cold: #3B82F6; --cold-dim: rgba(59,130,246,0.08);
+  --success: #22C55E;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1100px;margin:0 auto;padding:32px 24px}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
 
-/* --- Header --- */
-.header{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:28px;margin-bottom:28px;border-bottom:1px solid var(--border)}
-.header h1{font-size:28px;font-weight:700;letter-spacing:-.5px}
-.header h1 em{font-style:normal;color:var(--accent)}
-.header .sub{font-size:13px;color:var(--muted);margin-top:4px}
-.header .right{text-align:right}
-.header .right .big{font-size:22px;font-weight:700;color:var(--accent)}
+/* Top Accent Bar */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4F6AFF 0%, #6B7FFF 100%);
+  z-index: 9999;
+}
 
-/* --- Stats --- */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:32px}
-.stat{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:20px}
-.stat .lab{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:2px}
-.stat .val{font-size:34px;font-weight:800}
-.stat.hot .val{color:var(--hot)} .stat.warm .val{color:var(--warm)}
-.stat.cold .val{color:var(--cold)} .stat.total .val{color:var(--accent)}
-.stat.docs .val{color:var(--green)} .stat.munis .val{color:var(--muted)}
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+.header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+.header h1 em {
+  font-style: normal;
+  color: var(--primary);
+  font-weight: 800;
+}
+.header .sub {
+  font-size: 14px;
+  color: var(--subtle);
+  margin-top: 6px;
+  font-weight: 400;
+}
+.header .right { text-align: right; }
+.header .right .big {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
 
-/* --- Filters --- */
-.filters{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
-.fbtn{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--muted);cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
-.fbtn:hover,.fbtn.on{background:var(--s2);color:var(--text);border-color:var(--accent)}
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+}
+.stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 8px 0 0 8px;
+}
+.stat.total::before { background: var(--primary); }
+.stat.hot::before { background: var(--hot); }
+.stat.warm::before { background: var(--warm); }
+.stat.cold::before { background: var(--cold); }
+.stat.docs::before { background: var(--success); }
+.stat.munis::before { background: var(--muted); }
 
-/* --- Cards --- */
-.card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:14px;border-left:4px solid transparent;transition:.15s}
-.card:hover{border-color:var(--accent)}
-.card.hot{border-left-color:var(--hot)} .card.warm{border-left-color:var(--warm)} .card.cold{border-left-color:var(--cold)}
+.stat .lab {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--subtle);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.stat .val {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
 
-.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.card-title{font-size:18px;font-weight:600}
-.card-meta{font-size:13px;color:var(--muted);margin-top:3px}
+/* Filters */
+.filters {
+  display: inline-flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+.fbtn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.fbtn:hover { color: var(--text); }
+.fbtn.on {
+  background: var(--sidebar);
+  color: var(--text);
+}
 
-.badge{display:inline-block;padding:3px 12px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.badge.hot{background:var(--hot-bg);color:var(--hot)}
-.badge.warm{background:var(--warm-bg);color:var(--warm)}
-.badge.cold{background:var(--cold-bg);color:var(--cold)}
+/* Lead Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  transition: border-color 0.2s ease;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 8px 0 0 8px;
+}
+.card.hot::before { background: var(--hot); }
+.card.warm::before { background: var(--warm); }
+.card.cold::before { background: var(--cold); }
+.card:hover { border-color: var(--border-hover); }
 
-.bar{width:100%;height:5px;background:var(--s3);border-radius:3px;margin:10px 0;overflow:hidden}
-.fill{height:100%;border-radius:3px}
-.fill.hot{background:var(--hot)} .fill.warm{background:var(--warm)} .fill.cold{background:var(--cold)}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.card-meta {
+  font-size: 13px;
+  color: var(--subtle);
+  margin-top: 4px;
+  line-height: 1.4;
+}
 
-.action{background:var(--s2);border-radius:8px;padding:12px 16px;font-size:14px;margin:10px 0;border-left:3px solid var(--accent)}
-.action strong{color:var(--accent)}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.badge.hot { color: var(--hot); background: var(--hot-dim); }
+.badge.hot::before { background: var(--hot); }
+.badge.warm { color: var(--warm); background: var(--warm-dim); }
+.badge.warm::before { background: var(--warm); }
+.badge.cold { color: var(--cold); background: var(--cold-dim); }
+.badge.cold::before { background: var(--cold); }
 
-.tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
-.tag{padding:3px 10px;border-radius:6px;font-size:12px;background:var(--s2);color:var(--muted)}
+.score {
+  font-size: 13px;
+  color: var(--subtle);
+  margin-top: 6px;
+  text-align: right;
+}
+.score .number {
+  font-weight: 600;
+  color: var(--muted);
+}
 
-.ai-box{margin-top:10px;padding:14px 16px;background:var(--accent-dim);border:1px solid rgba(94,138,255,.2);border-radius:8px;font-size:14px;line-height:1.5}
-.ai-lab{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:6px;font-weight:600}
+.action {
+  background: var(--surface);
+  border-left: 3px solid var(--primary);
+  border-radius: 4px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-dim);
+  margin: 12px 0;
+  line-height: 1.5;
+}
 
-.ctx-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 0}
-.ctx-hidden{display:none}
-.ctx{font-size:13px;color:var(--muted);background:var(--s2);border-radius:8px;padding:12px 16px;margin-top:6px;line-height:1.5}
-.ctx mark{background:rgba(94,138,255,.25);color:var(--text);padding:1px 4px;border-radius:3px}
-.ctx strong{color:var(--text)}
+.tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.tag {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--sidebar);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
 
-.src{display:inline-block;margin-top:10px;color:var(--accent);text-decoration:none;font-size:13px}
-.src:hover{text-decoration:underline}
+.ai-box {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--primary-dim);
+  border: 1px solid rgba(79,106,255,0.2);
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.ai-lab {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
 
-.empty{text-align:center;padding:60px;color:var(--muted)}
-footer{text-align:center;padding:28px;color:var(--muted);font-size:11px;border-top:1px solid var(--border);margin-top:40px}
+.ctx-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 0;
+  margin-top: 8px;
+}
+.ctx-btn:hover { color: #6B7FFF; }
+.ctx-hidden { display: none; }
+.ctx {
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 8px;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+}
+.ctx strong { color: var(--text); }
+
+.src {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+.src:hover {
+  color: #6B7FFF;
+  text-decoration: underline;
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 40px;
+  color: var(--subtle);
+}
+.empty h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.empty p {
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+footer {
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--subtle);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 48px;
+}
 </style>
 </head>
 <body>
@@ -115,14 +366,14 @@ footer{text-align:center;padding:28px;color:var(--muted);font-size:11px;border-t
     <div class="stat warm"><div class="lab">Warm</div><div class="val">{{ warm_count }}</div></div>
     <div class="stat cold"><div class="lab">Cold</div><div class="val">{{ cold_count }}</div></div>
     <div class="stat docs"><div class="lab">Documents</div><div class="val">{{ documents_analyzed }}</div></div>
-    <div class="stat munis"><div class="lab">Sources Found</div><div class="val">{{ sources_found }}</div></div>
+    <div class="stat munis"><div class="lab">Sources</div><div class="val">{{ sources_found }}</div></div>
   </div>
 
   <div class="filters">
     <button class="fbtn on" onclick="filt('all')">All</button>
-    <button class="fbtn" onclick="filt('hot')">🔥 Hot ({{ hot_count }})</button>
-    <button class="fbtn" onclick="filt('warm')">🟡 Warm ({{ warm_count }})</button>
-    <button class="fbtn" onclick="filt('cold')">🔵 Cold ({{ cold_count }})</button>
+    <button class="fbtn" onclick="filt('hot')">Hot ({{ hot_count }})</button>
+    <button class="fbtn" onclick="filt('warm')">Warm ({{ warm_count }})</button>
+    <button class="fbtn" onclick="filt('cold')">Cold ({{ cold_count }})</button>
   </div>
 
   <div id="cards">
@@ -135,31 +386,29 @@ footer{text-align:center;padding:28px;color:var(--muted);font-size:11px;border-t
       </div>
       <div style="text-align:right">
         <span class="badge {{ l.lead_type }}">{{ l.lead_type }}</span>
-        <div class="card-meta" style="margin-top:4px">Score: {{ l.relevance_score }}</div>
+        <div class="score">Score: <span class="number">{{ l.relevance_score }}</span></div>
       </div>
     </div>
-    <div class="bar"><div class="fill {{ l.lead_type }}" style="width:{{ l.relevance_score }}%"></div></div>
-    <div class="action"><strong>→</strong> {{ l.recommended_action }}</div>
+    <div class="action">{{ l.recommended_action }}</div>
     <div class="tags">
       {% for sig in l.signal_labels %}<span class="tag">{{ sig }}</span>{% endfor %}
     </div>
     {% if l.llm_analysis %}
     <div class="ai-box"><div class="ai-lab">AI Analysis</div>{{ l.llm_analysis }}</div>
     {% endif %}
-    <button class="ctx-btn" onclick="tog(this)">Show {{ l.contexts|length }} match context(s) ▼</button>
+    <button class="ctx-btn" onclick="tog(this)">View {{ l.contexts|length }} match context(s)</button>
     <div class="ctx-hidden">
       {% for c in l.contexts %}
       <div class="ctx"><strong>{{ c.keyword }}</strong> <span class="tag">{{ c.signal_label }}</span><br>{{ c.context }}</div>
       {% endfor %}
     </div>
-    <a class="src" href="{{ l.url }}" target="_blank" rel="noopener">View source →</a>
+    <a class="src" href="{{ l.url }}" target="_blank" rel="noopener">View source document</a>
   </div>
   {% endfor %}
   {% if not leads %}
   <div class="empty">
-    <h3 style="margin-bottom:8px">No leads detected</h3>
-    <p>No ERP-related signals found in the meeting documents scanned for {{ state_name }}.</p>
-    <p style="margin-top:8px">This could mean the municipalities' meeting minutes aren't publicly posted in a standard format, or there simply weren't relevant discussions in recent documents.</p>
+    <h3>No leads detected</h3>
+    <p>No ERP-related signals were found in the meeting documents scanned. This could mean the municipalities' documents aren't publicly accessible in standard formats, or there weren't relevant discussions in recent documents.</p>
   </div>
   {% endif %}
   </div>
@@ -174,8 +423,9 @@ function filt(t){
 }
 function tog(b){
   const d=b.nextElementSibling;
-  if(d.classList.contains('ctx-hidden')){d.classList.remove('ctx-hidden');b.textContent=b.textContent.replace('Show','Hide').replace('▼','▲')}
-  else{d.classList.add('ctx-hidden');b.textContent=b.textContent.replace('Hide','Show').replace('▲','▼')}
+  const showing=!d.classList.contains('ctx-hidden');
+  d.classList.toggle('ctx-hidden');
+  b.textContent=showing?b.textContent.replace('Hide','View'):b.textContent.replace('View','Hide');
 }
 </script>
 </body>

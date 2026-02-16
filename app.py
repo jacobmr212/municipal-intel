@@ -40,13 +40,14 @@ REPORT_DIR.mkdir(exist_ok=True)
 
 # --- Population Tiers (Government ERP Sales Segments) ---
 POPULATION_TIERS = {
-    "Micro": (0, 2500, "Tiny towns, minimal budgets"),
-    "Small": (2500, 10000, "Core market, need fund accounting"),
-    "Small-Mid": (10000, 25000, "Sweet spot, real IT staff and budgets"),
-    "Mid-Market": (25000, 75000, "Competitive zone, head-to-head with Tyler/CentralSquare"),
-    "Upper-Mid": (75000, 150000, "Stretch targets"),
-    "Large": (150000, 10000000, "Enterprise, monitor for competitor intel"),
-    "Custom": (0, 10000000, "Manual min/max entry"),
+    "Micro (under 2,500)": (0, 2500),
+    "Small (2,500 – 10,000)": (2500, 10000),
+    "Small-Mid (10,000 – 25,000)": (10000, 25000),
+    "Mid-Market (25,000 – 75,000)": (25000, 75000),
+    "Upper-Mid (75,000 – 150,000)": (75000, 150000),
+    "Large (150,000+)": (150000, 10000000),
+    "All Cities": (0, 10000000),
+    "Custom": (0, 10000000),
 }
 
 # --- Caselle Territory States ---
@@ -223,51 +224,81 @@ st.markdown("""
         margin: 24px 0;
     }
 
-    .pre-scan-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #E5E7EB;
-        margin-bottom: 16px;
+    .scan-info-line {
+        font-size: 14px;
+        color: #D1D5DB;
+        line-height: 1.8;
+        margin-bottom: 6px;
     }
 
-    .scan-info-row {
-        display: flex;
-        gap: 40px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-    }
-
-    .scan-info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .scan-info-item .label {
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+    .scan-info-line .label {
         color: #6B7280;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.08em;
         font-weight: 500;
+        display: inline-block;
+        width: 140px;
     }
 
-    .scan-info-item .value {
-        font-size: 15px;
-        font-weight: 600;
+    .scan-info-line .value {
         color: #E5E7EB;
+        font-weight: 600;
     }
 
-    .scan-summary-line {
+    .scan-summary {
         font-size: 14px;
         color: #9CA3AF;
         line-height: 1.5;
         padding-top: 12px;
+        margin-top: 12px;
         border-top: 1px solid #1F1F23;
     }
 
-    .scan-summary-line strong {
-        color: #E5E7EB;
-        font-weight: 600;
+    .scan-warning {
+        font-size: 13px;
+        color: #D97706;
+        padding: 8px 12px;
+        background: rgba(217, 119, 6, 0.08);
+        border-left: 3px solid #D97706;
+        border-radius: 4px;
+        margin-top: 12px;
+    }
+
+    /* === Link-Style Button for Caselle Territory === */
+    #caselle-link-label {
+        margin-bottom: -8px;
+    }
+
+    /* Target the button that comes after the caselle-link-label */
+    #caselle-link-label + div button,
+    div:has(#caselle-link-label) + div button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #4F6AFF !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        padding: 0 4px !important;
+        height: auto !important;
+        min-height: 0 !important;
+        text-decoration: none !important;
+    }
+
+    #caselle-link-label + div button:hover,
+    div:has(#caselle-link-label) + div button:hover {
+        background: transparent !important;
+        color: #6B7FFF !important;
+        text-decoration: underline !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    #caselle-link-label + div button:focus,
+    div:has(#caselle-link-label) + div button:focus {
+        background: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
 
     /* === Empty State === */
@@ -808,23 +839,21 @@ def main():
             format_func=lambda x: state_options[x],
             default=["UT"] if "UT" in state_options else [list(state_options.keys())[0]],
         )
-        st.markdown('<div class="help-text">Select one or more states to scan. Selecting multiple states runs a multi-state scan.</div>', unsafe_allow_html=True)
 
-        # Caselle Territory quick-select
-        if st.button("Select Caselle Territory", use_container_width=True):
+        # Caselle Territory quick-select (subtle link style)
+        st.markdown('<div id="caselle-link-label" style="margin-top: 8px; font-size: 13px; color: #6B7280;">Quick select:</div>', unsafe_allow_html=True)
+
+        # Use a styled button that looks like a text link (key will be targeted in CSS)
+        if st.button("Caselle Territory", key="caselle_territory_link", type="secondary"):
             available_territory = [s for s in CASELLE_TERRITORY if s in state_options]
-            st.session_state['caselle_territory_selected'] = available_territory
+            selected_states = available_territory
             st.rerun()
-
-        # Apply Caselle Territory selection if button was clicked
-        if 'caselle_territory_selected' in st.session_state:
-            selected_states = st.session_state['caselle_territory_selected']
-            del st.session_state['caselle_territory_selected']
 
         # Combine municipalities from all selected states
         munis = []
         if selected_states:
-            state_name = ", ".join([db["states"][s]["name"] for s in selected_states])
+            state_names_list = [db["states"][s]["name"] for s in selected_states]
+            state_name = ", ".join(state_names_list)
             for state_abbr in selected_states:
                 state_munis = db["states"][state_abbr].get("municipalities", [])
                 for m in state_munis:
@@ -833,14 +862,7 @@ def main():
                     munis.append(m_copy)
         else:
             state_name = "None"
-
-        max_cities = st.slider(
-            "Max Cities to Scan",
-            min_value=1,
-            max_value=min(len(munis), 50) if munis else 50,
-            value=min(len(munis), 10) if munis else 10,
-        )
-        st.markdown('<div class="help-text">More cities = more comprehensive but slower scan</div>', unsafe_allow_html=True)
+            state_names_list = []
 
         # Filters Section (Collapsible)
         with st.expander("Filters", expanded=False):
@@ -851,15 +873,12 @@ def main():
             preset = st.radio(
                 "Target Market Segment",
                 tier_options,
-                index=2,  # Default to "Small-Mid" (sweet spot)
+                index=2,  # Default to "Small-Mid (10,000 – 25,000)"
                 label_visibility="collapsed"
             )
 
             # Get tier values
-            tier_min, tier_max, tier_desc = POPULATION_TIERS[preset]
-
-            # Show tier description
-            st.markdown(f'<div class="help-text">{tier_desc}</div>', unsafe_allow_html=True)
+            tier_min, tier_max = POPULATION_TIERS[preset]
 
             # Custom min/max inputs (only enabled for Custom tier)
             if preset == "Custom":
@@ -904,7 +923,6 @@ def main():
                 "AI-Enhanced Analysis",
                 value=False,
             )
-            st.markdown('<div class="help-text">Use Claude to generate contextual sales briefs for hot/warm leads. Requires ANTHROPIC_API_KEY environment variable.</div>', unsafe_allow_html=True)
 
     # --- Main Content ---
     render_header()
@@ -948,62 +966,83 @@ def main():
     else:  # Name (A-Z)
         filtered_munis.sort(key=lambda m: m.get("name", ""))
 
-    # Pre-scan briefing
-    cities_to_scan = filtered_munis[:max_cities]
+    # All filtered cities will be scanned (no max_cities slider)
+    cities_to_scan = filtered_munis
     num_cities = len(cities_to_scan)
 
-    # Calculate estimated time (rough: ~3 seconds per city)
-    estimated_seconds = num_cities * 3
+    # Calculate estimated time (~4 seconds per city)
+    estimated_seconds = num_cities * 4
     if estimated_seconds < 60:
-        estimated_time = f"{estimated_seconds} seconds"
+        estimated_time = f"~{estimated_seconds} seconds"
     else:
         estimated_minutes = estimated_seconds // 60
-        if estimated_minutes == 1:
-            estimated_time = "1 minute"
-        else:
-            estimated_time = f"{estimated_minutes}-{estimated_minutes + 1} minutes"
+        estimated_time = f"~{estimated_minutes} minute{'s' if estimated_minutes != 1 else ''}"
 
-    # Get population range
-    if cities_to_scan:
-        pop_values = [m.get("population", 0) for m in cities_to_scan]
-        pop_min = min(pop_values) if pop_values else 0
-        pop_max = max(pop_values) if pop_values else 0
-        if pop_min == pop_max:
-            pop_range_str = f"{pop_min:,}"
+    # Determine population range string based on tier
+    if preset == "All Cities":
+        # For "All Cities", show actual min-max of matched cities
+        if cities_to_scan:
+            pop_values = [m.get("population", 0) for m in cities_to_scan]
+            actual_min = min(pop_values) if pop_values else 0
+            actual_max = max(pop_values) if pop_values else 0
+            if actual_min == actual_max:
+                pop_range_str = f"{actual_min:,}"
+            else:
+                pop_range_str = f"{actual_min:,} – {actual_max:,}"
         else:
-            pop_range_str = f"{pop_min:,} - {pop_max:,}"
+            pop_range_str = "N/A"
+        tier_display = "All Cities"
+    elif preset == "Custom":
+        # For Custom, show user-entered values
+        pop_range_str = f"{min_population:,} – {max_population:,}"
+        tier_display = "Custom"
+    elif "under" in preset:
+        # Micro (under 2,500)
+        pop_range_str = f"0 – {tier_max:,}"
+        tier_display = preset.split(" (")[0]  # "Micro"
+    elif "+" in preset:
+        # Large (150,000+)
+        pop_range_str = f"{tier_min:,}+"
+        tier_display = preset.split(" (")[0]  # "Large"
     else:
-        pop_range_str = "N/A"
+        # All other tiers with explicit ranges
+        pop_range_str = f"{tier_min:,} – {tier_max:,}"
+        tier_display = preset.split(" (")[0]  # e.g., "Small-Mid"
 
-    # Get tier name
-    tier_name = preset if preset != "Custom" else f"{min_population:,} - {max_population:,}"
-
-    st.markdown(f"""
+    # Pre-scan briefing (simplified, accurate)
+    scan_briefing_html = f"""
     <div class="pre-scan-briefing">
-        <div class="pre-scan-title">Scan Configuration</div>
-        <div class="scan-info-row">
-            <div class="scan-info-item">
-                <div class="label">States</div>
-                <div class="value">{state_name}</div>
-            </div>
-            <div class="scan-info-item">
-                <div class="label">Population Tier</div>
-                <div class="value">{tier_name}</div>
-            </div>
-            <div class="scan-info-item">
-                <div class="label">Cities to Scan</div>
-                <div class="value">{num_cities}</div>
-            </div>
-            <div class="scan-info-item">
-                <div class="label">Population Range</div>
-                <div class="value">{pop_range_str}</div>
-            </div>
+        <div class="scan-info-line">
+            <span class="label">STATES:</span>
+            <span class="value">{state_name}</span>
         </div>
-        <div class="scan-summary-line">
-            Scanning <strong>{num_cities} cities</strong> across <strong>{state_name}</strong> — estimated <strong>{estimated_time}</strong>
+        <div class="scan-info-line">
+            <span class="label">POPULATION:</span>
+            <span class="value">{tier_display} ({pop_range_str})</span>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        <div class="scan-info-line">
+            <span class="label">CITIES MATCHED:</span>
+            <span class="value">{num_cities}</span>
+        </div>
+        <div class="scan-info-line">
+            <span class="label">ESTIMATED TIME:</span>
+            <span class="value">{estimated_time}</span>
+        </div>
+        <div class="scan-summary">
+            Scanning {num_cities} cities across {len(selected_states)} state{'s' if len(selected_states) != 1 else ''}
+        </div>
+    """
+
+    # Add warning for large scans
+    if estimated_seconds > 600:  # > 10 minutes
+        scan_briefing_html += """
+        <div class="scan-warning">
+            Large scan — consider narrowing filters or scanning one state at a time
+        </div>
+        """
+
+    scan_briefing_html += "</div>"
+    st.markdown(scan_briefing_html, unsafe_allow_html=True)
 
     # Run button (normal-sized, not full-width)
     if st.button("Run Scan", type="primary"):
@@ -1012,7 +1051,7 @@ def main():
                 selected_states=selected_states,
                 state_name=state_name,
                 municipalities=cities_to_scan,
-                max_cities=max_cities,
+                max_cities=num_cities,
                 use_llm=use_llm,
             )
 

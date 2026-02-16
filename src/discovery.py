@@ -93,21 +93,38 @@ class SourceDiscovery:
         Tries common URL patterns against the municipality's domain.
         """
         discovered = []
+
+        # Extract city name for third-party platform checks
+        city_slug = name.lower().replace(" ", "").replace("-", "")
+
+        # Build list of base URLs to check (own domain + third-party platforms)
         base_urls = [
             f"https://www.{domain}",
             f"https://{domain}",
         ]
 
-        # Try most common patterns first (CivicPlus, Granicus, then general)
+        # Add third-party platform subdomains
+        third_party_platforms = [
+            f"https://{city_slug}.civicweb.net",
+            f"https://{city_slug}.legistar.com",
+            f"https://{city_slug}.granicus.com",
+            f"https://{city_slug}-{state.lower()}.municode.com",
+        ]
+
+        # Try most common patterns first (CivicPlus AgendaCenter is #1)
         priority_patterns = [
             "/AgendaCenter", "/agendacenter",
-            "/Meetings.aspx", "/Calendar.aspx",
+            "/Archive.aspx", "/archive.aspx",  # CivicPlus archive
+            "/DocumentCenter", "/documentcenter",  # CivicPlus docs
+            "/Meetings.aspx", "/Calendar.aspx",  # Granicus
             "/meetings", "/city-council/meetings", "/council/meetings",
         ]
         remaining_patterns = [p for p in URL_PATTERNS if p not in priority_patterns]
         ordered_patterns = priority_patterns + remaining_patterns
 
         checked_count = 0
+
+        # First: Try own domain with common patterns
         for base_url in base_urls:
             for pattern in ordered_patterns:
                 url = f"{base_url}{pattern}"
@@ -151,8 +168,35 @@ class SourceDiscovery:
                     if len(discovered) >= 1 and checked_count >= 15:
                         return discovered
 
+        # Second: Try third-party platforms if nothing found on own domain
         if not discovered:
-            # Try the domain root as a fallback — some cities have meetings on the homepage
+            logger.info(f"  Checking third-party platforms for {name}...")
+            for platform_url in third_party_platforms:
+                if checked_count > 0:
+                    time.sleep(self.delay)
+                checked_count += 1
+
+                result = self._check_url(platform_url)
+                if result:
+                    found_url, source_type = result
+
+                    # Third-party platforms are high confidence
+                    confidence = 0.9
+                    source = DiscoveredSource(
+                        municipality=name,
+                        state=state,
+                        url=found_url,
+                        source_type=source_type,
+                        confidence=confidence,
+                        population=population,
+                    )
+                    discovered.append(source)
+                    logger.info(f"  ✓ Found on third-party platform: {found_url}")
+                    return discovered
+
+        # Third: Try the domain root as a fallback
+        if not discovered:
+            logger.info(f"  Trying domain root fallback for {name}...")
             for base_url in base_urls:
                 result = self._check_url(base_url)
                 if result:
@@ -165,7 +209,12 @@ class SourceDiscovery:
                         confidence=0.3,
                         population=population,
                     ))
+                    logger.info(f"  ~ Found (low confidence): {found_url}")
                     break
+
+        # Log if nothing found
+        if not discovered:
+            logger.warning(f"  ✗ No sources found for {name}, {state} ({domain}) — checked {checked_count} URLs")
 
         return discovered
 
@@ -176,6 +225,8 @@ class SourceDiscovery:
         """
         all_sources = []
         total = len(municipalities)
+        cities_found = set()
+        cities_skipped_no_domain = []
 
         for i, muni in enumerate(municipalities):
             name = muni["name"]
@@ -184,6 +235,7 @@ class SourceDiscovery:
 
             if not domain:
                 logger.warning(f"  No domain for {name}, {state_abbr} — skipping")
+                cities_skipped_no_domain.append(name)
                 continue
 
             logger.info(f"[{i + 1}/{total}] Discovering sources for {name}, {state_abbr}...")
@@ -192,10 +244,24 @@ class SourceDiscovery:
                 progress_callback(i, total, f"Discovering: {name}, {state_abbr}")
 
             sources = self.discover_municipality(name, state_abbr, domain, population)
+            if sources:
+                cities_found.add(name)
             all_sources.extend(sources)
 
         # Sort by confidence (highest first), then population (largest first)
         all_sources.sort(key=lambda s: (s.confidence, s.population), reverse=True)
 
-        logger.info(f"Discovery complete: {len(all_sources)} sources found for {len(municipalities)} municipalities")
+        # Calculate and log hit rate
+        cities_with_domains = total - len(cities_skipped_no_domain)
+        hit_rate = (len(cities_found) / cities_with_domains * 100) if cities_with_domains > 0 else 0
+
+        logger.info("=" * 60)
+        logger.info(f"DISCOVERY SUMMARY for {state_abbr}")
+        logger.info(f"  Total municipalities: {total}")
+        logger.info(f"  Sources found: {len(all_sources)} from {len(cities_found)} cities")
+        logger.info(f"  Hit rate: {hit_rate:.1f}% ({len(cities_found)}/{cities_with_domains})")
+        if cities_skipped_no_domain:
+            logger.info(f"  Skipped (no domain): {len(cities_skipped_no_domain)}")
+        logger.info("=" * 60)
+
         return all_sources

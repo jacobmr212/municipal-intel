@@ -191,10 +191,15 @@ SIGNALS = {
 # ============================================================
 
 URL_PATTERNS = [
-    # CivicPlus AgendaCenter (very common)
+    # CivicPlus AgendaCenter (MOST common platform for small-mid gov)
     "/AgendaCenter",
     "/agendacenter",
     "/Agendacenter",
+    "/Archive.aspx",  # CivicPlus archive pages
+    "/archive.aspx",
+    "/DocumentCenter",  # CivicPlus document center
+    "/documentcenter",
+    "/DocumentCenter/Index",
     # Granicus/Legistar (common municipal platform)
     "/ViewPublishedAgendas.ashx",
     "/PublishedAgendas.ashx",
@@ -216,8 +221,10 @@ URL_PATTERNS = [
     "/council/meetings",
     "/council/agendas",
     "/council/agendas-minutes",
+    "/council/minutes",  # Common pattern
     "/council-meetings",
     "/city-council-meetings",
+    "/meetings/city-council",  # Common pattern
     # Common paths - government
     "/government/agendas-minutes",
     "/government/meetings",
@@ -225,10 +232,13 @@ URL_PATTERNS = [
     "/government/city-council",
     "/government/city-council/agendas-minutes",
     "/government/city-council/meetings",
+    "/government/boards-commissions/city-council",  # Common pattern
+    "/government/council/meetings",  # Common pattern
     "/city-government/agendas-minutes",
     "/city-government/meetings",
     "/your-government/agendas-minutes",
     "/your-government/meetings",
+    "/our-government/city-council/agendas-minutes",  # Common pattern
     # Common paths - meetings
     "/meetings",
     "/agendas-minutes",
@@ -237,8 +247,10 @@ URL_PATTERNS = [
     "/minutes",
     "/meeting-agendas",
     "/meeting-minutes",
+    "/MeetingMinutes",  # Common pattern
+    "/meetingminutes",
     "/public-meetings",
-    # Common paths - departments
+    # Common paths - departments / city clerk
     "/departments/city-clerk",
     "/departments/city-clerk/agendas-minutes",
     "/departments/city-clerk/meetings",
@@ -246,6 +258,7 @@ URL_PATTERNS = [
     "/city-clerk",
     "/city-clerk/meetings",
     "/city-clerk/agendas",
+    "/city-clerk/agendas-minutes",  # Common pattern
     "/clerk/agendas-minutes",
     "/clerk/meetings",
     # Other common patterns
