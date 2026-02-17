@@ -109,11 +109,13 @@ class User(Base):
     User account.
 
     Passwordless authentication via magic links.
+    role: "client" | "consultant" | "admin"
     """
     __tablename__ = "users"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String(255), nullable=False, unique=True, index=True)
+    role = Column(String(20), nullable=False, default="client")  # client | consultant | admin
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
 

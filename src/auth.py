@@ -9,7 +9,7 @@ import jwt
 import os
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import HTTPException, Cookie, Response
+from fastapi import HTTPException, Cookie, Response, Depends
 from sqlalchemy.orm import Session
 
 from .database import User, MagicLink
@@ -88,20 +88,17 @@ def send_magic_link_email(email: str, magic_url: str) -> bool:
         return False
 
 
-def create_magic_link(db: Session, email: str) -> MagicLink:
+def create_magic_link(db: Session, email: str) -> Optional[MagicLink]:
     """
-    Create a magic link for the given email.
+    Create a magic link for an approved user.
 
-    Creates user if they don't exist.
-    Returns the MagicLink record with token.
+    Only creates a magic link if the user already exists in the database
+    (i.e., has been approved by an admin from the waitlist).
+    Returns None if user not found — caller should still return 200 to avoid leaking existence.
     """
-    # Get or create user
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(User.email == email.lower().strip()).first()
     if not user:
-        user = User(email=email)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        return None
 
     # Create magic link
     token = generate_magic_token()
@@ -151,11 +148,12 @@ def verify_magic_link(db: Session, token: str) -> Optional[User]:
     return user
 
 
-def create_session_token(user_id: str, email: str) -> str:
-    """Create a JWT session token."""
+def create_session_token(user_id: str, email: str, role: str) -> str:
+    """Create a JWT session token including the user's role."""
     payload = {
         "user_id": user_id,
         "email": email,
+        "role": role,
         "exp": datetime.utcnow() + SESSION_DURATION
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -165,7 +163,7 @@ def verify_session_token(token: str) -> Optional[dict]:
     """
     Verify a JWT session token.
 
-    Returns payload dict with user_id and email if valid.
+    Returns payload dict with user_id, email, and role if valid.
     Returns None if invalid or expired.
     """
     try:
@@ -181,7 +179,8 @@ def get_current_user(session_token: Optional[str] = Cookie(None)) -> dict:
     """
     FastAPI dependency to get current authenticated user from session cookie.
 
-    Raises HTTPException if not authenticated.
+    Raises HTTPException (401) if not authenticated.
+    Returns dict with user_id, email, role.
     """
     if not session_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -193,9 +192,35 @@ def get_current_user(session_token: Optional[str] = Cookie(None)) -> dict:
     return payload
 
 
+def require_role(*roles: str):
+    """
+    FastAPI dependency factory that enforces role-based access.
+
+    Usage:
+        @app.get("/municipal-intel")
+        async def page(user = Depends(require_role("consultant", "admin"))):
+            ...
+    """
+    def _check(user: dict = Depends(get_current_user)) -> dict:
+        if user.get("role") not in roles:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return user
+    return _check
+
+
+def get_current_user_optional(session_token: Optional[str] = Cookie(None)) -> Optional[dict]:
+    """
+    Like get_current_user but returns None instead of raising on missing/invalid session.
+    Used for routes that want to check auth without hard-requiring it.
+    """
+    if not session_token:
+        return None
+    return verify_session_token(session_token)
+
+
 def set_session_cookie(response: Response, user: User):
     """Set session cookie in response."""
-    token = create_session_token(user.id, user.email)
+    token = create_session_token(user.id, user.email, user.role)
     response.set_cookie(
         key="session_token",
         value=token,

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — GovTech Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --white: #FFFFFF;
+  --offwhite: #FAFAF9;
+  --sand: #F5F3EF;
+  --stone: #E8E4DD;
+  --warm-gray: #9C9689;
+  --text: #1A1816;
+  --text-secondary: #3D3A35;
+  --accent: #1E3BC0;
+  --accent-hover: #162DA8;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: var(--accent);
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--offwhite);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Nav */
+nav {
+  position: sticky;
+  top: 3px;
+  z-index: 90;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--stone);
+  padding: 0 2rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.nav-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+.nav-user {
+  font-size: 0.85rem;
+  color: var(--warm-gray);
+}
+
+/* Main content */
+.main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.page-header {
+  margin-bottom: 2.5rem;
+}
+
+.page-header h1 {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.4rem;
+}
+
+.page-header p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* Cards */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 10px;
+  padding: 2rem;
+}
+
+.card-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5C574F;
+  margin-bottom: 1rem;
+}
+
+.card h2 {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.01em;
+}
+
+.card p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover { background: var(--accent-hover); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--stone);
+}
+
+.btn-ghost:hover { border-color: var(--warm-gray); color: var(--text); }
+
+.coming-soon {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  background: var(--sand);
+  border: 1px solid var(--stone);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">GovTech Diagnostic</div>
+    <div class="nav-links">
+      <a href="/dashboard" class="active">Dashboard</a>
+      <a href="#assessment">My Assessment</a>
+      <a href="#consultation">Request Consultation</a>
+    </div>
+    <div class="nav-user">{{ user.email }}</div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <h1>ERP Readiness Dashboard</h1>
+    <p>Welcome back. Assess your financial systems and track your upgrade readiness.</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card" id="assessment">
+      <div class="card-tag">ERP Assessment</div>
+      <h2>Run a Readiness Assessment</h2>
+      <p>Answer questions about your pay codes, GL structure, and compliance gaps. Get a professional diagnostic report with risk scores and vendor-neutral recommendations.</p>
+      <a href="#" class="btn btn-primary">Start Assessment</a>
+    </div>
+
+    <div class="card">
+      <div class="card-tag">My Reports</div>
+      <h2>Previous Assessments <span class="coming-soon">Coming Soon</span></h2>
+      <p>View and download your past diagnostic reports. Track how your readiness score changes over time.</p>
+      <a href="#" class="btn btn-ghost">View Reports</a>
+    </div>
+
+    <div class="card" id="consultation">
+      <div class="card-tag">Expert Consultation</div>
+      <h2>Talk to a Specialist <span class="coming-soon">Coming Soon</span></h2>
+      <p>Connect with a government ERP implementation consultant to discuss your assessment results and next steps.</p>
+      <a href="#" class="btn btn-ghost">Request Consultation</a>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

@@ -29,6 +29,8 @@ from src.auth import (
     create_magic_link,
     verify_magic_link,
     get_current_user,
+    get_current_user_optional,
+    require_role,
     set_session_cookie,
     clear_session_cookie,
     send_magic_link_email,
@@ -41,6 +43,38 @@ app = FastAPI(title="Municipal Intel", version="2.0")
 
 # Initialize database
 init_db()
+
+
+# ============================================================
+# EXCEPTION HANDLERS
+# ============================================================
+
+@app.exception_handler(401)
+async def unauthorized_handler(request: Request, exc):
+    """Redirect unauthenticated browser requests to /login."""
+    # API requests get JSON error; page requests get redirect
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        return RedirectResponse(url="/login", status_code=303)
+    return JSONResponse(status_code=401, content={"detail": str(exc.detail)})
+
+
+@app.exception_handler(403)
+async def forbidden_handler(request: Request, exc):
+    """Return a clean 403 page for unauthorized role access."""
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        return HTMLResponse(
+            content="""<!DOCTYPE html><html><head><title>Access Denied</title>
+<style>body{font-family:-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#F5F3EF;}
+.box{max-width:400px;text-align:center;padding:2rem;}h1{font-size:1.5rem;color:#1A1816;margin-bottom:0.5rem;}p{color:#3D3A35;margin-bottom:1.5rem;}
+a{color:#1E3BC0;text-decoration:none;font-weight:500;}</style></head>
+<body><div class="box"><h1>Access Denied</h1><p>You don't have permission to view this page.</p>
+<a href="/dashboard">&larr; Go to Dashboard</a></div></body></html>""",
+            status_code=403
+        )
+    return JSONResponse(status_code=403, content={"detail": str(exc.detail)})
+
 
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -304,24 +338,24 @@ async def request_magic_link(request: MagicLinkRequest, db: Session = Depends(ge
     """
     Send a magic link to the user's email.
 
-    Creates user if they don't exist.
+    Only sends if the user has been approved (exists in users table).
+    Always returns 200 — never leak whether an email is registered.
     """
     magic_link = create_magic_link(db, request.email)
 
-    # Build magic link URL
-    magic_url = f"{APP_URL}/auth/verify/{magic_link.token}"
+    if magic_link:
+        # User exists — build and send the link
+        magic_url = f"{APP_URL}/auth/verify/{magic_link.token}"
+        send_magic_link_email(request.email, magic_url)
 
-    # Send email via Resend
-    email_sent = send_magic_link_email(request.email, magic_url)
+        response = {"success": True, "message": "If your email is registered, a login link is on its way."}
 
-    response = {
-        "success": True,
-        "message": "Magic link sent to your email" if email_sent else "Magic link created"
-    }
-
-    # In dev mode (no Resend key), include the link in response
-    if not RESEND_API_KEY:
-        response["dev_link"] = magic_url
+        # Dev mode: include link in response
+        if not RESEND_API_KEY:
+            response["dev_link"] = magic_url
+    else:
+        # User not found — return identical 200 to avoid enumeration
+        response = {"success": True, "message": "If your email is registered, a login link is on its way."}
 
     return response
 
@@ -331,18 +365,27 @@ async def verify_magic_link_route(token: str, response: Response, db: Session = 
     """
     Verify magic link token and create session.
 
-    Redirects to /app on success.
+    Redirects based on user role:
+      client    → /dashboard
+      consultant → /municipal-intel
+      admin     → /municipal-intel
     """
     user = verify_magic_link(db, token)
 
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid or expired magic link")
+        return RedirectResponse(url="/login?error=invalid_link", status_code=303)
 
     # Set session cookie
     set_session_cookie(response, user)
 
-    # Redirect to app
-    return RedirectResponse(url="/app", status_code=303)
+    # Role-based redirect
+    role = user.role or "client"
+    if role in ("consultant", "admin"):
+        redirect_url = "/municipal-intel"
+    else:
+        redirect_url = "/dashboard"
+
+    return RedirectResponse(url=redirect_url, status_code=303)
 
 
 @app.post("/api/auth/logout")
@@ -353,16 +396,76 @@ async def logout(response: Response):
 
 
 # ============================================================
+# AUTH PAGE ROUTES
+# ============================================================
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(
+    request: Request,
+    error: Optional[str] = None,
+    user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Login page with magic link form.
+
+    If already authenticated, redirect to appropriate dashboard.
+    """
+    if user:
+        role = user.get("role", "client")
+        if role in ("consultant", "admin"):
+            return RedirectResponse(url="/municipal-intel", status_code=303)
+        return RedirectResponse(url="/dashboard", status_code=303)
+
+    return templates.TemplateResponse("login.html", {
+        "request": request,
+        "error": error
+    })
+
+
+# ============================================================
 # PROTECTED APP ROUTES
 # ============================================================
 
-@app.get("/app", response_class=HTMLResponse)
-async def app_index(request: Request, user: dict = Depends(get_current_user)):
-    """Serve Municipal Intel app - requires authentication."""
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request, user: dict = Depends(get_current_user)):
+    """
+    Client ERP Readiness Dashboard.
+
+    Accessible by all authenticated users (client, consultant, admin).
+    """
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "user": user
+    })
+
+
+@app.get("/municipal-intel", response_class=HTMLResponse)
+async def municipal_intel(
+    request: Request,
+    user: dict = Depends(require_role("consultant", "admin"))
+):
+    """
+    Municipal Intel Scanner.
+
+    Restricted to consultant and admin roles only.
+    Clients attempting to access this will receive a 403.
+    """
     return templates.TemplateResponse("index.html", {
         "request": request,
         "user": user
     })
+
+
+@app.get("/app", response_class=HTMLResponse)
+async def app_redirect(user: dict = Depends(get_current_user)):
+    """
+    Legacy /app route — redirects to role-appropriate destination.
+    Kept for backward compatibility with existing magic links.
+    """
+    role = user.get("role", "client")
+    if role in ("consultant", "admin"):
+        return RedirectResponse(url="/municipal-intel", status_code=303)
+    return RedirectResponse(url="/dashboard", status_code=303)
 
 
 @app.post("/api/scans")
