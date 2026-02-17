@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GovTech Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-bg: #111110;
+  --sidebar-border: #2A2926;
+  --sidebar-text: #C8C4BC;
+  --sidebar-active: #FFFFFF;
+  --sidebar-hover: rgba(255,255,255,0.07);
+  --white: #FFFFFF;
+  --offwhite: #FAFAF9;
+  --sand: #F5F3EF;
+  --stone: #E8E4DD;
+  --warm-gray: #9C9689;
+  --text: #1A1816;
+  --text-secondary: #3D3A35;
+  --accent: #1E3BC0;
+  --accent-hover: #162DA8;
+  --accent-light: #EEF1FC;
+  --green: #1A7F37;
+  --green-bg: #D1FAE5;
+  --red: #991B1B;
+  --red-bg: #FEE2E2;
+  --hot: #EF6B5A;
+  --warm: #FBBF24;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--offwhite);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 50;
+}
+
+.sidebar-logo {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.sidebar-logo-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sidebar-active);
+  letter-spacing: -0.01em;
+}
+
+.sidebar-logo-sub {
+  font-size: 0.72rem;
+  color: #6B665E;
+  margin-top: 0.15rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nav-section-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4A4540;
+  padding: 0.75rem 0.75rem 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-tab:hover { background: var(--sidebar-hover); color: var(--sidebar-active); }
+
+.nav-tab.active {
+  background: rgba(30,59,192,0.2);
+  color: #7B9BF8;
+}
+
+.nav-tab .tab-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.nav-tab.active .tab-icon { opacity: 1; }
+
+.role-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  margin-left: auto;
+}
+
+.badge-admin { background: rgba(239,107,90,0.15); color: #EF6B5A; }
+.badge-consultant { background: rgba(251,191,36,0.12); color: #FBBF24; }
+.badge-client { background: rgba(74,222,128,0.1); color: #4ADE80; }
+
+.sidebar-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.sidebar-user-email {
+  font-size: 0.8rem;
+  color: #6B665E;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4A4540;
+  margin-bottom: 0.75rem;
+}
+
+.btn-logout {
+  font-size: 0.82rem;
+  color: #6B665E;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.btn-logout:hover { color: var(--sidebar-text); }
+
+/* ═══ MAIN CONTENT ═══ */
+.main {
+  margin-left: 240px;
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--stone);
+  padding: 1.5rem 2.5rem;
+}
+
+.main-header h1 {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.main-header p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+.main-body {
+  padding: 2rem 2.5rem;
+  flex: 1;
+}
+
+/* ═══ TAB PANELS ═══ */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ═══ CARDS ═══ */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 10px;
+  padding: 1.75rem;
+}
+
+.card-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5C574F;
+  margin-bottom: 0.75rem;
+}
+
+.card h2 {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.card p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary { background: var(--accent); color: #FFFFFF; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { background: var(--stone); color: var(--warm-gray); cursor: not-allowed; }
+
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--stone); }
+.btn-ghost:hover { border-color: var(--warm-gray); color: var(--text); }
+
+.btn-sm { padding: 0.4rem 0.85rem; font-size: 0.82rem; }
+
+.coming-soon {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  background: var(--sand);
+  border: 1px solid var(--stone);
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+
+/* ═══ SCANNER TAB ═══ */
+.scanner-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.scanner-config {
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 10px;
+  padding: 1.5rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.config-section {
+  margin-bottom: 1.5rem;
+}
+
+.config-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #5C574F;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.state-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.state-btn {
+  padding: 0.3rem 0.1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 500;
+  border: 1px solid var(--stone);
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--white);
+  color: var(--text-secondary);
+  transition: all 0.12s;
+}
+
+.state-btn:hover { border-color: var(--accent); color: var(--accent); }
+.state-btn.selected { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+
+.quick-links {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.quick-link {
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--sans);
+  font-weight: 500;
+}
+
+.quick-link:hover { text-decoration: underline; }
+
+.tier-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tier-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--stone);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.tier-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--text);
+}
+
+.tier-option input { margin: 0; accent-color: var(--accent); }
+
+/* Results area */
+.scanner-results {
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 10px;
+  min-height: 400px;
+}
+
+.results-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--stone);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.results-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.results-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.82rem;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-secondary);
+}
+
+.dot-hot { width: 7px; height: 7px; border-radius: 50%; background: var(--hot); display: inline-block; }
+.dot-warm { width: 7px; height: 7px; border-radius: 50%; background: var(--warm); display: inline-block; }
+
+/* Progress bar */
+.scan-progress {
+  padding: 2rem 1.5rem;
+  display: none;
+}
+
+.progress-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar-track {
+  height: 6px;
+  background: var(--stone);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* Empty state */
+.results-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--warm-gray);
+}
+
+.results-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.4;
+}
+
+.results-empty p { font-size: 0.9rem; }
+
+/* Lead rows */
+.leads-list {
+  display: none;
+}
+
+.lead-row {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--stone);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+.lead-row:last-child { border-bottom: none; }
+
+.lead-city {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+
+.lead-title {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.lead-source {
+  font-size: 0.72rem;
+  color: var(--warm-gray);
+  margin-top: 0.2rem;
+}
+
+.lead-score {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.tag-hot { background: rgba(239,107,90,0.12); color: #D95B4A; }
+.tag-warm { background: rgba(251,191,36,0.12); color: #B45309; }
+.tag-cold { background: var(--sand); color: var(--warm-gray); }
+
+/* ═══ ADMIN TAB ═══ */
+.admin-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--stone);
+  margin-bottom: 1.5rem;
+}
+
+.admin-tab-btn {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--warm-gray);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+  font-family: var(--sans);
+}
+
+.admin-tab-btn:hover { color: var(--text); }
+.admin-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.admin-panel { display: none; }
+.admin-panel.active { display: block; }
+
+/* Tables */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.data-table th {
+  background: var(--sand);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #5C574F;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--stone);
+}
+
+.data-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--stone);
+  vertical-align: middle;
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--sand); }
+
+.data-table td strong { color: var(--text); font-weight: 600; }
+
+.table-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--warm-gray);
+  font-size: 0.9rem;
+}
+
+/* Role select */
+.role-select {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--stone);
+  border-radius: 5px;
+  background: var(--white);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Approve form inline */
+.approve-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Notification toast */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--sidebar-bg);
+  color: #E5E3DE;
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transform: translateY(8px);
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 999;
+  pointer-events: none;
+  max-width: 320px;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success::before { content: '✓  '; color: #4ADE80; }
+.toast.error::before { content: '✕  '; color: var(--hot); }
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Date formatting */
+.text-muted { color: var(--warm-gray); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">GovTech Diagnostic</div>
+    <div class="sidebar-logo-sub">Intelligence Platform</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Workspace</div>
+
+    <button class="nav-tab active" onclick="switchTab('dashboard', this)">
+      <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1" y="1" width="6" height="6" rx="1"/>
+        <rect x="9" y="1" width="6" height="6" rx="1"/>
+        <rect x="1" y="9" width="6" height="6" rx="1"/>
+        <rect x="9" y="9" width="6" height="6" rx="1"/>
+      </svg>
+      Dashboard
+    </button>
+
+    {% if user.role in ('consultant', 'admin') %}
+    <button class="nav-tab" onclick="switchTab('scanner', this)">
+      <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="7" cy="7" r="5"/>
+        <path d="M11 11l3 3"/>
+      </svg>
+      Scanner
+    </button>
+    {% endif %}
+
+    {% if user.role == 'admin' %}
+    <div class="nav-section-label">Administration</div>
+    <button class="nav-tab" onclick="switchTab('admin', this)">
+      <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="5" r="3"/>
+        <path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6"/>
+      </svg>
+      Admin
+      <span class="role-badge badge-admin">Admin</span>
+    </button>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user-email">{{ user.email }}</div>
+    <div class="sidebar-user-role">
+      {% if user.role == 'admin' %}<span style="color:#EF6B5A;">Admin</span>
+      {% elif user.role == 'consultant' %}<span style="color:#FBBF24;">Consultant</span>
+      {% else %}<span style="color:#4ADE80;">Client</span>
+      {% endif %}
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign out</button>
+  </div>
+</aside>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main">
+
+  <!-- ─── DASHBOARD TAB ─── -->
+  <div id="tab-dashboard" class="tab-panel active">
+    <div class="main-header">
+      <h1>Dashboard</h1>
+      <p>ERP readiness tools and your assessment history.</p>
+    </div>
+    <div class="main-body">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-tag">ERP Assessment</div>
+          <h2>Run a Readiness Assessment</h2>
+          <p>Answer questions about your pay codes, GL structure, and compliance gaps. Get a vendor-neutral diagnostic report with risk scores.</p>
+          <button class="btn btn-primary">Start Assessment</button>
+        </div>
+        <div class="card">
+          <div class="card-tag">My Reports</div>
+          <h2>Previous Assessments <span class="coming-soon">Coming Soon</span></h2>
+          <p>View and download past diagnostic reports. Track readiness score changes over time.</p>
+          <button class="btn btn-ghost" disabled>View Reports</button>
+        </div>
+        <div class="card">
+          <div class="card-tag">Expert Consultation</div>
+          <h2>Talk to a Specialist <span class="coming-soon">Coming Soon</span></h2>
+          <p>Connect with a government ERP implementation consultant to discuss your results.</p>
+          <button class="btn btn-ghost" disabled>Request Consultation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SCANNER TAB ─── -->
+  {% if user.role in ('consultant', 'admin') %}
+  <div id="tab-scanner" class="tab-panel">
+    <div class="main-header">
+      <h1>Municipal Intel Scanner</h1>
+      <p>Scan government documents for procurement signals across all 50 states.</p>
+    </div>
+    <div class="main-body">
+      <div class="scanner-layout">
+
+        <!-- Config panel -->
+        <div class="scanner-config">
+          <div class="config-section">
+            <span class="config-label">States</span>
+            <div class="state-grid" id="stateGrid">
+              <!-- Populated by JS -->
+            </div>
+            <div class="quick-links" style="margin-top:0.75rem;">
+              <button class="quick-link" onclick="selectAll()">All</button>
+              <button class="quick-link" onclick="selectNone()">None</button>
+              <button class="quick-link" onclick="selectCaselleTerritory()">Caselle Territory</button>
+            </div>
+          </div>
+
+          <div class="config-section">
+            <span class="config-label">Population Tier</span>
+            <div class="tier-options">
+              <label class="tier-option"><input type="radio" name="tier" value="micro"> Micro (&lt;2.5K)</label>
+              <label class="tier-option"><input type="radio" name="tier" value="small" checked> Small (2.5K–10K)</label>
+              <label class="tier-option"><input type="radio" name="tier" value="small-mid"> Small-Mid (10K–25K)</label>
+              <label class="tier-option"><input type="radio" name="tier" value="mid-market"> Mid-Market (25K–75K)</label>
+              <label class="tier-option"><input type="radio" name="tier" value="upper-mid"> Upper-Mid (75K–150K)</label>
+              <label class="tier-option"><input type="radio" name="tier" value="large"> Large (150K+)</label>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;" id="startScanBtn" onclick="startScan()">
+            Start Scan
+          </button>
+        </div>
+
+        <!-- Results panel -->
+        <div class="scanner-results" id="scannerResults">
+          <div class="results-header">
+            <span class="results-title" id="resultsTitle">Results</span>
+            <div class="results-stats" id="resultsStats" style="display:none;">
+              <span class="stat-chip"><span class="dot-hot"></span><span id="hotCount">0</span> Hot</span>
+              <span class="stat-chip"><span class="dot-warm"></span><span id="warmCount">0</span> Warm</span>
+            </div>
+          </div>
+
+          <div class="scan-progress" id="scanProgress">
+            <div class="progress-label" id="progressMsg">Initializing...</div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+          </div>
+
+          <div class="results-empty" id="resultsEmpty">
+            <div class="results-empty-icon">&#x2315;</div>
+            <p>Configure states and tier, then start a scan.</p>
+          </div>
+
+          <div class="leads-list" id="leadsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ─── ADMIN TAB ─── -->
+  {% if user.role == 'admin' %}
+  <div id="tab-admin" class="tab-panel">
+    <div class="main-header">
+      <h1>Admin</h1>
+      <p>Manage the waitlist and user roles.</p>
+    </div>
+    <div class="main-body">
+
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" onclick="switchAdminTab('waitlist', this)">Waitlist</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('users', this)">Users</button>
+      </div>
+
+      <!-- Waitlist panel -->
+      <div id="admin-waitlist" class="admin-panel active">
+        <table class="data-table" id="waitlistTable">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Signed Up</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="waitlistBody">
+            <tr><td colspan="3" class="table-empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Users panel -->
+      <div id="admin-users" class="admin-panel">
+        <table class="data-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Last Login</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr><td colspan="5" class="table-empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div><!-- /main -->
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── User context from server ──
+const USER = {
+  email: "{{ user.email }}",
+  role: "{{ user.role }}"
+};
+
+// ── Tab switching ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('tab-' + name);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  // Lazy-load data when tab first opens
+  if (name === 'admin') {
+    loadWaitlist();
+    loadUsers();
+  }
+}
+
+function switchAdminTab(name, btn) {
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('admin-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Toast ──
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+// ── Logout ──
+function logout() {
+  fetch('/api/auth/logout', { method: 'POST' })
+    .then(() => window.location = '/');
+}
+
+// ═══════════════════════════════
+// SCANNER
+// ═══════════════════════════════
+
+const ALL_STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+];
+
+const CASELLE_STATES = ['UT','ID','WY','MT','NV','CO','NM','AZ','SD','ND','NE','KS','OK'];
+
+// Build state grid
+function buildStateGrid() {
+  const grid = document.getElementById('stateGrid');
+  if (!grid) return;
+  grid.innerHTML = ALL_STATES.map(s =>
+    `<button class="state-btn" data-state="${s}" onclick="toggleState(this)">${s}</button>`
+  ).join('');
+}
+
+function toggleState(btn) {
+  btn.classList.toggle('selected');
+}
+
+function selectAll() {
+  document.querySelectorAll('.state-btn').forEach(b => b.classList.add('selected'));
+}
+
+function selectNone() {
+  document.querySelectorAll('.state-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function selectCaselleTerritory() {
+  selectNone();
+  CASELLE_STATES.forEach(s => {
+    const btn = document.querySelector(`.state-btn[data-state="${s}"]`);
+    if (btn) btn.classList.add('selected');
+  });
+}
+
+function getSelectedStates() {
+  return Array.from(document.querySelectorAll('.state-btn.selected')).map(b => b.dataset.state);
+}
+
+function getSelectedTier() {
+  const checked = document.querySelector('input[name="tier"]:checked');
+  return checked ? checked.value : 'small';
+}
+
+let activeScanId = null;
+let pollInterval = null;
+
+function startScan() {
+  const states = getSelectedStates();
+  if (states.length === 0) { showToast('Select at least one state.', 'error'); return; }
+
+  const btn = document.getElementById('startScanBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Starting...';
+
+  document.getElementById('resultsEmpty').style.display = 'none';
+  document.getElementById('leadsList').style.display = 'none';
+  document.getElementById('scanProgress').style.display = 'block';
+  document.getElementById('resultsStats').style.display = 'none';
+  document.getElementById('resultsTitle').textContent = 'Scanning...';
+
+  fetch('/api/scans', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ states: states, population_tier: getSelectedTier() })
+  })
+  .then(r => r.json())
+  .then(data => {
+    activeScanId = data.scan_id;
+    pollInterval = setInterval(pollScan, 2000);
+  })
+  .catch(() => {
+    showToast('Failed to start scan. Try again.', 'error');
+    resetScanBtn();
+  });
+}
+
+function pollScan() {
+  if (!activeScanId) return;
+  fetch('/api/scans/' + activeScanId)
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('progressMsg').textContent = data.progress_message || 'Scanning...';
+    document.getElementById('progressFill').style.width = (data.progress_pct || 0) + '%';
+
+    if (data.status === 'completed') {
+      clearInterval(pollInterval);
+      loadLeads(activeScanId, data.stats);
+      resetScanBtn();
+    } else if (data.status === 'failed') {
+      clearInterval(pollInterval);
+      showToast('Scan failed: ' + (data.progress_message || 'Unknown error'), 'error');
+      document.getElementById('scanProgress').style.display = 'none';
+      document.getElementById('resultsEmpty').style.display = 'flex';
+      resetScanBtn();
+    }
+  });
+}
+
+function resetScanBtn() {
+  const btn = document.getElementById('startScanBtn');
+  btn.disabled = false;
+  btn.textContent = 'Start Scan';
+}
+
+function loadLeads(scanId, stats) {
+  fetch('/api/scans/' + scanId + '/leads?sort=score')
+  .then(r => r.json())
+  .then(data => {
+    const leads = data.leads || [];
+    document.getElementById('scanProgress').style.display = 'none';
+
+    if (leads.length === 0) {
+      document.getElementById('resultsEmpty').style.display = 'flex';
+      document.getElementById('resultsTitle').textContent = 'No leads found';
+      return;
+    }
+
+    const hot = leads.filter(l => l.lead_type === 'hot').length;
+    const warm = leads.filter(l => l.lead_type === 'warm').length;
+    document.getElementById('hotCount').textContent = hot;
+    document.getElementById('warmCount').textContent = warm;
+    document.getElementById('resultsStats').style.display = 'flex';
+    document.getElementById('resultsTitle').textContent = leads.length + ' leads';
+
+    const list = document.getElementById('leadsList');
+    list.innerHTML = leads.map(lead => `
+      <div class="lead-row">
+        <div>
+          <div class="lead-city">${lead.municipality}, ${lead.state}</div>
+          <div class="lead-title">${lead.title}</div>
+          <div class="lead-source">${formatSource(lead.source_type)} · ${lead.date || ''}</div>
+        </div>
+        <div class="lead-score">${Math.round(lead.relevance_score)}</div>
+        <div><span class="tag tag-${lead.lead_type}">${lead.lead_type}</span></div>
+      </div>
+    `).join('');
+    list.style.display = 'block';
+  });
+}
+
+function formatSource(t) {
+  const map = { meeting_minutes:'Meeting Minutes', procurement:'Procurement', budget:'Budget', job_posting:'Job Posting', audit:'State Audit', agenda_packet:'Agenda Packet' };
+  return map[t] || t;
+}
+
+// ═══════════════════════════════
+// ADMIN: WAITLIST
+// ═══════════════════════════════
+
+function loadWaitlist() {
+  fetch('/api/admin/waitlist')
+  .then(r => r.json())
+  .then(data => {
+    const tbody = document.getElementById('waitlistBody');
+    if (!data.waitlist || data.waitlist.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No pending signups.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.waitlist.map(entry => `
+      <tr id="wl-row-${CSS.escape(entry.email)}">
+        <td><strong>${entry.email}</strong></td>
+        <td class="text-muted">${formatDate(entry.created_at)}</td>
+        <td>
+          <div class="approve-form">
+            <select class="role-select" id="role-${CSS.escape(entry.email)}">
+              <option value="client">Client</option>
+              <option value="consultant">Consultant</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="approveUser('${entry.email}')">Approve</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  })
+  .catch(() => {
+    document.getElementById('waitlistBody').innerHTML = '<tr><td colspan="3" class="table-empty">Failed to load.</td></tr>';
+  });
+}
+
+function approveUser(email) {
+  const roleEl = document.getElementById('role-' + CSS.escape(email));
+  const role = roleEl ? roleEl.value : 'client';
+
+  fetch('/api/admin/approve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, role: role })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      const row = document.getElementById('wl-row-' + CSS.escape(email));
+      if (row) row.remove();
+      showToast('Approved ' + email + ' as ' + role + '. Welcome email sent.', 'success');
+      loadUsers(); // refresh users table
+    } else {
+      showToast(data.detail || 'Approval failed.', 'error');
+    }
+  })
+  .catch(() => showToast('Request failed.', 'error'));
+}
+
+// ═══════════════════════════════
+// ADMIN: USERS
+// ═══════════════════════════════
+
+function loadUsers() {
+  fetch('/api/admin/users')
+  .then(r => r.json())
+  .then(data => {
+    const tbody = document.getElementById('usersBody');
+    if (!data.users || data.users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No users yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.users.map(u => `
+      <tr>
+        <td><strong>${u.email}</strong></td>
+        <td>
+          <select class="role-select" onchange="updateRole('${u.id}', this.value)">
+            <option value="client" ${u.role==='client'?'selected':''}>Client</option>
+            <option value="consultant" ${u.role==='consultant'?'selected':''}>Consultant</option>
+            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+          </select>
+        </td>
+        <td class="text-muted">${formatDate(u.created_at)}</td>
+        <td class="text-muted">${u.last_login ? formatDate(u.last_login) : '—'}</td>
+        <td class="text-muted">${u.id.slice(0,8)}…</td>
+      </tr>
+    `).join('');
+  })
+  .catch(() => {
+    document.getElementById('usersBody').innerHTML = '<tr><td colspan="5" class="table-empty">Failed to load.</td></tr>';
+  });
+}
+
+function updateRole(userId, newRole) {
+  fetch('/api/admin/users/' + userId + '/role', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: newRole })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) showToast('Role updated to ' + newRole + '.', 'success');
+    else showToast(data.detail || 'Update failed.', 'error');
+  })
+  .catch(() => showToast('Request failed.', 'error'));
+}
+
+// ── Helpers ──
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── Init ──
+buildStateGrid();
+</script>
+
+</body>
+</html>

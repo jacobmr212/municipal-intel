@@ -99,6 +99,15 @@ class LeadUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+class AdminApproveRequest(BaseModel):
+    email: str
+    role: str = "client"  # client | consultant | admin
+
+
+class RoleUpdateRequest(BaseModel):
+    role: str
+
+
 # ============================================================
 # POPULATION TIER RANGES
 # ============================================================
@@ -378,14 +387,8 @@ async def verify_magic_link_route(token: str, response: Response, db: Session = 
     # Set session cookie
     set_session_cookie(response, user)
 
-    # Role-based redirect
-    role = user.role or "client"
-    if role in ("consultant", "admin"):
-        redirect_url = "/municipal-intel"
-    else:
-        redirect_url = "/dashboard"
-
-    return RedirectResponse(url=redirect_url, status_code=303)
+    # All roles land on the unified /app shell
+    return RedirectResponse(url="/app", status_code=303)
 
 
 @app.post("/api/auth/logout")
@@ -411,10 +414,7 @@ async def login_page(
     If already authenticated, redirect to appropriate dashboard.
     """
     if user:
-        role = user.get("role", "client")
-        if role in ("consultant", "admin"):
-            return RedirectResponse(url="/municipal-intel", status_code=303)
-        return RedirectResponse(url="/dashboard", status_code=303)
+        return RedirectResponse(url="/app", status_code=303)
 
     return templates.TemplateResponse("login.html", {
         "request": request,
@@ -426,46 +426,30 @@ async def login_page(
 # PROTECTED APP ROUTES
 # ============================================================
 
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, user: dict = Depends(get_current_user)):
-    """
-    Client ERP Readiness Dashboard.
-
-    Accessible by all authenticated users (client, consultant, admin).
-    """
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "user": user
-    })
+@app.get("/dashboard")
+async def dashboard(user: dict = Depends(get_current_user)):
+    """Redirect legacy /dashboard to unified /app shell."""
+    return RedirectResponse(url="/app", status_code=303)
 
 
-@app.get("/municipal-intel", response_class=HTMLResponse)
-async def municipal_intel(
-    request: Request,
-    user: dict = Depends(require_role("consultant", "admin"))
-):
-    """
-    Municipal Intel Scanner.
-
-    Restricted to consultant and admin roles only.
-    Clients attempting to access this will receive a 403.
-    """
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "user": user
-    })
+@app.get("/municipal-intel")
+async def municipal_intel(user: dict = Depends(get_current_user)):
+    """Redirect legacy /municipal-intel to unified /app shell."""
+    return RedirectResponse(url="/app", status_code=303)
 
 
 @app.get("/app", response_class=HTMLResponse)
-async def app_redirect(user: dict = Depends(get_current_user)):
+async def app_shell(request: Request, user: dict = Depends(get_current_user)):
     """
-    Legacy /app route — redirects to role-appropriate destination.
-    Kept for backward compatibility with existing magic links.
+    Unified app shell with role-conditional tabs:
+      - Dashboard (all roles)
+      - Scanner (consultant + admin)
+      - Admin (admin only)
     """
-    role = user.get("role", "client")
-    if role in ("consultant", "admin"):
-        return RedirectResponse(url="/municipal-intel", status_code=303)
-    return RedirectResponse(url="/dashboard", status_code=303)
+    return templates.TemplateResponse("app.html", {
+        "request": request,
+        "user": user
+    })
 
 
 @app.post("/api/scans")
@@ -756,6 +740,134 @@ async def export_scan(
         html_content = generate_html_report(lead_data, scan.stats_json or {})
 
         return HTMLResponse(content=html_content)
+
+
+# ============================================================
+# ADMIN API ENDPOINTS
+# ============================================================
+
+@app.get("/api/admin/waitlist")
+async def get_waitlist(
+    user: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """List all pending waitlist entries. Admin only."""
+    try:
+        result = db.execute(text("SELECT email, created_at FROM waitlist ORDER BY created_at DESC"))
+        rows = result.fetchall()
+        return {
+            "waitlist": [
+                {
+                    "email": row[0],
+                    "created_at": row[1].isoformat() if row[1] else None
+                }
+                for row in rows
+            ]
+        }
+    except Exception:
+        return {"waitlist": []}
+
+
+@app.post("/api/admin/approve")
+async def approve_waitlist_user(
+    request: AdminApproveRequest,
+    user: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Approve a waitlist applicant and create their account.
+
+    Creates User record, removes from waitlist, sends welcome magic link.
+    Admin only.
+    """
+    import uuid as _uuid
+
+    email = request.email.lower().strip()
+    role = request.role
+
+    valid_roles = ("client", "consultant", "admin")
+    if role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+
+    # Check if user already exists
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="User already exists")
+
+    # Create user
+    new_user = User(id=str(_uuid.uuid4()), email=email, role=role)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Remove from waitlist (best-effort, no error if not found)
+    try:
+        db.execute(text("DELETE FROM waitlist WHERE email = :email"), {"email": email})
+        db.commit()
+    except Exception:
+        pass
+
+    # Send welcome magic link
+    magic_link = create_magic_link(db, email)
+    dev_link = None
+    if magic_link:
+        magic_url = f"{APP_URL}/auth/verify/{magic_link.token}"
+        send_magic_link_email(email, magic_url)
+        if not RESEND_API_KEY:
+            dev_link = magic_url
+
+    response = {
+        "success": True,
+        "user_id": new_user.id,
+        "email": new_user.email,
+        "role": new_user.role
+    }
+    if dev_link:
+        response["dev_link"] = dev_link
+    return response
+
+
+@app.get("/api/admin/users")
+async def get_all_users(
+    user: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """List all users with role and timestamps. Admin only."""
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    return {
+        "users": [
+            {
+                "id": u.id,
+                "email": u.email,
+                "role": u.role,
+                "created_at": u.created_at.isoformat(),
+                "last_login": u.last_login.isoformat() if u.last_login else None
+            }
+            for u in users
+        ]
+    }
+
+
+@app.patch("/api/admin/users/{user_id}/role")
+async def update_user_role(
+    user_id: str,
+    update: RoleUpdateRequest,
+    user: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """Update a user's role. Admin only."""
+    valid_roles = ("client", "consultant", "admin")
+    if update.role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    target.role = update.role
+    db.commit()
+
+    return {"success": True, "user_id": user_id, "role": update.role}
 
 
 if __name__ == "__main__":
