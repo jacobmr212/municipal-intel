@@ -252,10 +252,10 @@ def run_scan(scan_id: str, config: dict):
 # PUBLIC ROUTES
 # ============================================================
 
-@app.get("/", response_class=HTMLResponse)
-async def landing(request: Request):
-    """Serve public landing page."""
-    return templates.TemplateResponse("landing.html", {"request": request})
+@app.get("/", response_class=FileResponse)
+async def landing():
+    """Serve public landing page as a static file (no template processing)."""
+    return FileResponse("static/landing.html")
 
 
 @app.get("/health")

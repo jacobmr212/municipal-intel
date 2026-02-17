@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GovTech Diagnostic — ERP Intelligence for Government</title>
+<meta name="description" content="AI-powered ERP diagnostic platform for municipalities. Assess financial systems, surface procurement signals, and close deals faster.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   GovTech Diagnostic Landing Page
+   Professional government/consulting aesthetic
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --navy: #1B2A4A;
+  --blue: #2E5FA1;
+  --light-blue: #4A7FC1;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --max-width: 1200px;
+  --section-padding: 5rem 2rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--gray-800);
+  background: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══ Navigation ═══ */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 1rem 0;
+}
+
+.nav-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-right a {
+  color: var(--gray-700);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  transition: color 0.2s;
+}
+
+.nav-right a:hover {
+  color: var(--blue);
+}
+
+.btn-nav {
+  background: var(--blue);
+  color: white !important;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.btn-nav:hover {
+  background: var(--navy);
+  color: white !important;
+}
+
+/* ═══ Hero ═══ */
+.hero {
+  padding: var(--section-padding);
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  background: linear-gradient(to bottom, var(--gray-50), white);
+}
+
+.hero-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-tag {
+  display: inline-block;
+  background: var(--blue);
+  color: white;
+  padding: 0.375rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.hero-body {
+  font-size: 1.25rem;
+  color: var(--gray-600);
+  max-width: 700px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--navy);
+}
+
+.btn-ghost {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background: transparent;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* ═══ Hero Card ═══ */
+.hero-card {
+  max-width: 420px;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: left;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.card-label {
+  font-weight: 600;
+  color: var(--navy);
+  font-size: 0.9375rem;
+}
+
+.card-live {
+  background: #D1FAE5;
+  color: #065F46;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.card-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.mini-stat {
+  text-align: center;
+}
+
+.mini-stat-val {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.mini-stat-val.hot { color: #DC2626; }
+.mini-stat-val.warm { color: #D97706; }
+.mini-stat-val.scanned { color: var(--blue); }
+
+.mini-stat-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-lead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.card-lead:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.lead-city-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--gray-800);
+  margin-bottom: 0.25rem;
+}
+
+.lead-desc {
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+}
+
+.tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag-hot { background: #FEE2E2; color: #DC2626; }
+.tag-warm { background: #FEF3C7; color: #D97706; }
+.tag-cold { background: var(--gray-100); color: var(--gray-600); }
+
+/* ═══ Divider ═══ */
+.divider {
+  border: none;
+  border-top: 1px solid var(--gray-200);
+  margin: 0;
+}
+
+/* ═══ Products ═══ */
+.products {
+  padding: var(--section-padding);
+  background: white;
+}
+
+.products-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.products-grid {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.product-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 2.5rem;
+}
+
+.product-number {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.product-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 0.75rem;
+}
+
+.product-card p {
+  color: var(--gray-600);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.product-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.product-features li {
+  font-size: 0.9375rem;
+  color: var(--gray-700);
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.product-features li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--blue);
+  font-weight: 600;
+}
+
+/* ═══ Section Tags ═══ */
+.section-tag {
+  display: inline-block;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  padding: 0.375rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+/* ═══ How It Works ═══ */
+.how-section {
+  padding: var(--section-padding);
+  background: var(--gray-50);
+}
+
+.how-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.how-inner h2 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 3rem;
+  letter-spacing: -0.01em;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  text-align: left;
+}
+
+.step {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 2rem;
+}
+
+.step-num {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.step h3 {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.step p {
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
+/* ═══ Sources ═══ */
+.sources-section {
+  padding: var(--section-padding);
+  background: white;
+  text-align: center;
+}
+
+.sources-section h2 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.sources-list {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.source-item {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.source-item h4 {
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.375rem;
+  font-size: 0.9375rem;
+}
+
+.source-item p {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+/* ═══ Stats Bar ═══ */
+.stats-bar {
+  background: var(--navy);
+  padding: 3rem 2rem;
+}
+
+.stats-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  color: white;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-desc {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ═══ CTA ═══ */
+.cta-section {
+  padding: var(--section-padding);
+  background: var(--gray-50);
+  text-align: center;
+}
+
+.cta-section h2 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.cta-body {
+  font-size: 1.125rem;
+  color: var(--gray-600);
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+}
+
+.cta-form {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 500px;
+  margin: 0 auto 1rem;
+}
+
+.cta-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.cta-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(46, 95, 161, 0.1);
+}
+
+.cta-form .btn-primary {
+  padding: 0.875rem 1.5rem;
+}
+
+.cta-note {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+/* ═══ Footer ═══ */
+footer {
+  background: var(--navy);
+  padding: 2rem;
+}
+
+.footer-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9375rem;
+}
+
+footer a {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  transition: color 0.2s;
+}
+
+footer a:hover {
+  color: white;
+}
+
+/* ═══ Fade In ═══ */
+.fade-in {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══ Responsive ═══ */
+@media (max-width: 768px) {
+  :root {
+    --section-padding: 3rem 1.5rem;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero-body {
+    font-size: 1.125rem;
+  }
+
+  .how-inner h2,
+  .sources-section h2,
+  .cta-section h2,
+  .products-header h2 {
+    font-size: 2rem;
+  }
+
+  .nav-right {
+    gap: 1rem;
+  }
+
+  .nav-right a {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .nav-right a:not(.btn-nav) {
+    display: none;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">GovTech Diagnostic</div>
+    <div class="nav-right">
+      <a href="#platform">Platform</a>
+      <a href="#process">How It Works</a>
+      <a href="#sources">Sources</a>
+      <a href="#access" class="btn-nav">Request Access</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-tag">Early Access</div>
+    <h1>ERP intelligence for government</h1>
+    <p class="hero-body">Diagnostic platform that helps municipalities assess their financial systems and surfaces procurement opportunities before your competitors find them.</p>
+    <div class="hero-actions">
+      <a href="#access" class="btn-primary">Request Early Access</a>
+      <a href="#process" class="btn-ghost">How it works &darr;</a>
+    </div>
+  </div>
+  <div class="hero-card">
+    <div class="card-header">
+      <span class="card-label">Municipal Intel</span>
+      <span class="card-live">Scanning</span>
+    </div>
+    <div class="card-stats">
+      <div class="mini-stat">
+        <div class="mini-stat-val hot">3</div>
+        <div class="mini-stat-label">Hot</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-val warm">8</div>
+        <div class="mini-stat-label">Warm</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-val scanned">47</div>
+        <div class="mini-stat-label">Scanned</div>
+      </div>
+    </div>
+    <div class="card-lead">
+      <div class="lead-info">
+        <div class="lead-city-name">Cedar Hills, UT</div>
+        <div class="lead-desc">Active RFP — financial management system</div>
+      </div>
+      <span class="tag tag-hot">Hot</span>
+    </div>
+    <div class="card-lead">
+      <div class="lead-info">
+        <div class="lead-city-name">Payson, UT</div>
+        <div class="lead-desc">Council discussing utility billing modernization</div>
+      </div>
+      <span class="tag tag-warm">Warm</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══ PLATFORM ═══ -->
+<section class="products" id="platform">
+  <div class="products-header fade-in">
+    <div class="section-tag">Platform</div>
+    <h2>Two tools. One intelligence advantage.</h2>
+  </div>
+  <div class="products-grid">
+    <div class="product-card fade-in">
+      <div class="product-number">01</div>
+      <h3>ERP Readiness Assessment</h3>
+      <p>Conversational AI that walks finance directors through their pay codes, GL structure, and compliance gaps. Generates a professional report with risk scores.</p>
+      <ul class="product-features">
+        <li>Payroll code analysis across all pay types</li>
+        <li>State-specific compliance validation</li>
+        <li>Vendor-neutral recommendations</li>
+        <li>Exportable diagnostic report</li>
+      </ul>
+    </div>
+    <div class="product-card fade-in">
+      <div class="product-number">02</div>
+      <h3>Municipal Intel Scanner</h3>
+      <p>Scans thousands of municipal documents across all 50 states for procurement signals, RFPs, and competitor activity. Delivers scored, actionable leads.</p>
+      <ul class="product-features">
+        <li>138 weighted signal keywords</li>
+        <li>Context-validated lead scoring</li>
+        <li>Hot, Warm, Cold classification</li>
+        <li>Source documents linked to every lead</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section class="how-section" id="process">
+  <div class="how-inner">
+    <div class="section-tag fade-in">Process</div>
+    <h2 class="fade-in">From scan to closed deal</h2>
+    <div class="steps">
+      <div class="step fade-in">
+        <div class="step-num">01</div>
+        <h3>Select targets</h3>
+        <p>Choose states and population tiers. One click scans your entire territory.</p>
+      </div>
+      <div class="step fade-in">
+        <div class="step-num">02</div>
+        <h3>Automated scanning</h3>
+        <p>The platform finds municipal document sources and analyzes content in the background.</p>
+      </div>
+      <div class="step fade-in">
+        <div class="step-num">03</div>
+        <h3>Scored leads</h3>
+        <p>Signals validated in context, scored by urgency, classified by procurement stage.</p>
+      </div>
+      <div class="step fade-in">
+        <div class="step-num">04</div>
+        <h3>Take action</h3>
+        <p>Each lead includes recommended next steps, source documents, and competitive intel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SOURCES ═══ -->
+<section class="sources-section" id="sources">
+  <div class="section-tag fade-in">Coverage</div>
+  <h2 class="fade-in">Six intelligence sources</h2>
+  <div style="height: 1rem;"></div>
+  <div class="sources-list fade-in">
+    <div class="source-item">
+      <h4>Procurement Portals</h4>
+      <p>Active RFPs, bid notices, vendor solicitations</p>
+    </div>
+    <div class="source-item">
+      <h4>Budget Documents</h4>
+      <p>Capital plans, funded line items, appropriations</p>
+    </div>
+    <div class="source-item">
+      <h4>Meeting Minutes</h4>
+      <p>Council discussions, votes, staff reports</p>
+    </div>
+    <div class="source-item">
+      <h4>Job Postings</h4>
+      <p>ERP administrator and implementation roles</p>
+    </div>
+    <div class="source-item">
+      <h4>State Audits</h4>
+      <p>Compliance findings, system deficiencies</p>
+    </div>
+    <div class="source-item">
+      <h4>Agenda Packets</h4>
+      <p>Pre-meeting briefings and staff recommendations</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STATS ═══ -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item fade-in">
+      <div class="stat-num">10,000+</div>
+      <div class="stat-desc">Municipalities tracked</div>
+    </div>
+    <div class="stat-item fade-in">
+      <div class="stat-num">50</div>
+      <div class="stat-desc">States covered</div>
+    </div>
+    <div class="stat-item fade-in">
+      <div class="stat-num">138</div>
+      <div class="stat-desc">Signal keywords</div>
+    </div>
+    <div class="stat-item fade-in">
+      <div class="stat-num">6</div>
+      <div class="stat-desc">Source types</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CTA ═══ -->
+<section class="cta-section" id="access">
+  <div class="section-tag fade-in">Early Access</div>
+  <h2 class="fade-in">Get intelligence before your competitors</h2>
+  <p class="cta-body fade-in">GovTech Diagnostic is in early access for government ERP professionals. Request a magic link to access the platform.</p>
+  <div class="cta-form fade-in">
+    <input type="email" class="cta-input" placeholder="you@company.com" id="email-input">
+    <button class="btn-primary" onclick="handleSubmit()" id="submit-btn">Request Access</button>
+  </div>
+  <p class="cta-note fade-in" id="form-note">No password needed. We'll email you a secure login link.</p>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-text">&copy; 2026 GovTech Diagnostic</span>
+    <a href="mailto:hello@govtechdiagnostic.com">hello@govtechdiagnostic.com</a>
+  </div>
+</footer>
+
+<script>
+async function handleSubmit() {
+  const email = document.getElementById('email-input').value.trim();
+  const btn = document.getElementById('submit-btn');
+  const note = document.getElementById('form-note');
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    note.textContent = 'Enter a valid email address.';
+    note.style.color = '#C42B1C';
+    return;
+  }
+
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  try {
+    const response = await fetch('/api/auth/request-magic-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      btn.textContent = 'Check Your Email';
+      btn.style.background = '#1A7F37';
+      btn.style.opacity = '1';
+
+      if (data.dev_link) {
+        note.innerHTML = '<a href="' + data.dev_link + '" style="color: #2B4AE0;">Click here to login (dev mode)</a>';
+      } else {
+        note.textContent = "Magic link sent! Check your email.";
+        note.style.color = '#1A7F37';
+      }
+
+      document.getElementById('email-input').disabled = true;
+    } else {
+      throw new Error(data.detail || 'Failed to send magic link');
+    }
+  } catch (error) {
+    btn.textContent = 'Try Again';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    note.textContent = 'Error: ' + error.message;
+    note.style.color = '#C42B1C';
+  }
+}
+
+// Scroll reveal
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
+
+</body>
+</html>
