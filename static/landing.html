@@ -6,7 +6,7 @@
 <title>GovTech Diagnostic — ERP Intelligence for Government</title>
 <meta name="description" content="AI-powered ERP diagnostic platform for municipalities. Assess financial systems, surface procurement signals, and close deals faster.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -26,10 +26,23 @@
   --green: #1A7F37;
   --dark-block: #111110;
   --serif: 'Instrument Serif', Georgia, serif;
-  --sans: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --sans: 'Geist', 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html { scroll-behavior: smooth; }
+
+/* ═══ ACCENT BAR ═══ */
+body::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: var(--accent);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
 
 body {
   font-family: var(--sans);
@@ -92,14 +105,14 @@ nav {
   font-size: 0.84rem;
   font-weight: 550;
   color: var(--white);
-  background: var(--text);
+  background: var(--accent);
   padding: 0.5rem 1.2rem;
   border-radius: 6px;
   text-decoration: none;
   transition: background 0.15s;
 }
 
-.btn-nav:hover { background: #333; }
+.btn-nav:hover { background: var(--accent-hover); }
 
 /* ═══ HERO ═══ */
 .hero {
@@ -300,11 +313,11 @@ h1 {
 .products {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 6rem 3rem;
+  padding: 5rem 3rem;
 }
 
 .products-header {
-  margin-bottom: 3.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .section-tag {
@@ -395,7 +408,7 @@ h2 {
 /* ═══ HOW IT WORKS ═══ */
 .how-section {
   background: var(--sand);
-  padding: 6rem 3rem;
+  padding: 5rem 3rem;
 }
 
 .how-inner {
@@ -404,7 +417,7 @@ h2 {
 }
 
 .how-inner .section-tag { margin-bottom: 0.75rem; }
-.how-inner h2 { margin-bottom: 3.5rem; }
+.how-inner h2 { margin-bottom: 2.5rem; }
 
 .steps {
   display: grid;
@@ -438,10 +451,10 @@ h2 {
 .sources-section {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 6rem 3rem;
+  padding: 5rem 3rem;
 }
 
-.sources-section h2 { margin-bottom: 3rem; }
+.sources-section h2 { margin-bottom: 2.5rem; }
 
 .sources-list {
   display: grid;
@@ -504,7 +517,7 @@ h2 {
 .cta-section {
   max-width: 640px;
   margin: 0 auto;
-  padding: 7rem 3rem;
+  padding: 5rem 3rem;
   text-align: center;
 }
 
@@ -613,6 +626,46 @@ footer a:hover { color: var(--text); }
   .footer-inner { flex-direction: column; gap: 0.75rem; }
 }
 
+/* ═══ TRUST STRIP ═══ */
+.trust-strip {
+  background: var(--sand);
+  border-top: 1px solid var(--stone);
+  border-bottom: 1px solid var(--stone);
+  padding: 2rem 3rem;
+}
+
+.trust-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.trust-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  margin-bottom: 0.75rem;
+}
+
+.trust-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.trust-stats strong { color: var(--text); font-weight: 600; }
+
+.trust-divider {
+  color: var(--stone);
+  padding: 0 0.25rem;
+}
+
 /* ═══ FADE IN ═══ */
 .fade-in {
   opacity: 0;
@@ -645,7 +698,7 @@ footer a:hover { color: var(--text); }
   <div class="hero-content">
     <div class="hero-tag">Early Access</div>
     <h1>ERP intelligence for government</h1>
-    <p class="hero-body">Diagnostic platform that helps municipalities assess their financial systems and surfaces procurement opportunities before your competitors find them.</p>
+    <p class="hero-body">The diagnostic platform that government ERP consultants use to assess municipal financial systems and find procurement opportunities before anyone else.</p>
     <div class="hero-actions">
       <a href="#access" class="btn-primary">Request Early Access</a>
       <a href="#process" class="btn-ghost">How it works &darr;</a>
@@ -688,6 +741,20 @@ footer a:hover { color: var(--text); }
 </section>
 
 <hr class="divider">
+
+<!-- ═══ TRUST STRIP ═══ -->
+<section class="trust-strip">
+  <div class="trust-inner">
+    <p class="trust-label">Built for government ERP professionals</p>
+    <div class="trust-stats">
+      <span>Serving municipalities across <strong>50 states</strong></span>
+      <span class="trust-divider">|</span>
+      <span>Built by <strong>ERP implementation consultants</strong></span>
+      <span class="trust-divider">|</span>
+      <span>Vendor-neutral analysis</span>
+    </div>
+  </div>
+</section>
 
 <!-- ═══ PLATFORM ═══ -->
 <section class="products" id="platform">
@@ -810,7 +877,7 @@ footer a:hover { color: var(--text); }
 <section class="cta-section" id="access">
   <div class="section-tag fade-in">Early Access</div>
   <h2 class="fade-in">Get intelligence before your competitors</h2>
-  <p class="cta-body fade-in">GovTech Diagnostic is in early access for government ERP professionals. Leave your email and we'll reach out with next steps.</p>
+  <p class="cta-body fade-in">GovTech Diagnostic is in early access. Join the waitlist to get notified when we launch.</p>
   <div class="cta-form fade-in">
     <input type="email" class="cta-input" placeholder="you@company.com" id="email-input">
     <button class="btn-primary" onclick="handleSubmit()" id="submit-btn">Request Access</button>
@@ -841,15 +908,24 @@ function handleSubmit() {
   btn.disabled = true;
   btn.style.opacity = '0.7';
 
-  // Wire to your Resend endpoint
-  setTimeout(() => {
-    btn.textContent = 'Submitted';
+  fetch('/api/waitlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email })
+  }).then(function(res) {
+    btn.textContent = 'You\'re on the list';
     btn.style.background = '#1A7F37';
     btn.style.opacity = '1';
-    note.textContent = "You're on the list. We'll be in touch.";
+    note.textContent = "We'll be in touch when we launch.";
     note.style.color = '#1A7F37';
     document.getElementById('email-input').disabled = true;
-  }, 500);
+  }).catch(function(err) {
+    btn.textContent = 'Try Again';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    note.textContent = 'Something went wrong. Please try again.';
+    note.style.color = '#C42B1C';
+  });
 }
 
 // Scroll reveal

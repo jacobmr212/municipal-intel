@@ -16,6 +16,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import json
 import os
 
@@ -262,6 +263,36 @@ async def landing():
 async def health():
     """Health check endpoint."""
     return {"status": "ok", "version": "2.0"}
+
+
+# ============================================================
+# WAITLIST ENDPOINT
+# ============================================================
+
+class WaitlistRequest(BaseModel):
+    email: str
+
+@app.post("/api/waitlist")
+async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db)):
+    """Add email to waitlist. Returns 200 even on duplicate to avoid leaking whether an email exists."""
+    try:
+        db.execute(
+            text("""
+                CREATE TABLE IF NOT EXISTS waitlist (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+        )
+        db.execute(
+            text("INSERT INTO waitlist (email) VALUES (:email) ON CONFLICT (email) DO NOTHING"),
+            {"email": request.email.lower().strip()}
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+    return {"status": "ok"}
 
 
 # ============================================================
