@@ -38,27 +38,12 @@ from src.auth import (
 # Initialize FastAPI app
 app = FastAPI(title="Municipal Intel", version="2.0")
 
-# Initialize database (lazy init on first request for Vercel)
-try:
-    init_db()
-except Exception as e:
-    print(f"Database initialization deferred: {e}")
+# Initialize database
+init_db()
 
 # Mount static files and templates
-import os
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-else:
-    print(f"Warning: Static directory not found at {static_dir}")
-
-if os.path.exists(templates_dir):
-    templates = Jinja2Templates(directory=templates_dir)
-else:
-    print(f"Warning: Templates directory not found at {templates_dir}")
-    templates = None
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 
 # ============================================================
