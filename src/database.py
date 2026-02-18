@@ -227,7 +227,21 @@ class Lead(Base):
 
 
 # Database setup
-engine = create_engine(DATABASE_URL, echo=False)
+# pool_pre_ping: test connections before use (handles Neon idle SSL drops)
+# pool_recycle: recycle connections every 5 min (Neon closes idle after ~5 min)
+# pool_size / max_overflow: conservative limits for a shared Neon free tier
+if DATABASE_URL and "postgresql" in DATABASE_URL:
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        pool_size=5,
+        max_overflow=10,
+        connect_args={"connect_timeout": 10}
+    )
+else:
+    engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -237,12 +251,15 @@ def init_db():
     if not os.getenv("DATABASE_URL"):
         os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
 
-    Base.metadata.create_all(bind=engine)
-
-    if os.getenv("DATABASE_URL"):
-        print(f"✓ Database initialized at: {os.getenv('DATABASE_URL')[:30]}...")
-    else:
-        print(f"✓ Database initialized at: {DATABASE_PATH}")
+    try:
+        Base.metadata.create_all(bind=engine)
+        if os.getenv("DATABASE_URL"):
+            print(f"✓ Database initialized at: {os.getenv('DATABASE_URL')[:30]}...")
+        else:
+            print(f"✓ Database initialized at: {DATABASE_PATH}")
+    except Exception as e:
+        # Log but don't crash — connections may recover on first request
+        print(f"⚠ Database init warning (will retry on first request): {e}")
 
 
 def get_db():
