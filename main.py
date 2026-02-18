@@ -357,14 +357,14 @@ async def request_magic_link(request: MagicLinkRequest, db: Session = Depends(ge
         magic_url = f"{APP_URL}/auth/verify/{magic_link.token}"
         send_magic_link_email(request.email, magic_url)
 
-        response = {"success": True, "message": "If your email is registered, a login link is on its way."}
+        response = {"success": True, "registered": True}
 
         # Dev mode: include link in response
         if not RESEND_API_KEY:
             response["dev_link"] = magic_url
     else:
-        # User not found — return identical 200 to avoid enumeration
-        response = {"success": True, "message": "If your email is registered, a login link is on its way."}
+        # User not found — tell frontend to show "thank you" holding message
+        response = {"success": True, "registered": False}
 
     return response
 
