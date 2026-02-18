@@ -12,6 +12,31 @@ from .signals import SIGNALS, classify_lead
 
 logger = logging.getLogger(__name__)
 
+# ── Physical/infrastructure procurement — if these appear near a budget/RFP signal,
+# the match is equipment/construction procurement, not software. Downgrade to low confidence.
+PHYSICAL_PROCUREMENT_TERMS = [
+    "street sweeper", "sweeper", "mower", "lawn mower", "excavator", "backhoe",
+    "grader", "snowplow", "snow plow", "dump truck", "fire truck", "ambulance",
+    "patrol car", "police vehicle", "fleet vehicle", "fleet management",
+    "hvac", "elevator", "generator", "lift station", "pump station",
+    "water line", "sewer line", "sewer main", "water main", "water pipe",
+    "stormwater", "storm water", "road construction", "pavement", "paving",
+    "asphalt", "concrete repair", "bridge", "culvert", "sidewalk",
+    "building renovation", "roofing", "roof replacement", "landscaping",
+    "park equipment", "playground", "street light", "traffic signal",
+]
+
+# ── Tech-context terms required to validate RFP/budget signals as software-related ──
+# These must appear within ±50 words of the trigger keyword.
+TECH_CONTEXT_TERMS = [
+    "software", "system", "technology", "erp", "financial system",
+    "accounting system", "payroll system", "billing system",
+    "information technology", "it department", "it services",
+    "implementation", "digital", "database", "application", "platform",
+    "cloud", "saas", "hosted", "license", "subscription",
+    "data migration", "integration", "interface",
+]
+
 
 @dataclass
 class SignalMatch:
@@ -94,28 +119,53 @@ class DocumentAnalyzer:
             ctx = ctx + "..."
         return ctx
 
-    def _validate_procurement_context(self, text: str, pos: int) -> bool:
-        """
-        Validate that procurement keywords appear in relevant context.
-        Returns True if supporting procurement terms found within ±50 words.
-        """
-        # Extract ±50 words around the match
+    def _extract_window(self, text: str, pos: int, num_words: int = 50) -> str:
+        """Extract ±num_words words around pos as a lowercase string."""
         words_per_char = 0.16  # ~6 chars per word average
-        char_window = int(50 / words_per_char)  # ~300 chars = ~50 words
+        char_window = int(num_words / words_per_char)
         start = max(0, pos - char_window)
         end = min(len(text), pos + char_window)
-        context = text[start:end].lower()
+        return text[start:end].lower()
 
-        # Supporting procurement terms that validate this is real procurement content
-        supporting_terms = [
-            "proposal", "bid", "rfp", "rfi", "rfq", "vendor", "contract",
-            "software", "system", "technology", "erp", "financial",
-            "implementation", "procurement", "purchase", "solicitation",
-            "submit", "response", "qualification", "requirement",
-        ]
+    def _is_physical_procurement(self, text: str, pos: int) -> bool:
+        """
+        Returns True if physical/infrastructure keywords appear within ±50 words.
+        Used to downgrade budget/RFP signals that are about equipment, not software.
+        """
+        window = self._extract_window(text, pos, num_words=50)
+        return any(term in window for term in PHYSICAL_PROCUREMENT_TERMS)
 
-        # Return True if at least one supporting term appears in context
-        return any(term in context for term in supporting_terms)
+    def _has_tech_context(self, text: str, pos: int) -> bool:
+        """
+        Returns True if at least one tech/software keyword appears within ±50 words.
+        Required to validate that budget/RFP signals are software-related.
+        """
+        window = self._extract_window(text, pos, num_words=50)
+        return any(term in window for term in TECH_CONTEXT_TERMS)
+
+    def _validate_procurement_context(self, text: str, pos: int, signal_type: str = "") -> bool:
+        """
+        Validate that a procurement signal appears in relevant tech/software context.
+
+        For active_rfp_signals: requires TECH context terms within ±50 words.
+          The old approach checked for any procurement word (including "rfp"), which
+          caused circular validation — "rfp" on any page validated "deadline for submission"
+          even when the deadline referred to meeting agenda submissions.
+
+        For budget_signals: requires TECH context within ±50 words AND no physical
+          procurement terms (to filter street sweeper / equipment RFPs).
+
+        Returns True (high confidence) if the signal is in a tech/software context.
+        """
+        # Step 1: Reject if physical procurement terms are nearby
+        if self._is_physical_procurement(text, pos):
+            return False
+
+        # Step 2: Require at least one tech-context term nearby
+        if not self._has_tech_context(text, pos):
+            return False
+
+        return True
 
     def _find_matches(self, text: str) -> list[SignalMatch]:
         """Run keyword matching across all signal categories."""
@@ -125,10 +175,11 @@ class DocumentAnalyzer:
 
             for kw, pattern in sig_data["patterns"]:
                 for match in pattern.finditer(text):
-                    # For signals that require context validation, check for supporting terms
+                    # For signals that require context validation, check for tech context
+                    # and absence of physical procurement terms.
                     confidence = "high"
                     if requires_context:
-                        if not self._validate_procurement_context(text, match.start()):
+                        if not self._validate_procurement_context(text, match.start(), sig_type):
                             confidence = "low"
 
                     matches.append(SignalMatch(

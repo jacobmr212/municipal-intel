@@ -100,8 +100,12 @@ SIGNALS = {
     "budget_signals": {
         "label": "Budget/Procurement",
         "weight": 6,
-        "description": "Budget discussions, procurement, or RFP activity",
+        "description": "Technology budget discussions, software procurement, or IT RFP activity",
+        # requires_context=True: each match is validated for tech/software context and
+        # checked against physical procurement terms before being scored.
+        "requires_context": True,
         "keywords": [
+            # Software/tech-specific procurement — these are specific enough to stand alone
             "software procurement",
             "technology upgrade",
             "technology modernization",
@@ -112,29 +116,29 @@ SIGNALS = {
             "software demonstration",
             "vendor demonstration",
             "vendor demo",
+            # Generic RFP phrases — validated by tech context in analyzer
             "request for proposal",
             "request for information",
             "request for qualifications",
-            "rfp",
-            "rfi",
-            "rfq",
-            "capital improvement",
+            # NOTE: bare "rfp", "rfi", "rfq" removed — too broad, fire on equipment/vehicle RFPs
+            # Budget line items that are tech-specific
             "it budget",
             "technology budget",
             "software budget",
             "software license",
             "software contract",
             "contract renewal",
+            # Vendor evaluation
             "vendor selection",
             "vendor evaluation",
             "vendor scoring",
             "vendor matrix",
-            "bid opening",
+            # Procurement terms — validated by tech context
             "sole source",
-            "procurement process",
-            "competitive bid",
             "software acquisition",
             "technology investment",
+            # NOTE: "capital improvement" removed — too broad, fires on property/infrastructure funds
+            # NOTE: "bid opening", "competitive bid", "procurement process" removed — fire on construction bids
         ],
     },
     "active_rfp_signals": {
