@@ -370,7 +370,7 @@ async def request_magic_link(request: MagicLinkRequest, db: Session = Depends(ge
 
 
 @app.get("/auth/verify/{token}")
-async def verify_magic_link_route(token: str, response: Response, db: Session = Depends(get_db)):
+async def verify_magic_link_route(token: str, db: Session = Depends(get_db)):
     """
     Verify magic link token and create session.
 
@@ -384,11 +384,11 @@ async def verify_magic_link_route(token: str, response: Response, db: Session = 
     if not user:
         return RedirectResponse(url="/login?error=invalid_link", status_code=303)
 
-    # Set session cookie
-    set_session_cookie(response, user)
-
-    # All roles land on the unified /app shell
-    return RedirectResponse(url="/app", status_code=303)
+    # Set cookie directly on the RedirectResponse — not on the injected Response,
+    # which is a different object and won't carry cookies through the redirect.
+    redirect = RedirectResponse(url="/app", status_code=303)
+    set_session_cookie(redirect, user)
+    return redirect
 
 
 @app.post("/api/auth/logout")
