@@ -8,7 +8,7 @@ Replaces Streamlit with persistent database, background task processing, and res
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Depends, Response
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Depends, Response, Query
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -638,6 +638,90 @@ async def update_lead(
     db.commit()
 
     return {"success": True}
+
+
+@app.get("/api/scan-preview")
+async def scan_preview(
+    states: List[str] = Query(default=[]),
+    population_tier: str = "small",
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Preview a scan config: return city counts and estimated runtime.
+
+    Query params:
+    - states: one or more state abbreviations (repeated param)
+    - population_tier: micro | small | small-mid | mid-market | upper-mid | large
+
+    Returns:
+    - total_cities: total municipalities matching the filter
+    - enriched_cities: verified domain + at least one source
+    - unenriched_cities: everything else (will need discovery)
+    - total_sources: number of known MunicipalSource records for enriched cities
+    - estimated_seconds: (enriched × 3) + (unenriched × 30)
+    """
+    if not states:
+        return {
+            "total_cities": 0, "enriched_cities": 0,
+            "unenriched_cities": 0, "total_sources": 0, "estimated_seconds": 0
+        }
+
+    pop_min, pop_max = get_population_range(population_tier)
+
+    # Load matching municipalities (ids + domain_status only)
+    from sqlalchemy import func
+    municipalities = (
+        db.query(Municipality.id, Municipality.domain_status)
+        .filter(
+            Municipality.state.in_(states),
+            Municipality.population >= pop_min,
+            Municipality.population <= pop_max,
+        )
+        .all()
+    )
+
+    if not municipalities:
+        return {
+            "total_cities": 0, "enriched_cities": 0,
+            "unenriched_cities": 0, "total_sources": 0, "estimated_seconds": 0
+        }
+
+    total_cities = len(municipalities)
+    all_ids = [m.id for m in municipalities]
+
+    # Find which of those ids have at least one source (one query, no N+1)
+    ids_with_sources = set(
+        row[0]
+        for row in db.query(MunicipalSource.municipality_id)
+        .filter(MunicipalSource.municipality_id.in_(all_ids))
+        .distinct()
+        .all()
+    )
+
+    enriched_ids = [
+        m.id for m in municipalities
+        if m.domain_status == "verified" and m.id in ids_with_sources
+    ]
+    enriched_count = len(enriched_ids)
+    unenriched_count = total_cities - enriched_count
+
+    # Count total sources for enriched cities
+    total_sources = (
+        db.query(func.count(MunicipalSource.id))
+        .filter(MunicipalSource.municipality_id.in_(enriched_ids))
+        .scalar()
+    ) if enriched_ids else 0
+
+    estimated_seconds = enriched_count * 3 + unenriched_count * 30
+
+    return {
+        "total_cities": total_cities,
+        "enriched_cities": enriched_count,
+        "unenriched_cities": unenriched_count,
+        "total_sources": total_sources,
+        "estimated_seconds": estimated_seconds,
+    }
 
 
 @app.get("/api/municipalities")

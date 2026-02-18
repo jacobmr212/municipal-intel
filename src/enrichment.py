@@ -342,37 +342,49 @@ class EnrichmentEngine:
         """
         Enrich all municipalities in a state.
         Returns dict with summary stats.
+
+        Uses a per-municipality session to avoid SSL connection drops on long-running
+        enrichments (Neon PostgreSQL drops idle connections after ~5 minutes).
         """
+        # Load municipality IDs with a short-lived connection, then close it.
         db = SessionLocal()
-
         try:
-            # Get all municipalities for this state
-            municipalities = db.query(Municipality).filter_by(state=state_abbr).order_by(
-                Municipality.population.desc()
-            ).all()
+            municipality_ids = [
+                m.id for m in db.query(Municipality).filter_by(state=state_abbr)
+                .order_by(Municipality.population.desc()).all()
+            ]
+        finally:
+            db.close()
 
-            total = len(municipalities)
-            if total == 0:
-                logger.warning(f"No municipalities found for state: {state_abbr}")
-                return {}
+        total = len(municipality_ids)
+        if total == 0:
+            logger.warning(f"No municipalities found for state: {state_abbr}")
+            return {}
 
-            logger.info("=" * 70)
-            logger.info(f"ENRICHMENT: {state_abbr} ({total} municipalities)")
-            logger.info("=" * 70)
+        logger.info("=" * 70)
+        logger.info(f"ENRICHMENT: {state_abbr} ({total} municipalities)")
+        logger.info("=" * 70)
 
-            stats = {
-                "total": total,
-                "domains_verified": 0,
-                "domains_dead": 0,
-                "sources_found": 0,
-                "already_verified": 0,
-            }
+        stats = {
+            "total": total,
+            "domains_verified": 0,
+            "domains_dead": 0,
+            "sources_found": 0,
+            "already_verified": 0,
+        }
 
-            for i, municipality in enumerate(municipalities):
+        for i, muni_id in enumerate(municipality_ids):
+            # Fresh session per municipality — avoids idle SSL drops on Neon.
+            db = SessionLocal()
+            try:
+                municipality = db.query(Municipality).filter_by(id=muni_id).first()
+                if not municipality:
+                    continue
+
                 if progress_callback:
                     progress_callback(i, total, f"Enriching: {municipality.name}, {state_abbr}")
 
-                # Skip if already verified
+                # Skip if already verified and has sources
                 if municipality.domain_status == "verified" and db.query(MunicipalSource).filter_by(
                     municipality_id=municipality.id
                 ).count() > 0:
@@ -391,23 +403,25 @@ class EnrichmentEngine:
 
                 stats["sources_found"] += result["sources_found"]
 
-            # Summary
-            logger.info("=" * 70)
-            logger.info(f"ENRICHMENT SUMMARY: {state_abbr}")
-            logger.info(f"  Total municipalities: {stats['total']}")
-            logger.info(f"  Already enriched: {stats['already_verified']}")
-            logger.info(f"  Domains verified: {stats['domains_verified']}")
-            logger.info(f"  Domains dead: {stats['domains_dead']}")
-            logger.info(f"  Sources discovered: {stats['sources_found']}")
+            except Exception as e:
+                logger.error(f"[{i + 1}/{total}] Error enriching {muni_id}: {e}")
+            finally:
+                db.close()
 
-            hit_rate = (stats['sources_found'] / stats['total'] * 100) if stats['total'] > 0 else 0
-            logger.info(f"  Discovery rate: {hit_rate:.1f}%")
-            logger.info("=" * 70)
+        # Summary
+        logger.info("=" * 70)
+        logger.info(f"ENRICHMENT SUMMARY: {state_abbr}")
+        logger.info(f"  Total municipalities: {stats['total']}")
+        logger.info(f"  Already enriched: {stats['already_verified']}")
+        logger.info(f"  Domains verified: {stats['domains_verified']}")
+        logger.info(f"  Domains dead: {stats['domains_dead']}")
+        logger.info(f"  Sources discovered: {stats['sources_found']}")
 
-            return stats
+        hit_rate = (stats['sources_found'] / stats['total'] * 100) if stats['total'] > 0 else 0
+        logger.info(f"  Discovery rate: {hit_rate:.1f}%")
+        logger.info("=" * 70)
 
-        finally:
-            db.close()
+        return stats
 
     def enrich_states(self, state_abbrs: list[str], progress_callback: Optional[Callable] = None) -> dict:
         """

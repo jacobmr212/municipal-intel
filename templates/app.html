@@ -669,6 +669,161 @@ body {
 
 /* Date formatting */
 .text-muted { color: var(--warm-gray); font-size: 0.8rem; }
+
+/* ═══ SCAN PREVIEW CARD ═══ */
+.scan-preview {
+  background: var(--sand);
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.scan-preview-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  margin-bottom: 0.75rem;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.2rem 0;
+  font-size: 0.82rem;
+}
+
+.preview-row + .preview-row {
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.preview-key {
+  color: var(--text-secondary);
+}
+
+.preview-val {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.preview-indent {
+  padding-left: 0.75rem;
+}
+
+.preview-indent .preview-key {
+  font-size: 0.78rem;
+  color: var(--warm-gray);
+}
+
+.preview-indent .preview-val {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.preview-time {
+  color: var(--warm-gray);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+/* ═══ RECENT SCANS ═══ */
+.recent-scans-section {
+  margin-top: 1.5rem;
+}
+
+.recent-scans-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  margin-bottom: 0.75rem;
+}
+
+.recent-scan-row {
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.recent-scan-row:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.recent-scan-info {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+}
+
+.recent-scan-date { color: var(--text-secondary); font-weight: 500; }
+
+.recent-scan-states {
+  color: var(--text);
+  font-weight: 600;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-scan-tier {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  background: var(--sand);
+  border: 1px solid var(--stone);
+  padding: 0.1rem 0.45rem;
+  border-radius: 3px;
+}
+
+.recent-scan-results {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.recent-result {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+}
+
+.recent-result.hot { background: rgba(239,107,90,0.12); color: #D95B4A; }
+.recent-result.warm { background: rgba(251,191,36,0.12); color: #B45309; }
+.recent-result.cold { background: var(--sand); color: var(--warm-gray); }
+
+.recent-scan-status {
+  font-size: 0.75rem;
+  color: var(--warm-gray);
+  text-transform: capitalize;
+}
+
+.recent-scans-empty {
+  font-size: 0.85rem;
+  color: var(--warm-gray);
+  padding: 0.5rem 0;
+}
 </style>
 </head>
 <body>
@@ -797,8 +952,42 @@ body {
             </div>
           </div>
 
-          <button class="btn btn-primary" style="width:100%;" id="startScanBtn" onclick="startScan()">
-            Start Scan
+          <!-- Scan preview card -->
+          <div class="scan-preview" id="scanPreviewCard">
+            <div class="scan-preview-label">Scan Configuration</div>
+
+            <div class="preview-row">
+              <span class="preview-key">States selected</span>
+              <span class="preview-val" id="prevStates">None</span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-key">Population tier</span>
+              <span class="preview-val" id="prevTier">Small (2.5K–10K)</span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-key">Cities matched</span>
+              <span class="preview-val" id="prevCitiesTotal">—</span>
+            </div>
+            <div class="preview-row preview-indent">
+              <span class="preview-key">Enriched</span>
+              <span class="preview-val" id="prevEnriched">—</span>
+            </div>
+            <div class="preview-row preview-indent">
+              <span class="preview-key">Unenriched</span>
+              <span class="preview-val" id="prevUnenriched">—</span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-key">Sources available</span>
+              <span class="preview-val" id="prevSources">—</span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-key">Estimated time</span>
+              <span class="preview-val preview-time" id="prevTime">—</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;" id="startScanBtn" onclick="startScan()" disabled>
+            Select states to scan
           </button>
         </div>
 
@@ -826,6 +1015,12 @@ body {
 
           <div class="leads-list" id="leadsList"></div>
         </div>
+      </div>
+
+      <!-- Recent scans -->
+      <div class="recent-scans-section" id="recentScansSection">
+        <div class="recent-scans-heading">Recent Scans</div>
+        <div id="recentScans"><p class="recent-scans-empty">Loading...</p></div>
       </div>
     </div>
   </div>
@@ -907,6 +1102,9 @@ function switchTab(name, btn) {
     loadWaitlist();
     loadUsers();
   }
+  if (name === 'scanner') {
+    loadRecentScans();
+  }
 }
 
 function switchAdminTab(name, btn) {
@@ -956,14 +1154,17 @@ function buildStateGrid() {
 
 function toggleState(btn) {
   btn.classList.toggle('selected');
+  debouncedUpdatePreview();
 }
 
 function selectAll() {
   document.querySelectorAll('.state-btn').forEach(b => b.classList.add('selected'));
+  debouncedUpdatePreview();
 }
 
 function selectNone() {
   document.querySelectorAll('.state-btn').forEach(b => b.classList.remove('selected'));
+  debouncedUpdatePreview();
 }
 
 function selectCaselleTerritory() {
@@ -972,6 +1173,7 @@ function selectCaselleTerritory() {
     const btn = document.querySelector(`.state-btn[data-state="${s}"]`);
     if (btn) btn.classList.add('selected');
   });
+  debouncedUpdatePreview();
 }
 
 function getSelectedStates() {
@@ -1040,8 +1242,9 @@ function pollScan() {
 
 function resetScanBtn() {
   const btn = document.getElementById('startScanBtn');
-  btn.disabled = false;
-  btn.textContent = 'Start Scan';
+  const states = getSelectedStates();
+  btn.disabled = states.length === 0;
+  btn.textContent = states.length === 0 ? 'Select states to scan' : 'Run Scan';
 }
 
 function loadLeads(scanId, stats) {
@@ -1083,6 +1286,177 @@ function loadLeads(scanId, stats) {
 function formatSource(t) {
   const map = { meeting_minutes:'Meeting Minutes', procurement:'Procurement', budget:'Budget', job_posting:'Job Posting', audit:'State Audit', agenda_packet:'Agenda Packet' };
   return map[t] || t;
+}
+
+// ═══════════════════════════════
+// SCAN PREVIEW
+// ═══════════════════════════════
+
+const TIER_LABELS = {
+  micro: 'Micro (<2.5K)',
+  small: 'Small (2.5K–10K)',
+  'small-mid': 'Small-Mid (10K–25K)',
+  'mid-market': 'Mid-Market (25K–75K)',
+  'upper-mid': 'Upper-Mid (75K–150K)',
+  large: 'Large (150K+)'
+};
+
+let _previewTimer = null;
+
+function debouncedUpdatePreview() {
+  clearTimeout(_previewTimer);
+  _previewTimer = setTimeout(updatePreview, 300);
+}
+
+function updatePreview() {
+  const states = getSelectedStates();
+  const tier = getSelectedTier();
+  const btn = document.getElementById('startScanBtn');
+
+  // Update tier display
+  document.getElementById('prevTier').textContent = TIER_LABELS[tier] || tier;
+
+  if (states.length === 0) {
+    btn.disabled = true;
+    btn.textContent = 'Select states to scan';
+    document.getElementById('prevStates').textContent = 'None';
+    ['prevCitiesTotal','prevEnriched','prevUnenriched','prevSources','prevTime'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    return;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Run Scan';
+
+  // States display: show abbrevs if ≤6, otherwise show count
+  document.getElementById('prevStates').textContent =
+    states.length <= 6 ? states.join(', ') : states.length + ' states';
+
+  // Show loading state
+  ['prevCitiesTotal','prevEnriched','prevUnenriched','prevSources','prevTime'].forEach(id => {
+    document.getElementById(id).textContent = '…';
+  });
+
+  const params = new URLSearchParams({ population_tier: tier });
+  states.forEach(s => params.append('states', s));
+
+  fetch('/api/scan-preview?' + params.toString())
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('prevCitiesTotal').textContent = data.total_cities.toLocaleString();
+      document.getElementById('prevEnriched').textContent = data.enriched_cities.toLocaleString();
+      document.getElementById('prevUnenriched').textContent = data.unenriched_cities.toLocaleString();
+      document.getElementById('prevSources').textContent = data.total_sources.toLocaleString();
+      const secs = data.estimated_seconds;
+      const mins = Math.ceil(secs / 60);
+      document.getElementById('prevTime').textContent =
+        secs === 0 ? '—' : secs < 60 ? '<1 min' : '~' + mins + ' min';
+    })
+    .catch(() => {
+      ['prevCitiesTotal','prevEnriched','prevUnenriched','prevSources','prevTime'].forEach(id => {
+        document.getElementById(id).textContent = '—';
+      });
+    });
+}
+
+// ═══════════════════════════════
+// RECENT SCANS
+// ═══════════════════════════════
+
+const TIER_SHORT = {
+  micro: 'Micro', small: 'Small', 'small-mid': 'Small-Mid',
+  'mid-market': 'Mid-Market', 'upper-mid': 'Upper-Mid', large: 'Large'
+};
+
+function loadRecentScans() {
+  const container = document.getElementById('recentScans');
+  if (!container) return;
+
+  fetch('/api/scans')
+    .then(r => r.json())
+    .then(data => {
+      const scans = (data.scans || []).slice(0, 5);
+      if (scans.length === 0) {
+        container.innerHTML = '<p class="recent-scans-empty">No scans yet.</p>';
+        return;
+      }
+      container.innerHTML = scans.map(scan => {
+        const stats = scan.stats || {};
+        const config = scan.config || {};
+        const stateList = (config.states || []);
+        const statesDisplay = stateList.length <= 6
+          ? stateList.join(', ')
+          : stateList.length + ' states';
+        const tier = config.population_tier || '';
+        const hot = stats.leads_hot || 0;
+        const warm = stats.leads_warm || 0;
+        const cold = stats.leads_cold || 0;
+
+        const resultsHtml = scan.status === 'completed'
+          ? `<span class="recent-result hot">${hot} hot</span>
+             <span class="recent-result warm">${warm} warm</span>
+             <span class="recent-result cold">${cold} cold</span>`
+          : `<span class="recent-scan-status">${scan.status}</span>`;
+
+        return `
+          <div class="recent-scan-row" onclick="loadScanById('${scan.id}')">
+            <div class="recent-scan-info">
+              <span class="recent-scan-date">${formatDate(scan.created_at)}</span>
+              <span class="recent-scan-states">${statesDisplay || '—'}</span>
+              <span class="recent-scan-tier">${TIER_SHORT[tier] || tier}</span>
+            </div>
+            <div class="recent-scan-results">${resultsHtml}</div>
+          </div>`;
+      }).join('');
+    })
+    .catch(() => {
+      const container = document.getElementById('recentScans');
+      if (container) container.innerHTML = '<p class="recent-scans-empty">Could not load recent scans.</p>';
+    });
+}
+
+function loadScanById(scanId) {
+  document.getElementById('resultsEmpty').style.display = 'none';
+  document.getElementById('leadsList').style.display = 'none';
+  document.getElementById('scanProgress').style.display = 'none';
+  document.getElementById('resultsStats').style.display = 'none';
+  document.getElementById('resultsTitle').textContent = 'Loading…';
+
+  fetch('/api/scans/' + scanId + '/leads?sort=score')
+    .then(r => r.json())
+    .then(data => {
+      const leads = data.leads || [];
+      if (leads.length === 0) {
+        document.getElementById('resultsTitle').textContent = 'No leads found';
+        document.getElementById('resultsEmpty').style.display = 'flex';
+        return;
+      }
+      const hot = leads.filter(l => l.lead_type === 'hot').length;
+      const warm = leads.filter(l => l.lead_type === 'warm').length;
+      document.getElementById('hotCount').textContent = hot;
+      document.getElementById('warmCount').textContent = warm;
+      document.getElementById('resultsStats').style.display = 'flex';
+      document.getElementById('resultsTitle').textContent = leads.length + ' leads';
+
+      const list = document.getElementById('leadsList');
+      list.innerHTML = leads.map(lead => `
+        <div class="lead-row">
+          <div>
+            <div class="lead-city">${lead.municipality}, ${lead.state}</div>
+            <div class="lead-title">${lead.title}</div>
+            <div class="lead-source">${formatSource(lead.source_type)} · ${lead.date || ''}</div>
+          </div>
+          <div class="lead-score">${Math.round(lead.relevance_score)}</div>
+          <div><span class="tag tag-${lead.lead_type}">${lead.lead_type}</span></div>
+        </div>
+      `).join('');
+      list.style.display = 'block';
+    })
+    .catch(() => {
+      document.getElementById('resultsTitle').textContent = 'Failed to load';
+      document.getElementById('resultsEmpty').style.display = 'flex';
+    });
 }
 
 // ═══════════════════════════════
@@ -1200,6 +1574,11 @@ function formatDate(iso) {
 
 // ── Init ──
 buildStateGrid();
+
+// Wire up tier radios to trigger preview update
+document.querySelectorAll('input[name="tier"]').forEach(radio => {
+  radio.addEventListener('change', debouncedUpdatePreview);
+});
 </script>
 
 </body>
