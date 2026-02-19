@@ -2409,20 +2409,27 @@ async def create_assessment(
     """Create a new assessment for the current user."""
     import uuid as _uuid
     from datetime import datetime
+    import traceback
 
-    assessment_id = str(_uuid.uuid4())
+    try:
+        assessment_id = str(_uuid.uuid4())
 
-    db.execute(text("""
-        INSERT INTO "Assessment" (id, "userId", status, "createdAt", "updatedAt")
-        VALUES (:id, :user_id, 'draft', :now, :now)
-    """), {
-        "id": assessment_id,
-        "user_id": user["id"],
-        "now": datetime.utcnow()
-    })
-    db.commit()
+        db.execute(text("""
+            INSERT INTO "Assessment" (id, "userId", status, "createdAt", "updatedAt")
+            VALUES (:id, :user_id, 'draft', :now, :now)
+        """), {
+            "id": assessment_id,
+            "user_id": user["id"],
+            "now": datetime.utcnow()
+        })
+        db.commit()
 
-    return {"id": assessment_id, "status": "draft"}
+        return {"id": assessment_id, "status": "draft"}
+    except Exception as e:
+        db.rollback()
+        print(f"ERROR creating assessment: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to create assessment: {str(e)}")
 
 
 @app.get("/api/assessments")
