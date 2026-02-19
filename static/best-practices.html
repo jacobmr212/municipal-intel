@@ -81,7 +81,7 @@
   --sans: 'DM Sans', -apple-system, sans-serif;
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 120px; }
 
 body {
   font-family: var(--sans);
@@ -95,16 +95,30 @@ body {
 .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
 .content-width { max-width: 800px; margin: 0 auto; }
 
+/* ===== SCROLL PROGRESS BAR ===== */
+#scroll-progress {
+  position: fixed;
+  top: 72px;
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  width: 0%;
+  z-index: 99;
+  transition: width 0.1s ease-out;
+}
+
 /* ===== HEADER ===== */
 header {
   padding: 24px 0;
   background: var(--cream);
   border-bottom: 1px solid var(--sand-dark);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   backdrop-filter: blur(8px);
-  background: rgba(253, 252, 250, 0.9);
+  background: rgba(253, 252, 250, 0.95);
 }
 
 .header-content {
@@ -133,24 +147,25 @@ nav a:hover { color: var(--accent); }
 
 /* ===== HERO ===== */
 .hero {
-  padding: 80px 0;
+  padding: 100px 0 40px;
   background: linear-gradient(135deg, var(--cream) 0%, var(--sand) 100%);
   border-bottom: 1px solid var(--sand-dark);
+  margin-top: 72px;
 }
 
 .hero h1 {
   font-family: var(--serif);
-  font-size: 56px;
+  font-size: 48px;
   line-height: 1.1;
   color: var(--ink);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   max-width: 800px;
 }
 
 .hero .subtitle {
-  font-size: 20px;
+  font-size: 18px;
   color: var(--ink-light);
-  margin-bottom: 32px;
+  margin-bottom: 0;
   max-width: 700px;
   line-height: 1.5;
 }
@@ -158,7 +173,7 @@ nav a:hover { color: var(--accent); }
 .breadcrumb {
   font-size: 14px;
   color: var(--ink-muted);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .breadcrumb a {
@@ -168,31 +183,226 @@ nav a:hover { color: var(--accent); }
 
 .breadcrumb a:hover { text-decoration: underline; }
 
-/* ===== CONTENT SECTIONS ===== */
-.section {
-  padding: 80px 0;
+/* ===== STICKY TOC ===== */
+.toc-wrapper {
+  position: sticky;
+  top: 95px;
+  z-index: 90;
+  background: var(--cream);
   border-bottom: 1px solid var(--sand-dark);
+  padding: 16px 0;
 }
 
-.section:last-child { border-bottom: none; }
-
-.section-header {
-  text-align: center;
-  margin-bottom: 64px;
+/* Desktop Sidebar TOC */
+.toc-sidebar {
+  display: none;
 }
 
-.section-title {
-  font-family: var(--serif);
-  font-size: 42px;
-  color: var(--ink);
-  margin-bottom: 16px;
+@media (min-width: 1024px) {
+  .toc-sidebar {
+    display: block;
+    position: fixed;
+    left: max(32px, calc((100vw - 1200px) / 2));
+    top: 120px;
+    width: 220px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    padding: 24px 16px;
+    background: var(--white);
+    border: 1px solid var(--sand-dark);
+    border-radius: 8px;
+  }
+
+  .toc-sidebar-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+
+  .toc-sidebar nav a {
+    display: block;
+    padding: 8px 12px;
+    margin: 4px 0;
+    color: var(--ink-light);
+    text-decoration: none;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-left: 0;
+  }
+
+  .toc-sidebar nav a:hover {
+    background: var(--sand);
+    color: var(--accent);
+  }
+
+  .toc-sidebar nav a.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .main-content-with-sidebar {
+    margin-left: 260px;
+  }
 }
 
-.section-subtitle {
-  font-size: 18px;
+/* Mobile Horizontal Pills TOC */
+.toc-pills {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.toc-pills::-webkit-scrollbar { display: none; }
+
+.toc-pills nav {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.toc-pills a {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--white);
   color: var(--ink-light);
-  max-width: 700px;
-  margin: 0 auto;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 20px;
+  border: 1px solid var(--sand-dark);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.toc-pills a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toc-pills a.active {
+  background: var(--accent);
+  color: var(--white);
+  border-color: var(--accent);
+}
+
+@media (min-width: 1024px) {
+  .toc-wrapper { display: none; }
+}
+
+/* ===== ACCORDION SECTIONS ===== */
+.accordion {
+  margin: 48px 0;
+}
+
+.accordion-item {
+  background: var(--white);
+  border: 1px solid var(--sand-dark);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.accordion-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.accordion-header {
+  padding: 24px 28px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.accordion-header:hover {
+  background: var(--sand);
+}
+
+.accordion-header:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.accordion-header-content {
+  flex: 1;
+}
+
+.accordion-number {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.accordion-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  color: var(--ink);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.accordion-summary {
+  font-size: 16px;
+  color: var(--ink-light);
+  line-height: 1.5;
+}
+
+.accordion-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.accordion-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--ink-muted);
+  stroke-width: 2.5;
+}
+
+.accordion-item.active .accordion-icon {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.accordion-content-inner {
+  padding: 0 28px 32px;
+}
+
+.accordion-item.active .accordion-content {
+  max-height: 10000px;
+}
+
+/* Progressive enhancement fallback */
+.no-js .accordion-content {
+  max-height: none !important;
+}
+
+.no-js .accordion-icon {
+  display: none;
 }
 
 /* ===== ARTICLE CONTENT ===== */
@@ -203,31 +413,31 @@ nav a:hover { color: var(--accent); }
 
 .article-content h2 {
   font-family: var(--serif);
-  font-size: 36px;
-  color: var(--ink);
-  margin: 48px 0 24px 0;
-}
-
-.article-content h3 {
-  font-family: var(--serif);
-  font-size: 28px;
+  font-size: 32px;
   color: var(--ink);
   margin: 40px 0 20px 0;
 }
 
+.article-content h3 {
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--ink);
+  margin: 32px 0 16px 0;
+}
+
 .article-content p {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   color: var(--ink-light);
 }
 
 .article-content ul, .article-content ol {
-  margin: 24px 0 24px 32px;
+  margin: 20px 0 20px 32px;
   color: var(--ink-light);
 }
 
 .article-content li {
-  margin-bottom: 12px;
-  padding-left: 8px;
+  margin-bottom: 10px;
+  padding-left: 4px;
 }
 
 .article-content strong {
@@ -237,9 +447,9 @@ nav a:hover { color: var(--accent); }
 
 /* ===== CALLOUT BOXES ===== */
 .callout {
-  padding: 24px 32px;
+  padding: 20px 24px;
   border-radius: 8px;
-  margin: 32px 0;
+  margin: 24px 0;
   border-left: 4px solid;
 }
 
@@ -260,8 +470,8 @@ nav a:hover { color: var(--accent); }
 
 .callout-title {
   font-weight: 600;
-  font-size: 18px;
-  margin-bottom: 12px;
+  font-size: 16px;
+  margin-bottom: 10px;
   color: var(--ink);
   display: flex;
   align-items: center;
@@ -269,16 +479,22 @@ nav a:hover { color: var(--accent); }
 }
 
 .callout p {
-  margin: 0;
+  margin: 0 0 8px 0;
   color: var(--ink-light);
+  font-size: 16px;
+}
+
+.callout p:last-child {
+  margin-bottom: 0;
 }
 
 .callout ul {
-  margin: 12px 0 0 20px;
+  margin: 10px 0 0 20px;
 }
 
 .callout li {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: 16px;
 }
 
 /* ===== CHECKLIST ===== */
@@ -286,14 +502,14 @@ nav a:hover { color: var(--accent); }
   background: var(--white);
   border: 1px solid var(--sand-dark);
   border-radius: 8px;
-  padding: 32px;
-  margin: 32px 0;
+  padding: 24px;
+  margin: 24px 0;
 }
 
 .checklist-title {
   font-family: var(--serif);
-  font-size: 24px;
-  margin-bottom: 24px;
+  font-size: 20px;
+  margin-bottom: 20px;
   color: var(--ink);
 }
 
@@ -301,8 +517,8 @@ nav a:hover { color: var(--accent); }
   display: flex;
   align-items: start;
   gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--sand);
 }
 
@@ -314,8 +530,8 @@ nav a:hover { color: var(--accent); }
 
 .checklist-checkbox {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 2px solid var(--accent);
   border-radius: 4px;
   margin-top: 2px;
@@ -324,32 +540,91 @@ nav a:hover { color: var(--accent); }
 .checklist-text {
   flex: 1;
   color: var(--ink-light);
-  font-size: 16px;
+  font-size: 15px;
 }
 
-/* ===== CTA SECTION ===== */
+/* ===== SECTION CTA ===== */
+.section-cta {
+  background: var(--sand);
+  border: 1px solid var(--sand-dark);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 32px 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.section-cta-text {
+  flex: 1;
+  font-size: 16px;
+  color: var(--ink-light);
+  line-height: 1.5;
+}
+
+.section-cta-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--accent);
+  color: var(--white);
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.section-cta-button:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.section-cta-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 640px) {
+  .section-cta {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .section-cta-button {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+/* ===== FINAL CTA SECTION ===== */
 .cta-section {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-  padding: 80px 0;
+  padding: 64px 0;
   text-align: center;
   color: var(--white);
 }
 
 .cta-title {
   font-family: var(--serif);
-  font-size: 42px;
-  margin-bottom: 16px;
+  font-size: 36px;
+  margin-bottom: 12px;
 }
 
 .cta-subtitle {
-  font-size: 18px;
-  margin-bottom: 32px;
+  font-size: 17px;
+  margin-bottom: 24px;
   opacity: 0.9;
 }
 
 .cta-button {
   display: inline-block;
-  padding: 16px 40px;
+  padding: 14px 32px;
   background: var(--white);
   color: var(--accent);
   text-decoration: none;
@@ -357,17 +632,17 @@ nav a:hover { color: var(--accent); }
   font-weight: 600;
   font-size: 16px;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .cta-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
 
 /* ===== FOOTER ===== */
 footer {
-  padding: 48px 0;
+  padding: 40px 0;
   background: var(--sand);
   border-top: 1px solid var(--sand-dark);
   text-align: center;
@@ -384,18 +659,28 @@ footer a:hover { text-decoration: underline; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .hero h1 { font-size: 36px; }
-  .hero .subtitle { font-size: 18px; }
-  .section-title { font-size: 32px; }
-  .article-content h2 { font-size: 28px; }
-  .article-content h3 { font-size: 22px; }
-  .cta-title { font-size: 32px; }
-  nav a { margin-left: 20px; font-size: 14px; }
+  .hero h1 { font-size: 32px; }
+  .hero .subtitle { font-size: 16px; }
+  .accordion-title { font-size: 22px; }
+  .accordion-summary { font-size: 15px; }
+  .accordion-header { padding: 20px; }
+  .accordion-content-inner { padding: 0 20px 24px; }
+  .article-content h2 { font-size: 26px; }
+  .article-content h3 { font-size: 20px; }
+  .cta-title { font-size: 28px; }
+  nav a { margin-left: 16px; font-size: 14px; }
   .container { padding: 0 20px; }
+
+  @media (min-width: 1024px) {
+    .container { padding: 0 32px 0 292px; }
+  }
 }
 </style>
 </head>
-<body>
+<body class="no-js">
+
+<!-- Scroll Progress Bar -->
+<div id="scroll-progress"></div>
 
 <!-- ===== HEADER ===== -->
 <header>
@@ -424,306 +709,439 @@ footer a:hover { text-decoration: underline; }
   </div>
 </section>
 
-<!-- ===== TABLE OF CONTENTS ===== -->
-<section class="section" style="padding-top: 48px; padding-bottom: 48px; background: var(--sand);">
-  <div class="container content-width">
-    <h2 style="font-family: var(--serif); font-size: 24px; margin-bottom: 16px;">Table of Contents</h2>
-    <ol style="margin-left: 24px;">
-      <li><a href="#red-flags" style="color: var(--accent); text-decoration: none;">ERP Implementation Red Flags</a></li>
-      <li><a href="#procurement" style="color: var(--accent); text-decoration: none;">Procurement Best Practices</a></li>
-      <li><a href="#roadmap" style="color: var(--accent); text-decoration: none;">Digital Transformation Roadmap</a></li>
-      <li><a href="#data-management" style="color: var(--accent); text-decoration: none;">Data Management & Transparency</a></li>
-      <li><a href="#change-management" style="color: var(--accent); text-decoration: none;">Change Management & Staff Adoption</a></li>
-    </ol>
+<!-- ===== STICKY TOC (Mobile Pills) ===== -->
+<div class="toc-wrapper">
+  <div class="container">
+    <div class="toc-pills">
+      <nav>
+        <a href="#red-flags" data-section="red-flags">Red Flags</a>
+        <a href="#procurement" data-section="procurement">Procurement</a>
+        <a href="#roadmap" data-section="roadmap">Roadmap</a>
+        <a href="#data-management" data-section="data-management">Data & Transparency</a>
+        <a href="#change-management" data-section="change-management">Change Management</a>
+      </nav>
+    </div>
   </div>
-</section>
+</div>
+
+<!-- ===== DESKTOP SIDEBAR TOC ===== -->
+<aside class="toc-sidebar">
+  <div class="toc-sidebar-title">Contents</div>
+  <nav>
+    <a href="#red-flags" data-section="red-flags">1. Red Flags</a>
+    <a href="#procurement" data-section="procurement">2. Procurement</a>
+    <a href="#roadmap" data-section="roadmap">3. Roadmap</a>
+    <a href="#data-management" data-section="data-management">4. Data & Transparency</a>
+    <a href="#change-management" data-section="change-management">5. Change Management</a>
+  </nav>
+</aside>
 
 <!-- ===== MAIN CONTENT ===== -->
-<article class="section">
-  <div class="container content-width article-content">
+<div class="container" style="padding-top: 48px; padding-bottom: 0;">
+  <div class="accordion">
 
-    <!-- ===== RED FLAGS ===== -->
-    <h2 id="red-flags">1. ERP Implementation Red Flags</h2>
+    <!-- SECTION 1: RED FLAGS -->
+    <div class="accordion-item" id="red-flags">
+      <div class="accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="content-red-flags">
+        <div class="accordion-header-content">
+          <span class="accordion-number">Section 1</span>
+          <h2 class="accordion-title">ERP Implementation Red Flags</h2>
+          <p class="accordion-summary">Avoiding common pitfalls can save your municipality millions. Here are the warning signs to watch for when evaluating ERP vendors and implementation partners.</p>
+        </div>
+        <div class="accordion-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="accordion-content" id="content-red-flags">
+        <div class="accordion-content-inner article-content">
 
-    <p>Avoiding common pitfalls can save your municipality millions. Here are the warning signs to watch for when evaluating ERP vendors and implementation partners.</p>
+          <div class="callout callout-warning">
+            <div class="callout-title">⚠️ Critical Warning Signs</div>
+            <ul>
+              <li><strong>Vendor Lock-In:</strong> Proprietary data formats, lack of export tools, exclusive hosting requirements</li>
+              <li><strong>Scope Creep:</strong> Vague contract language, "we'll figure it out later" promises, undefined deliverables</li>
+              <li><strong>Unrealistic Timelines:</strong> Promises of 6-month implementations for complex ERP systems (typical: 12-24 months)</li>
+              <li><strong>Hidden Costs:</strong> Per-user licensing, integration fees, data migration charges not disclosed upfront</li>
+              <li><strong>Lack of Public Sector Experience:</strong> Vendor has no municipal references or case studies</li>
+            </ul>
+          </div>
 
-    <div class="callout callout-warning">
-      <div class="callout-title">⚠️ Critical Warning Signs</div>
-      <ul>
-        <li><strong>Vendor Lock-In:</strong> Proprietary data formats, lack of export tools, exclusive hosting requirements</li>
-        <li><strong>Scope Creep:</strong> Vague contract language, "we'll figure it out later" promises, undefined deliverables</li>
-        <li><strong>Unrealistic Timelines:</strong> Promises of 6-month implementations for complex ERP systems (typical: 12-24 months)</li>
-        <li><strong>Hidden Costs:</strong> Per-user licensing, integration fees, data migration charges not disclosed upfront</li>
-        <li><strong>Lack of Public Sector Experience:</strong> Vendor has no municipal references or case studies</li>
-      </ul>
-    </div>
+          <h3>Hidden Costs Municipalities Miss</h3>
+          <p>Many ERP projects exceed budget due to costs that weren't apparent during initial vendor presentations:</p>
+          <ul>
+            <li><strong>Data Migration:</strong> Cleaning legacy data, mapping fields, validating accuracy ($50K-$200K typical)</li>
+            <li><strong>Custom Integrations:</strong> Connecting to third-party systems (payroll, timekeeping, GIS) ($25K-$100K each)</li>
+            <li><strong>Staff Training:</strong> Initial and ongoing training for all departments ($30K-$150K annually)</li>
+            <li><strong>Consulting Fees:</strong> Implementation partner hourly rates, change orders, extended support ($100K-$500K)</li>
+            <li><strong>Hardware & Infrastructure:</strong> Server upgrades, network improvements, backup systems ($40K-$200K)</li>
+          </ul>
 
-    <h3>Hidden Costs Municipalities Miss</h3>
-    <p>Many ERP projects exceed budget due to costs that weren't apparent during initial vendor presentations:</p>
-    <ul>
-      <li><strong>Data Migration:</strong> Cleaning legacy data, mapping fields, validating accuracy ($50K-$200K typical)</li>
-      <li><strong>Custom Integrations:</strong> Connecting to third-party systems (payroll, timekeeping, GIS) ($25K-$100K each)</li>
-      <li><strong>Staff Training:</strong> Initial and ongoing training for all departments ($30K-$150K annually)</li>
-      <li><strong>Consulting Fees:</strong> Implementation partner hourly rates, change orders, extended support ($100K-$500K)</li>
-      <li><strong>Hardware & Infrastructure:</strong> Server upgrades, network improvements, backup systems ($40K-$200K)</li>
-    </ul>
+          <div class="checklist">
+            <div class="checklist-title">Budget Planning Checklist</div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Software licensing costs (initial + 5-year projection with annual increases)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Implementation services (vendor + third-party consultants)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Data migration and cleanup (budget 15-20% of software cost)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Integration costs for existing systems (payroll, GIS, asset management)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Hardware and infrastructure upgrades</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Training for all staff (initial + ongoing)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Contingency fund (minimum 20% of total project cost)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Annual support and maintenance (typically 18-22% of license cost)</div>
+            </div>
+          </div>
 
-    <div class="checklist">
-      <div class="checklist-title">Budget Planning Checklist</div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Software licensing costs (initial + 5-year projection with annual increases)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Implementation services (vendor + third-party consultants)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Data migration and cleanup (budget 15-20% of software cost)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Integration costs for existing systems (payroll, GIS, asset management)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Hardware and infrastructure upgrades</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Training for all staff (initial + ongoing)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Contingency fund (minimum 20% of total project cost)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Annual support and maintenance (typically 18-22% of license cost)</div>
-      </div>
-    </div>
+          <div class="section-cta">
+            <div class="section-cta-text">Seeing these red flags in your current system? Find out where you stand.</div>
+            <a href="/#waitlist" class="section-cta-button">
+              Take the ERP Readiness Assessment
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
 
-    <!-- ===== PROCUREMENT ===== -->
-    <h2 id="procurement">2. Procurement Best Practices</h2>
-
-    <p>A well-structured procurement process protects your municipality from vendor lock-in, ensures competitive pricing, and sets the foundation for successful implementation.</p>
-
-    <h3>RFP Requirements Checklist</h3>
-    <p>Your Request for Proposal should include these essential components:</p>
-
-    <div class="checklist">
-      <div class="checklist-title">Essential RFP Components</div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Functional Requirements:</strong> Detailed list of must-have features by department (finance, HR, utilities, etc.)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Technical Requirements:</strong> Security standards, accessibility compliance (ADA/WCAG), mobile access</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Integration Requirements:</strong> List all systems that must integrate (payroll, GIS, permitting, utility billing)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Data Migration Plan:</strong> Require vendors to describe approach, timeline, validation process</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Training Requirements:</strong> Specify minimum hours, delivery method, materials provided</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Support Terms:</strong> Response times, escalation process, after-hours availability</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Implementation Timeline:</strong> Require detailed project plan with milestones and go-live date</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>Cost Breakdown:</strong> Itemize software, services, training, support, integrations separately</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text"><strong>References:</strong> Require 3+ municipal references of similar size and complexity</div>
+        </div>
       </div>
     </div>
 
-    <h3>Vendor Evaluation Criteria</h3>
-    <p>Score vendors on these weighted factors (suggested weights in parentheses):</p>
-    <ul>
-      <li><strong>Public Sector Experience (25%):</strong> Number of municipal implementations, similar-sized cities, longevity in market</li>
-      <li><strong>Functional Fit (25%):</strong> Percentage of requirements met out-of-box vs. customization needed</li>
-      <li><strong>Total Cost of Ownership (20%):</strong> 5-year total including licenses, support, upgrades, staff time</li>
-      <li><strong>Implementation Approach (15%):</strong> Methodology, timeline realism, change management plan</li>
-      <li><strong>References & Reputation (10%):</strong> Client satisfaction, user group activity, online reviews</li>
-      <li><strong>Technology & Innovation (5%):</strong> Modern architecture, mobile access, API availability, roadmap</li>
-    </ul>
-
-    <div class="callout callout-info">
-      <div class="callout-title">💡 Pro Tip: Reference Checks</div>
-      <p>Don't just call the references the vendor provides. Ask those references:</p>
-      <ul>
-        <li>"Who else in our region uses this system?" (then call them too)</li>
-        <li>"What surprised you during implementation that wasn't in the contract?"</li>
-        <li>"How often do you actually use the features they demoed?"</li>
-        <li>"What's your annual total spend including hidden costs?"</li>
-      </ul>
-    </div>
-
-    <!-- ===== ROADMAP ===== -->
-    <h2 id="roadmap">3. Digital Transformation Roadmap</h2>
-
-    <p>Successful digital transformation isn't about replacing all systems at once—it's about strategic, phased improvements that deliver quick wins while building toward long-term goals.</p>
-
-    <h3>Where to Start: Quick Wins vs. Long-Term Projects</h3>
-
-    <div class="callout callout-success">
-      <div class="callout-title">✅ Quick Wins (3-6 months)</div>
-      <ul>
-        <li><strong>Online Payment Portal:</strong> Accept utility bills, permits, fees online (high visibility, low risk)</li>
-        <li><strong>Meeting Minutes Publication:</strong> Automate posting of council/board minutes to website (transparency win)</li>
-        <li><strong>Email Communication:</strong> Migrate from paper notices to email for bills, announcements (cost savings)</li>
-        <li><strong>Document Management:</strong> Digitize frequently accessed records (permits, contracts, resolutions)</li>
-      </ul>
-    </div>
-
-    <p style="margin-top: 32px;"><strong>Long-Term Projects (12-24 months):</strong></p>
-    <ul>
-      <li><strong>Full ERP Replacement:</strong> Finance, HR, payroll, procurement in integrated system</li>
-      <li><strong>Citizen Portal:</strong> Self-service for permits, licenses, service requests, account management</li>
-      <li><strong>GIS Integration:</strong> Asset management, work orders, planning tied to geographic data</li>
-      <li><strong>Business Intelligence:</strong> Dashboards, reporting, predictive analytics for decision-making</li>
-    </ul>
-
-    <h3>Common Pitfalls and How to Avoid Them</h3>
-
-    <div class="callout callout-warning">
-      <div class="callout-title">⚠️ Pitfall: Customization Overload</div>
-      <p><strong>The Problem:</strong> Departments request extensive customizations to match old workflows, resulting in expensive, fragile systems that break with every upgrade.</p>
-      <p style="margin-top: 12px;"><strong>The Solution:</strong> Adopt a "configure, don't customize" approach. Use 80/20 rule: accept vendor's best practices for 80% of workflows, customize only mission-critical 20%.</p>
-    </div>
-
-    <div class="callout callout-warning" style="margin-top: 24px;">
-      <div class="callout-title">⚠️ Pitfall: Underestimating Change Management</div>
-      <p><strong>The Problem:</strong> Technical implementation succeeds, but staff resistance tanks adoption. System sits unused while staff revert to spreadsheets.</p>
-      <p style="margin-top: 12px;"><strong>The Solution:</strong> Budget 15-20% of project cost for change management: staff champions, hands-on training, process documentation, executive sponsorship.</p>
-    </div>
-
-    <!-- ===== DATA MANAGEMENT ===== -->
-    <h2 id="data-management">4. Data Management & Transparency</h2>
-
-    <p>Modern ERP systems should enhance—not hinder—your municipality's transparency and public records compliance.</p>
-
-    <h3>Public Records Compliance</h3>
-    <p>Your ERP system must support legal obligations for public records:</p>
-    <ul>
-      <li><strong>Retention Policies:</strong> Automated retention schedules per state law (e.g., payroll records 7 years, contracts 6 years)</li>
-      <li><strong>FOIA/Public Records Requests:</strong> Export tools for common request types, audit trails showing who accessed what</li>
-      <li><strong>Redaction Tools:</strong> Ability to remove PII (Social Security numbers, private addresses) before disclosure</li>
-      <li><strong>Audit Trails:</strong> Immutable logs of all data changes for financial transactions and sensitive records</li>
-    </ul>
-
-    <h3>Meeting Minutes Accessibility</h3>
-    <p>Best practices for publishing council and board meeting materials:</p>
-
-    <div class="checklist">
-      <div class="checklist-title">Meeting Transparency Checklist</div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Agendas posted at least 24-48 hours before meetings (check state requirements)</div>
+    <!-- SECTION 2: PROCUREMENT -->
+    <div class="accordion-item" id="procurement">
+      <div class="accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="content-procurement">
+        <div class="accordion-header-content">
+          <span class="accordion-number">Section 2</span>
+          <h2 class="accordion-title">Procurement Best Practices</h2>
+          <p class="accordion-summary">A well-structured procurement process protects your municipality from vendor lock-in, ensures competitive pricing, and sets the foundation for successful implementation.</p>
+        </div>
+        <div class="accordion-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
       </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Minutes published within 7-10 business days of approval</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Attachments (staff reports, contracts, presentations) linked directly from minutes</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Searchable format (PDF with OCR or HTML, not scanned images)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Archive of historical minutes easily browsable (by date, topic, or keyword)</div>
-      </div>
-      <div class="checklist-item">
-        <div class="checklist-checkbox"></div>
-        <div class="checklist-text">Video recordings if meetings are broadcast (YouTube, Granicus, etc.)</div>
+      <div class="accordion-content" id="content-procurement">
+        <div class="accordion-content-inner article-content">
+
+          <h3>RFP Requirements Checklist</h3>
+          <p>Your Request for Proposal should include these essential components:</p>
+
+          <div class="checklist">
+            <div class="checklist-title">Essential RFP Components</div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Functional Requirements:</strong> Detailed list of must-have features by department (finance, HR, utilities, etc.)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Technical Requirements:</strong> Security standards, accessibility compliance (ADA/WCAG), mobile access</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Integration Requirements:</strong> List all systems that must integrate (payroll, GIS, permitting, utility billing)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Data Migration Plan:</strong> Require vendors to describe approach, timeline, validation process</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Training Requirements:</strong> Specify minimum hours, delivery method, materials provided</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Support Terms:</strong> Response times, escalation process, after-hours availability</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Implementation Timeline:</strong> Require detailed project plan with milestones and go-live date</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>Cost Breakdown:</strong> Itemize software, services, training, support, integrations separately</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text"><strong>References:</strong> Require 3+ municipal references of similar size and complexity</div>
+            </div>
+          </div>
+
+          <h3>Vendor Evaluation Criteria</h3>
+          <p>Score vendors on these weighted factors (suggested weights in parentheses):</p>
+          <ul>
+            <li><strong>Public Sector Experience (25%):</strong> Number of municipal implementations, similar-sized cities, longevity in market</li>
+            <li><strong>Functional Fit (25%):</strong> Percentage of requirements met out-of-box vs. customization needed</li>
+            <li><strong>Total Cost of Ownership (20%):</strong> 5-year total including licenses, support, upgrades, staff time</li>
+            <li><strong>Implementation Approach (15%):</strong> Methodology, timeline realism, change management plan</li>
+            <li><strong>References & Reputation (10%):</strong> Client satisfaction, user group activity, online reviews</li>
+            <li><strong>Technology & Innovation (5%):</strong> Modern architecture, mobile access, API availability, roadmap</li>
+          </ul>
+
+          <div class="callout callout-info">
+            <div class="callout-title">💡 Pro Tip: Reference Checks</div>
+            <p>Don't just call the references the vendor provides. Ask those references:</p>
+            <ul>
+              <li>"Who else in our region uses this system?" (then call them too)</li>
+              <li>"What surprised you during implementation that wasn't in the contract?"</li>
+              <li>"How often do you actually use the features they demoed?"</li>
+              <li>"What's your annual total spend including hidden costs?"</li>
+            </ul>
+          </div>
+
+          <div class="section-cta">
+            <div class="section-cta-text">Building your RFP? Start with a clear picture of what you actually need.</div>
+            <a href="/#waitlist" class="section-cta-button">
+              Start the Readiness Assessment
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <h3>Citizen Engagement Tools</h3>
-    <p>Modern municipalities use ERP data to engage citizens:</p>
-    <ul>
-      <li><strong>Budget Transparency Portals:</strong> OpenGov-style dashboards showing spending by department, category, vendor</li>
-      <li><strong>Service Request Tracking:</strong> 311 systems where citizens report potholes, graffiti, etc. and track status</li>
-      <li><strong>Permit Tracking:</strong> Real-time status of building permits, business licenses, land use applications</li>
-      <li><strong>Performance Dashboards:</strong> Public-facing metrics (response times, project completion, budget variance)</li>
-    </ul>
+    <!-- SECTION 3: ROADMAP -->
+    <div class="accordion-item" id="roadmap">
+      <div class="accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="content-roadmap">
+        <div class="accordion-header-content">
+          <span class="accordion-number">Section 3</span>
+          <h2 class="accordion-title">Digital Transformation Roadmap</h2>
+          <p class="accordion-summary">Successful digital transformation isn't about replacing all systems at once—it's about strategic, phased improvements that deliver quick wins while building toward long-term goals.</p>
+        </div>
+        <div class="accordion-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="accordion-content" id="content-roadmap">
+        <div class="accordion-content-inner article-content">
 
-    <!-- ===== CHANGE MANAGEMENT ===== -->
-    <h2 id="change-management">5. Change Management & Staff Adoption</h2>
+          <h3>Where to Start: Quick Wins vs. Long-Term Projects</h3>
 
-    <p>Technology implementations fail more often due to people problems than technical problems. A deliberate change management strategy is essential.</p>
+          <div class="callout callout-success">
+            <div class="callout-title">✅ Quick Wins (3-6 months)</div>
+            <ul>
+              <li><strong>Online Payment Portal:</strong> Accept utility bills, permits, fees online (high visibility, low risk)</li>
+              <li><strong>Meeting Minutes Publication:</strong> Automate posting of council/board minutes to website (transparency win)</li>
+              <li><strong>Email Communication:</strong> Migrate from paper notices to email for bills, announcements (cost savings)</li>
+              <li><strong>Document Management:</strong> Digitize frequently accessed records (permits, contracts, resolutions)</li>
+            </ul>
+          </div>
 
-    <h3>Building Internal Champions</h3>
-    <p>Identify "super users" in each department who will:</p>
-    <ul>
-      <li>Participate in vendor demos and provide input on requirements</li>
-      <li>Receive advanced training and become departmental experts</li>
-      <li>Provide peer-to-peer support during go-live and beyond</li>
-      <li>Advocate for the new system and help overcome resistance</li>
-    </ul>
+          <p style="margin-top: 32px;"><strong>Long-Term Projects (12-24 months):</strong></p>
+          <ul>
+            <li><strong>Full ERP Replacement:</strong> Finance, HR, payroll, procurement in integrated system</li>
+            <li><strong>Citizen Portal:</strong> Self-service for permits, licenses, service requests, account management</li>
+            <li><strong>GIS Integration:</strong> Asset management, work orders, planning tied to geographic data</li>
+            <li><strong>Business Intelligence:</strong> Dashboards, reporting, predictive analytics for decision-making</li>
+          </ul>
 
-    <div class="callout callout-success">
-      <div class="callout-title">✅ Success Pattern: Phased Rollout</div>
-      <p>Instead of "big bang" go-live across all departments, consider phased approach:</p>
-      <ul>
-        <li><strong>Phase 1 (Months 1-3):</strong> Finance core (GL, AP, AR) with super users only</li>
-        <li><strong>Phase 2 (Months 4-6):</strong> HR and payroll, expand to all finance staff</li>
-        <li><strong>Phase 3 (Months 7-9):</strong> Department-specific modules (utilities, permitting, etc.)</li>
-        <li><strong>Phase 4 (Months 10-12):</strong> Self-service portals for employees and citizens</li>
-      </ul>
-      <p style="margin-top: 12px;">Benefits: Reduced risk, incremental learning, time to address issues before they cascade.</p>
+          <h3>Common Pitfalls and How to Avoid Them</h3>
+
+          <div class="callout callout-warning">
+            <div class="callout-title">⚠️ Pitfall: Customization Overload</div>
+            <p><strong>The Problem:</strong> Departments request extensive customizations to match old workflows, resulting in expensive, fragile systems that break with every upgrade.</p>
+            <p style="margin-top: 12px;"><strong>The Solution:</strong> Adopt a "configure, don't customize" approach. Use 80/20 rule: accept vendor's best practices for 80% of workflows, customize only mission-critical 20%.</p>
+          </div>
+
+          <div class="callout callout-warning" style="margin-top: 24px;">
+            <div class="callout-title">⚠️ Pitfall: Underestimating Change Management</div>
+            <p><strong>The Problem:</strong> Technical implementation succeeds, but staff resistance tanks adoption. System sits unused while staff revert to spreadsheets.</p>
+            <p style="margin-top: 12px;"><strong>The Solution:</strong> Budget 15-20% of project cost for change management: staff champions, hands-on training, process documentation, executive sponsorship.</p>
+          </div>
+
+          <div class="section-cta">
+            <div class="section-cta-text">Not sure where to start your modernization journey? We can help you figure that out.</div>
+            <a href="/#waitlist" class="section-cta-button">
+              Assess Your Current State
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+
+        </div>
+      </div>
     </div>
 
-    <h3>Training That Actually Works</h3>
-    <p>Avoid these common training mistakes:</p>
-    <ul>
-      <li><strong>❌ Generic webinars:</strong> Vendor's canned training doesn't match your workflows</li>
-      <li><strong>❌ "Train the trainer" only:</strong> Assumes trainers have time/skill to teach others</li>
-      <li><strong>❌ Training 6 months before go-live:</strong> Staff forget everything by the time system launches</li>
-    </ul>
+    <!-- SECTION 4: DATA MANAGEMENT -->
+    <div class="accordion-item" id="data-management">
+      <div class="accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="content-data-management">
+        <div class="accordion-header-content">
+          <span class="accordion-number">Section 4</span>
+          <h2 class="accordion-title">Data Management & Transparency</h2>
+          <p class="accordion-summary">Modern ERP systems should enhance—not hinder—your municipality's transparency and public records compliance.</p>
+        </div>
+        <div class="accordion-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="accordion-content" id="content-data-management">
+        <div class="accordion-content-inner article-content">
 
-    <p><strong>✅ Effective training approach:</strong></p>
-    <ul>
-      <li><strong>Role-based training:</strong> Finance clerks learn AP workflows, not HR processes they'll never use</li>
-      <li><strong>Hands-on sandbox:</strong> Practice environment with test data, not just watching demos</li>
-      <li><strong>Just-in-time schedule:</strong> Train 2-4 weeks before go-live when it's fresh</li>
-      <li><strong>Job aids & quick reference:</strong> Laminated cheat sheets, video snippets for common tasks</li>
-      <li><strong>Ongoing support:</strong> Office hours, help desk, refresher sessions post-launch</li>
-    </ul>
+          <h3>Public Records Compliance</h3>
+          <p>Your ERP system must support legal obligations for public records:</p>
+          <ul>
+            <li><strong>Retention Policies:</strong> Automated retention schedules per state law (e.g., payroll records 7 years, contracts 6 years)</li>
+            <li><strong>FOIA/Public Records Requests:</strong> Export tools for common request types, audit trails showing who accessed what</li>
+            <li><strong>Redaction Tools:</strong> Ability to remove PII (Social Security numbers, private addresses) before disclosure</li>
+            <li><strong>Audit Trails:</strong> Immutable logs of all data changes for financial transactions and sensitive records</li>
+          </ul>
 
-    <h3>Measuring Success</h3>
-    <p>Track these KPIs to ensure your ERP implementation is delivering value:</p>
-    <ul>
-      <li><strong>User Adoption:</strong> % of staff actively using system (login frequency, transaction counts)</li>
-      <li><strong>Process Efficiency:</strong> Time to close month-end, process invoices, run payroll (compare to baseline)</li>
-      <li><strong>Error Rates:</strong> Declined transactions, duplicate entries, journal entry corrections (should decrease)</li>
-      <li><strong>Staff Satisfaction:</strong> Survey scores on system usability, training quality, support responsiveness</li>
-      <li><strong>Cost Savings:</strong> Reduction in paper, postage, manual data entry, overtime</li>
-    </ul>
+          <h3>Meeting Minutes Accessibility</h3>
+          <p>Best practices for publishing council and board meeting materials:</p>
+
+          <div class="checklist">
+            <div class="checklist-title">Meeting Transparency Checklist</div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Agendas posted at least 24-48 hours before meetings (check state requirements)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Minutes published within 7-10 business days of approval</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Attachments (staff reports, contracts, presentations) linked directly from minutes</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Searchable format (PDF with OCR or HTML, not scanned images)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Archive of historical minutes easily browsable (by date, topic, or keyword)</div>
+            </div>
+            <div class="checklist-item">
+              <div class="checklist-checkbox"></div>
+              <div class="checklist-text">Video recordings if meetings are broadcast (YouTube, Granicus, etc.)</div>
+            </div>
+          </div>
+
+          <h3>Citizen Engagement Tools</h3>
+          <p>Modern municipalities use ERP data to engage citizens:</p>
+          <ul>
+            <li><strong>Budget Transparency Portals:</strong> OpenGov-style dashboards showing spending by department, category, vendor</li>
+            <li><strong>Service Request Tracking:</strong> 311 systems where citizens report potholes, graffiti, etc. and track status</li>
+            <li><strong>Permit Tracking:</strong> Real-time status of building permits, business licenses, land use applications</li>
+            <li><strong>Performance Dashboards:</strong> Public-facing metrics (response times, project completion, budget variance)</li>
+          </ul>
+
+          <div class="section-cta">
+            <div class="section-cta-text">How transparent is your current system? Identify gaps before they become audit findings.</div>
+            <a href="/#waitlist" class="section-cta-button">
+              Run the Readiness Assessment
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: CHANGE MANAGEMENT -->
+    <div class="accordion-item" id="change-management">
+      <div class="accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="content-change-management">
+        <div class="accordion-header-content">
+          <span class="accordion-number">Section 5</span>
+          <h2 class="accordion-title">Change Management & Staff Adoption</h2>
+          <p class="accordion-summary">Technology implementations fail more often due to people problems than technical problems. A deliberate change management strategy is essential.</p>
+        </div>
+        <div class="accordion-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="accordion-content" id="content-change-management">
+        <div class="accordion-content-inner article-content">
+
+          <h3>Building Internal Champions</h3>
+          <p>Identify "super users" in each department who will:</p>
+          <ul>
+            <li>Participate in vendor demos and provide input on requirements</li>
+            <li>Receive advanced training and become departmental experts</li>
+            <li>Provide peer-to-peer support during go-live and beyond</li>
+            <li>Advocate for the new system and help overcome resistance</li>
+          </ul>
+
+          <div class="callout callout-success">
+            <div class="callout-title">✅ Success Pattern: Phased Rollout</div>
+            <p>Instead of "big bang" go-live across all departments, consider phased approach:</p>
+            <ul>
+              <li><strong>Phase 1 (Months 1-3):</strong> Finance core (GL, AP, AR) with super users only</li>
+              <li><strong>Phase 2 (Months 4-6):</strong> HR and payroll, expand to all finance staff</li>
+              <li><strong>Phase 3 (Months 7-9):</strong> Department-specific modules (utilities, permitting, etc.)</li>
+              <li><strong>Phase 4 (Months 10-12):</strong> Self-service portals for employees and citizens</li>
+            </ul>
+            <p style="margin-top: 12px;">Benefits: Reduced risk, incremental learning, time to address issues before they cascade.</p>
+          </div>
+
+          <h3>Training That Actually Works</h3>
+          <p>Avoid these common training mistakes:</p>
+          <ul>
+            <li><strong>❌ Generic webinars:</strong> Vendor's canned training doesn't match your workflows</li>
+            <li><strong>❌ "Train the trainer" only:</strong> Assumes trainers have time/skill to teach others</li>
+            <li><strong>❌ Training 6 months before go-live:</strong> Staff forget everything by the time system launches</li>
+          </ul>
+
+          <p><strong>✅ Effective training approach:</strong></p>
+          <ul>
+            <li><strong>Role-based training:</strong> Finance clerks learn AP workflows, not HR processes they'll never use</li>
+            <li><strong>Hands-on sandbox:</strong> Practice environment with test data, not just watching demos</li>
+            <li><strong>Just-in-time schedule:</strong> Train 2-4 weeks before go-live when it's fresh</li>
+            <li><strong>Job aids & quick reference:</strong> Laminated cheat sheets, video snippets for common tasks</li>
+            <li><strong>Ongoing support:</strong> Office hours, help desk, refresher sessions post-launch</li>
+          </ul>
+
+          <h3>Measuring Success</h3>
+          <p>Track these KPIs to ensure your ERP implementation is delivering value:</p>
+          <ul>
+            <li><strong>User Adoption:</strong> % of staff actively using system (login frequency, transaction counts)</li>
+            <li><strong>Process Efficiency:</strong> Time to close month-end, process invoices, run payroll (compare to baseline)</li>
+            <li><strong>Error Rates:</strong> Declined transactions, duplicate entries, journal entry corrections (should decrease)</li>
+            <li><strong>Staff Satisfaction:</strong> Survey scores on system usability, training quality, support responsiveness</li>
+            <li><strong>Cost Savings:</strong> Reduction in paper, postage, manual data entry, overtime</li>
+          </ul>
+
+          <div class="section-cta">
+            <div class="section-cta-text">The best change management starts with knowing exactly what you're changing from.</div>
+            <a href="/#waitlist" class="section-cta-button">
+              Evaluate Your Current Systems
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
 
   </div>
-</article>
+</div>
 
-<!-- ===== CTA SECTION ===== -->
+<!-- ===== FINAL CTA SECTION ===== -->
 <section class="cta-section">
   <div class="container content-width">
     <h2 class="cta-title">Ready to Assess Your ERP Readiness?</h2>
@@ -743,6 +1161,160 @@ footer a:hover { text-decoration: underline; }
     </p>
   </div>
 </footer>
+
+<script>
+// Remove no-js class for progressive enhancement
+document.body.classList.remove('no-js');
+
+// ===== ACCORDION FUNCTIONALITY =====
+const accordionItems = document.querySelectorAll('.accordion-item');
+const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+function toggleAccordion(item) {
+  const isActive = item.classList.contains('active');
+  const content = item.querySelector('.accordion-content');
+  const header = item.querySelector('.accordion-header');
+
+  // Close all other accordions (one at a time behavior)
+  accordionItems.forEach(otherItem => {
+    if (otherItem !== item && otherItem.classList.contains('active')) {
+      otherItem.classList.remove('active');
+      otherItem.querySelector('.accordion-header').setAttribute('aria-expanded', 'false');
+      const otherContent = otherItem.querySelector('.accordion-content');
+      otherContent.style.maxHeight = null;
+    }
+  });
+
+  // Toggle current accordion
+  if (isActive) {
+    item.classList.remove('active');
+    header.setAttribute('aria-expanded', 'false');
+    content.style.maxHeight = null;
+  } else {
+    item.classList.add('active');
+    header.setAttribute('aria-expanded', 'true');
+    content.style.maxHeight = content.scrollHeight + 'px';
+
+    // Scroll to accordion header after a brief delay
+    setTimeout(() => {
+      const headerTop = item.offsetTop - 100;
+      window.scrollTo({ top: headerTop, behavior: 'smooth' });
+    }, 300);
+  }
+
+  updateTOCHighlight();
+}
+
+accordionHeaders.forEach(header => {
+  // Click handler
+  header.addEventListener('click', (e) => {
+    toggleAccordion(header.closest('.accordion-item'));
+  });
+
+  // Keyboard handler
+  header.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleAccordion(header.closest('.accordion-item'));
+    }
+  });
+});
+
+// ===== DEEP LINKING =====
+function handleDeepLink() {
+  const hash = window.location.hash;
+  if (hash) {
+    const targetSection = document.querySelector(hash);
+    if (targetSection && targetSection.classList.contains('accordion-item')) {
+      setTimeout(() => {
+        toggleAccordion(targetSection);
+      }, 100);
+    }
+  }
+}
+
+// Handle deep links on page load and hash change
+window.addEventListener('load', handleDeepLink);
+window.addEventListener('hashchange', handleDeepLink);
+
+// ===== TOC HIGHLIGHTING =====
+const tocLinks = document.querySelectorAll('.toc-pills a, .toc-sidebar a');
+
+function updateTOCHighlight() {
+  const activeSection = Array.from(accordionItems).find(item => item.classList.contains('active'));
+
+  tocLinks.forEach(link => {
+    if (activeSection && link.getAttribute('href') === `#${activeSection.id}`) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+}
+
+// TOC click handlers
+tocLinks.forEach(link => {
+  link.addEventListener('click', (e) => {
+    const targetId = link.getAttribute('href').slice(1);
+    const targetSection = document.getElementById(targetId);
+
+    if (targetSection && targetSection.classList.contains('accordion-item')) {
+      e.preventDefault();
+      toggleAccordion(targetSection);
+
+      // Update URL hash without triggering hashchange event
+      history.pushState(null, null, `#${targetId}`);
+    }
+  });
+});
+
+// ===== SCROLL PROGRESS BAR =====
+const progressBar = document.getElementById('scroll-progress');
+
+function updateScrollProgress() {
+  const windowHeight = window.innerHeight;
+  const documentHeight = document.documentElement.scrollHeight - windowHeight;
+  const scrolled = window.pageYOffset;
+  const progress = (scrolled / documentHeight) * 100;
+
+  progressBar.style.width = progress + '%';
+}
+
+window.addEventListener('scroll', updateScrollProgress);
+updateScrollProgress();
+
+// ===== SCROLL SPY FOR TOC (Alternative behavior if needed) =====
+// Uncomment this if you want TOC to highlight based on scroll position instead of active accordion
+/*
+function scrollSpy() {
+  const sections = Array.from(accordionItems);
+  let currentSection = '';
+
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.clientHeight;
+    const scrollPosition = window.pageYOffset + 150;
+
+    if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+      currentSection = section.id;
+    }
+  });
+
+  tocLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === `#${currentSection}`) {
+      link.classList.add('active');
+    }
+  });
+}
+
+window.addEventListener('scroll', scrollSpy);
+scrollSpy();
+*/
+
+// Initial TOC highlight
+updateTOCHighlight();
+</script>
 
 </body>
 </html>
