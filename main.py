@@ -20,7 +20,10 @@ from sqlalchemy import text
 import json
 import os
 
-from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User
+from src.database import (
+    init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User,
+    Assessment, AssessmentSection, Finding, Report, AnonymousAssessment
+)
 from src.discovery import SourceDiscovery
 from src.scraper import MunicipalScraper
 from src.analyzer import DocumentAnalyzer
@@ -1142,6 +1145,123 @@ async def get_all_users(
             }
             for u in users
         ]
+    }
+
+
+@app.get("/api/admin/analytics")
+async def get_admin_analytics(
+    user: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """Get comprehensive admin analytics including section interest tracking. Admin only."""
+
+    # Get all assessments with user data
+    assessments = db.query(Assessment).join(User).all()
+
+    # Overview statistics
+    total_assessments = len(assessments)
+    completed = len([a for a in assessments if a.status == "completed"])
+    in_progress = len([a for a in assessments if a.status == "in-progress"])
+    draft = len([a for a in assessments if a.status == "draft"])
+
+    # Get unique users count
+    total_users = db.query(User).count()
+
+    # Anonymous assessments count
+    anonymous_count = db.query(AnonymousAssessment.sessionId).distinct().count()
+
+    # Section interest tracking (NEW!)
+    section_interest_counts = {}
+    section_interest_details = {}
+
+    for assessment in assessments:
+        if assessment.interestedSections:
+            interested = assessment.interestedSections if isinstance(assessment.interestedSections, list) else []
+            for section_num in interested:
+                section_interest_counts[section_num] = section_interest_counts.get(section_num, 0) + 1
+                if section_num not in section_interest_details:
+                    section_interest_details[section_num] = []
+                section_interest_details[section_num].append({
+                    "userId": assessment.userId,
+                    "userEmail": assessment.user.email if assessment.user else "Unknown",
+                    "organization": getattr(assessment.organizationProfile, 'organization', None) if assessment.organizationProfile else None,
+                    "state": getattr(assessment.organizationProfile, 'state', None) if assessment.organizationProfile else None,
+                })
+
+    # Section completion rates
+    section_completion = {}
+    for i in range(1, 9):  # 8 sections
+        section_completion[i] = {
+            "completed": 0,
+            "inProgress": 0,
+            "total": total_assessments
+        }
+
+    for assessment in assessments:
+        for section in assessment.sections:
+            section_num = section.sectionNumber
+            if section.status == "completed":
+                section_completion[section_num]["completed"] += 1
+            elif section.status == "in-progress":
+                section_completion[section_num]["inProgress"] += 1
+
+    # Recent activity (last 10 updated assessments)
+    recent = db.query(Assessment).join(User).order_by(Assessment.updatedAt.desc()).limit(10).all()
+    recent_activity = []
+    for assessment in recent:
+        sections_completed = len([s for s in assessment.sections if s.status == "completed"])
+        recent_activity.append({
+            "id": assessment.id,
+            "userEmail": assessment.user.email if assessment.user else "Unknown",
+            "organization": assessment.organizationProfile.get("organization") if assessment.organizationProfile else None,
+            "state": assessment.organizationProfile.get("state") if assessment.organizationProfile else None,
+            "status": assessment.status,
+            "sectionsCompleted": sections_completed,
+            "updatedAt": assessment.updatedAt.isoformat()
+        })
+
+    # User growth (last 30 days)
+    thirty_days_ago = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    new_users = db.query(User).filter(User.created_at >= thirty_days_ago).all()
+    user_growth = [{
+        "id": u.id,
+        "email": u.email,
+        "createdAt": u.created_at.isoformat()
+    } for u in new_users]
+
+    # User demographics
+    state_distribution = {}
+    entity_type_distribution = {}
+
+    for assessment in assessments:
+        if assessment.organizationProfile:
+            state = assessment.organizationProfile.get("state")
+            entity_type = assessment.organizationProfile.get("entityType")
+            if state:
+                state_distribution[state] = state_distribution.get(state, 0) + 1
+            if entity_type:
+                entity_type_distribution[entity_type] = entity_type_distribution.get(entity_type, 0) + 1
+
+    return {
+        "overview": {
+            "totalAssessments": total_assessments,
+            "completedAssessments": completed,
+            "inProgressAssessments": in_progress,
+            "draftAssessments": draft,
+            "totalUsers": total_users,
+            "anonymousAssessments": anonymous_count
+        },
+        "sectionInterest": {
+            "counts": section_interest_counts,
+            "details": section_interest_details
+        },
+        "sectionCompletion": section_completion,
+        "demographics": {
+            "states": state_distribution,
+            "entityTypes": entity_type_distribution
+        },
+        "recentActivity": recent_activity,
+        "userGrowth": user_growth
     }
 
 

@@ -121,6 +121,7 @@ class User(Base):
 
     # Relationships
     scans = relationship("Scan", back_populates="user")
+    assessments = relationship("Assessment", back_populates="user")
     magic_links = relationship("MagicLink", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -225,6 +226,129 @@ class Lead(Base):
 
     def __repr__(self):
         return f"<Lead: {self.municipality}, {self.state} - {self.lead_type.upper()} ({self.relevance_score:.1f})>"
+
+
+class Assessment(Base):
+    """
+    Assessment record for ERP diagnostic platform.
+
+    Tracks user progress through the 8-section diagnostic questionnaire.
+    """
+    __tablename__ = "Assessment"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    userId = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    status = Column(String(20), nullable=False, default="draft")  # draft | in-progress | completed
+    organizationProfile = Column(JSON, nullable=True)  # Section 1 answers
+    importedData = Column(JSON, nullable=True)  # Imported data (departments, funds, pay codes, etc.)
+    interestedSections = Column(JSON, nullable=True)  # Array of section numbers user is interested in
+    overallScore = Column(Float, nullable=True)
+    createdAt = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updatedAt = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completedAt = Column(DateTime, nullable=True)
+
+    # Relationships
+    user = relationship("User", back_populates="assessments")
+    sections = relationship("AssessmentSection", back_populates="assessment", cascade="all, delete-orphan")
+    findings = relationship("Finding", back_populates="assessment", cascade="all, delete-orphan")
+    reports = relationship("Report", back_populates="assessment", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Assessment {self.id[:8]}: {self.status} for {self.user.email if self.user else 'Unknown'}>"
+
+
+class AssessmentSection(Base):
+    """
+    Individual section within an assessment.
+
+    Each assessment has 8 sections (Organization, GL, Payroll, etc.)
+    """
+    __tablename__ = "AssessmentSection"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    assessmentId = Column(String(36), ForeignKey("Assessment.id"), nullable=False, index=True)
+    sectionNumber = Column(Integer, nullable=False)
+    sectionName = Column(String(100), nullable=False)
+    status = Column(String(20), nullable=False, default="not-started")  # not-started | in-progress | completed
+    answers = Column(JSON, nullable=True)  # All answers for this section
+    aiFindings = Column(JSON, nullable=True)  # AI analysis results
+    createdAt = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updatedAt = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    assessment = relationship("Assessment", back_populates="sections")
+
+    def __repr__(self):
+        return f"<AssessmentSection {self.sectionNumber}: {self.sectionName} - {self.status}>"
+
+
+class Finding(Base):
+    """
+    Finding/issue discovered during assessment analysis.
+    """
+    __tablename__ = "Finding"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    assessmentId = Column(String(36), ForeignKey("Assessment.id"), nullable=False, index=True)
+    sectionNumber = Column(Integer, nullable=False)
+    severity = Column(String(20), nullable=False)  # critical | high | medium | low
+    category = Column(String(50), nullable=False)  # compliance | consolidation | risk | process
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    impact = Column(Text, nullable=True)
+    recommendation = Column(Text, nullable=True)
+    chainReaction = Column(JSON, nullable=True)  # Downstream impacts
+    createdAt = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    assessment = relationship("Assessment", back_populates="findings")
+
+    def __repr__(self):
+        return f"<Finding: {self.title} ({self.severity})>"
+
+
+class Report(Base):
+    """
+    Generated assessment report.
+    """
+    __tablename__ = "Report"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    assessmentId = Column(String(36), ForeignKey("Assessment.id"), nullable=False, index=True)
+    executiveSummary = Column(Text, nullable=True)
+    overallScore = Column(Float, nullable=True)
+    categoryScores = Column(JSON, nullable=True)  # Scores by category
+    generatedAt = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    assessment = relationship("Assessment", back_populates="reports")
+
+    def __repr__(self):
+        return f"<Report for Assessment {self.assessmentId[:8]}>"
+
+
+class AnonymousAssessment(Base):
+    """
+    Anonymous assessment data for guest users (no login required).
+
+    Stores aggregated data without PII for analytics purposes.
+    """
+    __tablename__ = "AnonymousAssessment"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    sessionId = Column(String(36), nullable=False, index=True)  # Random ID to group sections
+    sectionNumber = Column(Integer, nullable=False, index=True)
+    sectionName = Column(String(100), nullable=False)
+    answers = Column(JSON, nullable=False)  # Section answers (no PII)
+    metadata = Column(JSON, nullable=True)  # Browser/device metadata
+    state = Column(String(2), nullable=True, index=True)  # State code only
+    entityType = Column(String(50), nullable=True)  # Entity type
+    employeeCountRange = Column(String(20), nullable=True)  # Bucketed range
+    departmentCountRange = Column(String(20), nullable=True)  # Bucketed range
+    createdAt = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<AnonymousAssessment: Session {self.sessionId[:8]} - Section {self.sectionNumber}>"
 
 
 # Database setup
