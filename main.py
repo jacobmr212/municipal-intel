@@ -315,6 +315,24 @@ async def sitemap():
     return FileResponse("static/sitemap.xml", media_type="application/xml")
 
 
+@app.get("/og-image.png", response_class=FileResponse)
+async def og_image():
+    """Serve Open Graph image for social media previews."""
+    return FileResponse("static/og-image.png", media_type="image/png")
+
+
+@app.get("/favicon.ico", response_class=FileResponse)
+async def favicon():
+    """Serve favicon for browser tabs."""
+    return FileResponse("static/favicon.ico", media_type="image/x-icon")
+
+
+@app.get("/apple-touch-icon.png", response_class=FileResponse)
+async def apple_touch_icon():
+    """Serve Apple touch icon for iOS devices."""
+    return FileResponse("static/apple-touch-icon.png", media_type="image/png")
+
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""
