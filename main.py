@@ -1354,7 +1354,6 @@ async def get_admin_analytics(
                 a.id,
                 a.status,
                 a."createdAt",
-                a."completedAt",
                 u.email,
                 a."organizationProfile"->>'organization' as organization,
                 a."organizationProfile"->>'state' as state
@@ -1370,10 +1369,9 @@ async def get_admin_analytics(
                 "assessmentId": row[0],
                 "status": row[1],
                 "createdAt": row[2].isoformat() if row[2] else None,
-                "completedAt": row[3].isoformat() if row[3] else None,
-                "userEmail": row[4],
-                "organization": row[5],
-                "state": row[6]
+                "userEmail": row[3],
+                "organization": row[4],
+                "state": row[5]
             })
 
         # User growth (assessments created per week, last 12 weeks)
@@ -2434,7 +2432,7 @@ async def list_assessments(
 ):
     """List all assessments for the current user."""
     result = db.execute(text("""
-        SELECT id, status, "createdAt", "completedAt", "overallScore"
+        SELECT id, status, "createdAt", "updatedAt"
         FROM "Assessment"
         WHERE "userId" = :user_id
         ORDER BY "createdAt" DESC
@@ -2446,8 +2444,7 @@ async def list_assessments(
             "id": row[0],
             "status": row[1],
             "createdAt": row[2].isoformat() if row[2] else None,
-            "completedAt": row[3].isoformat() if row[3] else None,
-            "overallScore": row[4]
+            "updatedAt": row[3].isoformat() if row[3] else None
         })
 
     return {"assessments": assessments}
@@ -2462,7 +2459,7 @@ async def get_assessment(
     """Get a specific assessment with all sections."""
     # Get assessment
     result = db.execute(text("""
-        SELECT id, status, "organizationProfile", "createdAt", "completedAt", "overallScore"
+        SELECT id, status, "organizationProfile", "createdAt", "updatedAt"
         FROM "Assessment"
         WHERE id = :id AND "userId" = :user_id
     """), {"id": assessment_id, "user_id": user["id"]})
@@ -2492,8 +2489,7 @@ async def get_assessment(
         "status": row[1],
         "organizationProfile": row[2] or {},
         "createdAt": row[3].isoformat() if row[3] else None,
-        "completedAt": row[4].isoformat() if row[4] else None,
-        "overallScore": row[5],
+        "updatedAt": row[4].isoformat() if row[4] else None,
         "sections": sections
     }
 
