@@ -893,10 +893,12 @@ async def scan_preview(
 @app.get("/api/municipalities")
 async def get_municipalities(
     state: Optional[str] = None,
+    user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get municipalities for frontend selectors.
+    Requires authentication.
 
     Query params:
     - state: Filter by state abbreviation
@@ -925,10 +927,12 @@ async def get_municipalities(
 async def export_scan(
     scan_id: str,
     format: str = "html",
+    user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Generate and download export report.
+    Requires authentication and scan ownership.
 
     Formats: html | json
     """
