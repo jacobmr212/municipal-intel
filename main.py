@@ -792,12 +792,23 @@ async def list_scans(
 async def update_lead(
     lead_id: str,
     update: LeadUpdate,
+    user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update lead notes."""
+    """Update lead notes. Requires authentication and scan ownership."""
+    # Get lead and verify it exists
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
+
+    # Verify lead belongs to user's scan
+    scan = db.query(Scan).filter(
+        Scan.id == lead.scan_id,
+        Scan.user_id == user["user_id"]
+    ).first()
+
+    if not scan:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     if update.notes is not None:
         lead.notes = update.notes
