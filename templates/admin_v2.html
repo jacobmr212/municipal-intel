@@ -468,6 +468,8 @@ input[type="checkbox"] {
     <button class="tab-btn" onclick="switchTab('users', this)">Users</button>
     <button class="tab-btn" onclick="switchTab('scans', this)">Scans</button>
     <button class="tab-btn" onclick="switchTab('analytics', this)">Analytics</button>
+    <button class="tab-btn" onclick="window.location.href='/app'">Scanner</button>
+    <button class="tab-btn" onclick="window.location.href='/dashboard'">Assessment</button>
   </div>
 
   <!-- ═══ OVERVIEW TAB ═══ -->
@@ -828,8 +830,8 @@ async function loadOverview() {
     const waitlist = await waitlistRes.json();
     const scans = await scansRes.json();
 
-    document.getElementById('overview-users').textContent = users.length;
-    document.getElementById('overview-waitlist').textContent = waitlist.length;
+    document.getElementById('overview-users').textContent = users.users?.length || 0;
+    document.getElementById('overview-waitlist').textContent = waitlist.waitlist?.length || 0;
     document.getElementById('overview-scans').textContent = scans.length;
 
     // Recent activity (stub)
@@ -846,18 +848,18 @@ async function loadWaitlist() {
     const data = await res.json();
 
     const tbody = document.getElementById('waitlist-body');
-    if (data.length === 0) {
+    if (!data.waitlist || data.waitlist.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10" class="table-empty">No pending waitlist entries</td></tr>';
       return;
     }
 
-    tbody.innerHTML = data.map(entry => `
+    tbody.innerHTML = data.waitlist.map(entry => `
       <tr data-filter="${entry.source}">
         <td><input type="checkbox" onchange="updateBulkBar('waitlist')"></td>
-        <td><span class="status-badge status-info">${entry.source}</span></td>
+        <td><span class="status-badge status-info">${entry.source || 'landing'}</span></td>
         <td>${entry.name || '-'}</td>
         <td>${entry.email}</td>
-        <td>${entry.organization || '-'}</td>
+        <td>${entry.municipality || entry.company || '-'}</td>
         <td>${entry.state || '-'}</td>
         <td>${entry.current_erp || '-'}</td>
         <td>
@@ -884,10 +886,10 @@ async function loadUsers() {
     const res = await fetch('/api/admin/users');
     const data = await res.json();
 
-    document.getElementById('overview-users').textContent = data.length;
+    document.getElementById('overview-users').textContent = data.users.length;
 
     const tbody = document.getElementById('users-body');
-    tbody.innerHTML = data.map(u => `
+    tbody.innerHTML = data.users.map(u => `
       <tr data-filter="${u.role}">
         <td>${u.email}</td>
         <td>
