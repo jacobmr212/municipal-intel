@@ -1330,6 +1330,7 @@ body {
       <div class="admin-tabs">
         <button class="admin-tab-btn active" onclick="switchAdminTab('waitlist', this)">Waitlist</button>
         <button class="admin-tab-btn" onclick="switchAdminTab('users', this)">Users</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('analytics', this)">Analytics</button>
       </div>
 
       <!-- Waitlist panel -->
@@ -1372,6 +1373,68 @@ body {
           </tbody>
         </table>
       </div>
+
+      <!-- Analytics panel -->
+      <div id="admin-analytics" class="admin-panel">
+        <div style="margin-bottom: 2rem;">
+
+          <!-- Overview Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem;">
+              <div style="font-size: 0.875rem; color: #77716B; margin-bottom: 0.5rem;">Total Assessments</div>
+              <div style="font-size: 2rem; font-weight: 600; color: #1A1816;" id="stat-total">-</div>
+            </div>
+            <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem;">
+              <div style="font-size: 0.875rem; color: #77716B; margin-bottom: 0.5rem;">Completed</div>
+              <div style="font-size: 2rem; font-weight: 600; color: #2E7D32;" id="stat-completed">-</div>
+            </div>
+            <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem;">
+              <div style="font-size: 0.875rem; color: #77716B; margin-bottom: 0.5rem;">In Progress</div>
+              <div style="font-size: 2rem; font-weight: 600; color: #1976D2;" id="stat-in-progress">-</div>
+            </div>
+            <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem;">
+              <div style="font-size: 0.875rem; color: #77716B; margin-bottom: 0.5rem;">Total Users</div>
+              <div style="font-size: 2rem; font-weight: 600; color: #1A1816;" id="stat-users">-</div>
+            </div>
+          </div>
+
+          <!-- Section Interest Tracking -->
+          <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; color: #1A1816;">Section Interest Tracking</h3>
+            <p style="color: #77716B; font-size: 0.875rem; margin-bottom: 1.5rem;">
+              Which locked sections (4-8) are users most interested in? Use this to prioritize development.
+            </p>
+            <div id="section-interest-content">
+              <div style="color: #77716B;">No interest data yet.</div>
+            </div>
+          </div>
+
+          <!-- Section Completion Rates -->
+          <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; color: #1A1816;">Section Completion Rates</h3>
+            <div id="section-completion-content">
+              <div style="color: #77716B;">No completion data yet.</div>
+            </div>
+          </div>
+
+          <!-- Demographics -->
+          <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; color: #1A1816;">State Distribution</h3>
+            <div id="state-distribution-content">
+              <div style="color: #77716B;">No demographic data yet.</div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div style="background: white; border: 1px solid #E5E2DC; border-radius: 8px; padding: 1.5rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; color: #1A1816;">Recent Activity</h3>
+            <div id="recent-activity-content">
+              <div style="color: #77716B;">No recent activity.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   </div>
   {% endif %}
@@ -1400,6 +1463,7 @@ function switchTab(name, btn) {
   if (name === 'admin') {
     loadWaitlist();
     loadUsers();
+    loadAnalytics();
   }
   if (name === 'scanner') {
     loadRecentScans();
@@ -1411,6 +1475,11 @@ function switchAdminTab(name, btn) {
   document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('admin-' + name).classList.add('active');
   btn.classList.add('active');
+
+  // Load analytics data when analytics tab is opened
+  if (name === 'analytics') {
+    loadAnalytics();
+  }
 }
 
 // ── Toast ──
@@ -2220,6 +2289,138 @@ function updateRole(userId, newRole) {
     else showToast(data.detail || 'Update failed.', 'error');
   })
   .catch(() => showToast('Request failed.', 'error'));
+}
+
+// ═══════════════════════════════
+// ADMIN: ANALYTICS
+// ═══════════════════════════════
+
+function loadAnalytics() {
+  fetch('/api/admin/analytics')
+  .then(r => r.json())
+  .then(data => {
+    // Update overview stats
+    document.getElementById('stat-total').textContent = data.overview.totalAssessments;
+    document.getElementById('stat-completed').textContent = data.overview.completed;
+    document.getElementById('stat-in-progress').textContent = data.overview.inProgress;
+    document.getElementById('stat-users').textContent = data.overview.totalUsers;
+
+    // Section interest tracking
+    const sectionInterestEl = document.getElementById('section-interest-content');
+    if (Object.keys(data.sectionInterest.counts).length === 0) {
+      sectionInterestEl.innerHTML = '<div style="color: #77716B;">No users have expressed interest in locked sections yet.</div>';
+    } else {
+      const sectionNames = {
+        '4': 'Section 4',
+        '5': 'Section 5',
+        '6': 'Section 6',
+        '7': 'Section 7',
+        '8': 'Section 8'
+      };
+      const sortedSections = Object.entries(data.sectionInterest.counts)
+        .sort((a, b) => b[1] - a[1]);
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+      sortedSections.forEach(([sectionNum, count]) => {
+        const maxCount = sortedSections[0][1];
+        const percentage = (count / maxCount) * 100;
+        html += `
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <strong>${sectionNames[sectionNum] || 'Section ' + sectionNum}</strong>
+              <span style="color: #1976D2; font-weight: 600;">${count} ${count === 1 ? 'user' : 'users'}</span>
+            </div>
+            <div style="background: #E5E2DC; border-radius: 4px; height: 24px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, #1976D2, #42A5F5); height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      sectionInterestEl.innerHTML = html;
+    }
+
+    // Section completion rates
+    const sectionCompletionEl = document.getElementById('section-completion-content');
+    if (Object.keys(data.sectionCompletion).length === 0) {
+      sectionCompletionEl.innerHTML = '<div style="color: #77716B;">No section completion data yet.</div>';
+    } else {
+      let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+      Object.entries(data.sectionCompletion).sort((a, b) => a[0] - b[0]).forEach(([sectionNum, stats]) => {
+        html += `
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <strong>Section ${sectionNum}</strong>
+              <span>${stats.completed}/${stats.total} (${stats.completion_rate}%)</span>
+            </div>
+            <div style="background: #E5E2DC; border-radius: 4px; height: 20px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, #2E7D32, #66BB6A); height: 100%; width: ${stats.completion_rate}%; transition: width 0.3s;"></div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      sectionCompletionEl.innerHTML = html;
+    }
+
+    // State distribution
+    const stateDistEl = document.getElementById('state-distribution-content');
+    if (Object.keys(data.demographics.stateDistribution).length === 0) {
+      stateDistEl.innerHTML = '<div style="color: #77716B;">No demographic data yet.</div>';
+    } else {
+      const sortedStates = Object.entries(data.demographics.stateDistribution)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      const maxCount = sortedStates[0][1];
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+      sortedStates.forEach(([state, count]) => {
+        const percentage = (count / maxCount) * 100;
+        html += `
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="min-width: 40px; font-weight: 600; color: #1A1816;">${state}</div>
+            <div style="flex: 1; background: #E5E2DC; border-radius: 4px; height: 20px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, #1976D2, #42A5F5); height: 100%; width: ${percentage}%;"></div>
+            </div>
+            <div style="min-width: 30px; text-align: right; color: #77716B;">${count}</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      stateDistEl.innerHTML = html;
+    }
+
+    // Recent activity
+    const activityEl = document.getElementById('recent-activity-content');
+    if (data.recentActivity.length === 0) {
+      activityEl.innerHTML = '<div style="color: #77716B;">No recent activity.</div>';
+    } else {
+      let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+      data.recentActivity.forEach(activity => {
+        const statusColor = activity.status === 'completed' ? '#2E7D32' :
+                           activity.status === 'in-progress' ? '#1976D2' : '#77716B';
+        const statusBadge = `<span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${activity.status}</span>`;
+
+        html += `
+          <div style="padding: 0.75rem; background: #F5F3EF; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.25rem;">
+              <strong>${activity.organization || activity.userEmail}</strong>
+              ${statusBadge}
+            </div>
+            <div style="color: #77716B; font-size: 0.875rem;">
+              ${activity.state || ''} • ${formatDate(activity.createdAt)}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      activityEl.innerHTML = html;
+    }
+  })
+  .catch(err => {
+    console.error('Failed to load analytics:', err);
+    document.getElementById('stat-total').textContent = 'Error';
+  });
 }
 
 // ── Helpers ──
