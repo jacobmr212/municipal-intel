@@ -303,6 +303,18 @@ async def landing():
     return FileResponse("static/landing.html")
 
 
+@app.get("/robots.txt", response_class=FileResponse)
+async def robots():
+    """Serve robots.txt for search engine crawlers."""
+    return FileResponse("static/robots.txt", media_type="text/plain")
+
+
+@app.get("/sitemap.xml", response_class=FileResponse)
+async def sitemap():
+    """Serve sitemap.xml for search engines."""
+    return FileResponse("static/sitemap.xml", media_type="application/xml")
+
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""
