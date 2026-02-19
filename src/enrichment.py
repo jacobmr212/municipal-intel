@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 
 from .database import SessionLocal, Municipality, MunicipalSource
 from .signals import URL_PATTERNS, PROCUREMENT_PATTERNS
+from .discovery import SourceDiscovery
 
 logger = logging.getLogger(__name__)
 
@@ -234,104 +235,73 @@ class EnrichmentEngine:
 
         # Step 2: Discover sources if domain is verified
         if municipality.domain_status == "verified":
-            base_url = municipality.resolved_url or f"https://{municipality.domain}"
+            # Delegate to SourceDiscovery which includes JS fallback for pop >= 10K
+            discovery = SourceDiscovery(request_delay=self.delay, timeout=self.timeout)
 
-            # Extract city name for third-party platform checks
-            city_slug = municipality.name.lower().replace(" ", "").replace("-", "")
-
-            # Priority patterns to check first (most common)
-            priority_patterns = [
-                "/AgendaCenter", "/agendacenter",
-                "/Archive.aspx", "/archive.aspx",
-                "/DocumentCenter", "/documentcenter",
-                "/Meetings.aspx", "/Calendar.aspx",
-                "/meetings", "/city-council/meetings", "/council/meetings",
-            ]
-
-            remaining_patterns = [p for p in URL_PATTERNS if p not in priority_patterns]
-            ordered_patterns = priority_patterns + remaining_patterns
-
-            # Limit checks for speed (max 8 patterns)
-            max_patterns_to_check = 8
-            checked_count = 0
-            sources_found = 0
+            # Extract domain from resolved_url
+            domain = municipality.domain
+            if municipality.resolved_url:
+                # Parse domain from resolved_url (e.g., "https://cityoflosangeles.com/" -> "cityoflosangeles.com")
+                from urllib.parse import urlparse
+                parsed = urlparse(municipality.resolved_url)
+                domain = parsed.netloc.replace("www.", "")
 
             logger.info(f"  Discovering sources for {municipality.name}, {municipality.state}...")
 
-            for pattern in ordered_patterns:
-                if checked_count >= max_patterns_to_check:
-                    break
+            # Discover meeting minutes sources
+            discovered = discovery.discover_municipality(
+                name=municipality.name,
+                state=municipality.state,
+                domain=domain,
+                population=municipality.population or 0,
+                progress_callback=progress_callback
+            )
 
-                url = f"{base_url.rstrip('/')}{pattern}"
+            # Save discovered sources to database
+            for source_obj in discovered:
+                # Check if we already have this source
+                existing = db.query(MunicipalSource).filter_by(url=source_obj.url).first()
+                if existing:
+                    continue
 
-                if checked_count > 0:
-                    time.sleep(self.delay)
-                checked_count += 1
+                # Create source record
+                source = MunicipalSource(
+                    municipality_id=municipality.id,
+                    url=source_obj.url,
+                    source_type="meeting_minutes",
+                    platform=source_obj.source_type,
+                    confidence=source_obj.confidence,
+                    discovered_by_pattern="SourceDiscovery",
+                )
+                db.add(source)
+                db.commit()
+                stats["sources_found"] += 1
+                logger.info(f"    ✓ Source found: {source_obj.url} ({source_obj.source_type})")
 
-                result = self._check_url_for_content(url)
-                if result:
-                    found_url, platform = result
+            # Also discover procurement sources
+            procurement_sources = discovery.discover_procurement(
+                name=municipality.name,
+                state=municipality.state,
+                domain=domain,
+                population=municipality.population or 0
+            )
 
-                    # Check if we already have this source
-                    existing = db.query(MunicipalSource).filter_by(url=found_url).first()
-                    if existing:
-                        continue
-
-                    # Determine confidence
-                    confidence = 0.7
-                    if platform == "civicplus":
-                        confidence = 0.9
-                    elif platform == "granicus":
-                        confidence = 0.85
-
-                    # Create source record
+            for source_obj in procurement_sources:
+                # Check if already exists
+                existing = db.query(MunicipalSource).filter_by(url=source_obj.url).first()
+                if not existing:
                     source = MunicipalSource(
                         municipality_id=municipality.id,
-                        url=found_url,
-                        source_type="meeting_minutes",
-                        platform=platform,
-                        confidence=confidence,
-                        discovered_by_pattern=pattern,
+                        url=source_obj.url,
+                        source_type="procurement",
+                        platform=source_obj.source_type,
+                        confidence=source_obj.confidence,
+                        discovered_by_pattern="SourceDiscovery",
                     )
                     db.add(source)
                     db.commit()
-                    sources_found += 1
                     stats["sources_found"] += 1
-
-                    logger.info(f"    ✓ Source found: {found_url} ({platform}) — pattern: {pattern}")
-
-                    # Early stopping: if high confidence source found, stop
-                    if confidence >= 0.85:
-                        logger.info(f"    High confidence source found — stopping search")
-                        break
-
-                    # If found any source and checked 5+ patterns, stop
-                    if sources_found >= 1 and checked_count >= 5:
-                        logger.info(f"    Source found after {checked_count} checks — stopping")
-                        break
-
-            # Also check for procurement sources (quick check)
-            for pattern in PROCUREMENT_PATTERNS[:5]:  # Only check first 5 procurement patterns
-                url = f"{base_url.rstrip('/')}{pattern}"
-                time.sleep(self.delay)
-
-                if self._check_url_for_procurement(url):
-                    # Check if already exists
-                    existing = db.query(MunicipalSource).filter_by(url=url).first()
-                    if not existing:
-                        source = MunicipalSource(
-                            municipality_id=municipality.id,
-                            url=url,
-                            source_type="procurement",
-                            platform="html",
-                            confidence=0.85,
-                            discovered_by_pattern=pattern,
-                        )
-                        db.add(source)
-                        db.commit()
-                        stats["sources_found"] += 1
-                        logger.info(f"    ✓ Procurement source found: {url}")
-                    break  # Only need one procurement source
+                    logger.info(f"    ✓ Procurement source found: {source_obj.url}")
 
             if stats["sources_found"] == 0:
                 logger.warning(f"    ✗ No sources found for {municipality.name}, {municipality.state}")
