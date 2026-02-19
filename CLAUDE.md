@@ -25,11 +25,14 @@ WY, MT, NV, NM) to surface government ERP buying signals.
 - Admin at /admin (waitlist management, user role assignment)
 - Background scan processing with progress polling
 - Database: Postgres on Neon (shared by FastAPI app)
-- **306 municipal sources across 7 states** (UT, CO, ID, WY, MT, NV, NM)
-- Utah: 177 sources (133 portal + 44 direct)
+- **367 municipal sources across 7 states** (UT, CO, ID, WY, MT, NV, NM)
+- Utah: 177 sources (133 portal, 29 meeting_minutes, 15 procurement)
 - **Colorado: 111 sources** (49 meeting_minutes, 35 procurement, 27 budget)
 - **Idaho: 42 sources** (22 meeting_minutes, 14 procurement, 6 budget)
-- WY, MT, NV, NM: 18 sources via CivicPlus/pattern discovery
+- Wyoming: 13 sources (11 meeting_minutes, 1 procurement, 1 budget)
+- Montana: 8 sources (8 meeting_minutes)
+- Nevada: 5 sources (5 meeting_minutes)
+- New Mexico: 11 sources (11 meeting_minutes)
 
 ### First Production Scan Results (Feb 18, 2026)
 - Small tier (2.5K–10K): 24 min, 61 sources, 241 docs, 2 HOT + 1 WARM
@@ -54,18 +57,35 @@ After discovering 111 CO sources and 42 ID sources, ran verification scan to con
 - Added `TECH_CONTEXT_TERMS` positive requirement in analyzer.py (software, erp, system, etc.)
 - `active_rfp_signals` no longer uses circular self-validation via "rfp" as a supporting term
 
+### Enrichment Summary (Feb 18-19, 2026)
+- ✅ **Colorado**: 111 sources discovered (49 MM, 35 proc, 27 budget via pattern probing)
+- ✅ **Idaho**: 42 sources discovered (22 MM, 14 proc, 6 budget via pattern probing)
+- ✅ **WY/MT/NV/NM**: Limited procurement/budget sources found (smaller cities lack standardized pages)
+- ⚠️ **ND/SD/OR/WA**: Outside Caselle territory (7-state focus: UT, CO, ID, WY, MT, NV, NM)
+
 ### Known Issues
-1. ~~Source coverage thin outside Utah~~ → ✅ Fixed: CO now has 111 sources, ID has 42 sources (Feb 18)
-2. ~~Neon SSL idle timeout during scans~~ → ✅ Fixed: Session-cycling pattern in verify_scan.py (scripts/verify_scan.py:98-106)
-3. ND, SD, OR, WA not yet enriched (0 sources)
+1. ~~Source coverage thin outside Utah~~ → ✅ Fixed: All 7 Caselle states now covered (367 sources)
+2. ~~Neon SSL idle timeout during scans~~ → ✅ Fixed: Session-cycling pattern (scripts/verify_scan.py:98-106)
+3. Smaller states (MT, NV, NM) lack procurement/budget sources (rely on meeting_minutes only)
 4. Landing page hero may need breakpoint check on some viewports
 
+### Customer Status Categorization (Feb 18, 2026)
+✅ **Implemented automatic customer status detection for leads:**
+- Leads are categorized as "existing_customer" or "new_opportunity" based on signal analysis
+- Detection logic: If "direct_mentions" signal is present (Caselle/Clarity mentioned) → "existing_customer"
+- Otherwise → "new_opportunity" (municipality shopping for ERP, no current Caselle affiliation)
+- Field added to Lead model (src/database.py:214) with index for efficient filtering
+- Detection implemented in DocumentAnalyzer (src/analyzer.py:264-265)
+- Tests confirm 100% accuracy: Caselle mentions → existing_customer, all others → new_opportunity
+- **Sales Impact**: Enables prioritization of existing customer retention/upsell vs new acquisition
+
 ### Priority Next Steps
-1. Add lead categorization: "EXISTING CUSTOMER" vs "NEW OPPORTUNITY"
-2. ~~Build state portal scrapers for Colorado and Idaho~~ → Completed via direct discovery (Feb 18)
-3. Enrich ND, SD, OR, WA (state portals or direct discovery)
+1. ~~Add lead categorization: "EXISTING CUSTOMER" vs "NEW OPPORTUNITY"~~ → ✅ Completed (Feb 18)
+2. ~~Build state portal scrapers for Colorado and Idaho~~ → ✅ Completed via direct discovery (Feb 18)
+3. ~~Enrich CO, ID with procurement/budget sources~~ → ✅ Completed (Feb 19: 80 new sources)
 4. Point govtechdiagnostic.com domain to Railway
 5. Wire landing page email form to Resend for notifications
+6. Consider manual enrichment for MT, NV, NM procurement sources (low priority)
 
 ## Key Files
 
@@ -91,8 +111,8 @@ After discovering 111 CO sources and 42 ID sources, ran verification scan to con
 | `waitlist` | id, email, created_at |
 | `municipalities` | id, name, state, population, domain, domain_status, resolved_url |
 | `municipal_sources` | id, municipality_id, url, source_type, platform, confidence |
-| `intel_scans` | id, user_id, status, config_json, progress_phase, progress_pct, stats_json |
-| `intel_leads` | id, scan_id, municipality, state, lead_type, relevance_score, signal_matches_json |
+| `scans` | id, user_id, status, config_json, progress_phase, progress_pct, stats_json |
+| `leads` | id, scan_id, municipality, state, lead_type, customer_status, relevance_score, signal_matches_json |
 
 ## Environment Variables (Railway)
 

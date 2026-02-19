@@ -154,6 +154,7 @@ def run_scan(scan_id: str, config: dict):
                                 source_type=result.source_type,
                                 relevance_score=result.relevance_score,
                                 lead_type=result.lead_type,
+                                customer_status=result.customer_status,
                                 recommended_action=result.recommended_action,
                                 signal_matches_json={
                                     m.signal_type: {

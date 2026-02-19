@@ -64,6 +64,7 @@ class AnalysisResult:
     signal_matches: list[SignalMatch] = field(default_factory=list)
     summary: str = ""
     lead_type: str = ""
+    customer_status: str = "unknown"  # existing_customer | new_opportunity | unknown
     recommended_action: str = ""
     llm_analysis: str = ""
 
@@ -260,6 +261,9 @@ Reply with ONLY the sales brief."""
         high_confidence_signals = {m.signal_type for m in matches if m.confidence == "high"}
         lead_type, action = classify_lead(score, signal_types, source_type, high_confidence_signals)
 
+        # Determine customer status based on direct mentions
+        customer_status = "existing_customer" if "direct_mentions" in signal_types else "new_opportunity"
+
         # Build summary
         unique_kws = list(dict.fromkeys(m.keyword for m in matches))[:6]
         summary = f"{len(matches)} signal(s): {', '.join(unique_kws)}"
@@ -281,6 +285,7 @@ Reply with ONLY the sales brief."""
             signal_matches=matches,
             summary=summary,
             lead_type=lead_type,
+            customer_status=customer_status,
             recommended_action=action,
             llm_analysis=llm_text,
         )

@@ -234,6 +234,7 @@ def run_scan(scan_id: str, config: dict):
                                     source_type=result.source_type,
                                     relevance_score=result.relevance_score,
                                     lead_type=result.lead_type,
+                                    customer_status=result.customer_status,
                                     recommended_action=result.recommended_action,
                                     signal_matches_json={
                                         m.signal_type: {
@@ -314,6 +315,15 @@ async def health():
 
 class WaitlistRequest(BaseModel):
     email: str
+    name: Optional[str] = None
+    title: Optional[str] = None
+    municipality: Optional[str] = None
+    state: Optional[str] = None
+    current_erp: Optional[str] = None
+    open_to_contact: Optional[bool] = None
+    company: Optional[str] = None
+    interest: Optional[str] = None
+    source: Optional[str] = None  # 'municipality' or 'consultant'
 
 @app.post("/api/waitlist")
 async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db)):
@@ -324,13 +334,38 @@ async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db))
                 CREATE TABLE IF NOT EXISTS waitlist (
                     id SERIAL PRIMARY KEY,
                     email TEXT UNIQUE NOT NULL,
+                    name TEXT,
+                    title TEXT,
+                    municipality TEXT,
+                    state TEXT,
+                    current_erp TEXT,
+                    open_to_contact BOOLEAN,
+                    company TEXT,
+                    interest TEXT,
+                    source TEXT,
                     created_at TIMESTAMP DEFAULT NOW()
                 )
             """)
         )
         db.execute(
-            text("INSERT INTO waitlist (email) VALUES (:email) ON CONFLICT (email) DO NOTHING"),
-            {"email": request.email.lower().strip()}
+            text("""
+                INSERT INTO waitlist
+                (email, name, title, municipality, state, current_erp, open_to_contact, company, interest, source)
+                VALUES (:email, :name, :title, :municipality, :state, :current_erp, :open_to_contact, :company, :interest, :source)
+                ON CONFLICT (email) DO NOTHING
+            """),
+            {
+                "email": request.email.lower().strip(),
+                "name": request.name,
+                "title": request.title,
+                "municipality": request.municipality,
+                "state": request.state,
+                "current_erp": request.current_erp,
+                "open_to_contact": request.open_to_contact,
+                "company": request.company,
+                "interest": request.interest,
+                "source": request.source
+            }
         )
         db.commit()
     except Exception:
@@ -857,13 +892,27 @@ async def get_waitlist(
 ):
     """List all pending waitlist entries. Admin only."""
     try:
-        result = db.execute(text("SELECT email, created_at FROM waitlist ORDER BY created_at DESC"))
+        result = db.execute(text("""
+            SELECT email, name, title, municipality, state, current_erp,
+                   open_to_contact, company, interest, source, created_at
+            FROM waitlist
+            ORDER BY created_at DESC
+        """))
         rows = result.fetchall()
         return {
             "waitlist": [
                 {
                     "email": row[0],
-                    "created_at": row[1].isoformat() if row[1] else None
+                    "name": row[1],
+                    "title": row[2],
+                    "municipality": row[3],
+                    "state": row[4],
+                    "current_erp": row[5],
+                    "open_to_contact": row[6],
+                    "company": row[7],
+                    "interest": row[8],
+                    "source": row[9],
+                    "created_at": row[10].isoformat() if row[10] else None
                 }
                 for row in rows
             ]

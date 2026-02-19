@@ -211,6 +211,7 @@ class Lead(Base):
     # Lead classification
     relevance_score = Column(Float, nullable=False, default=0.0, index=True)  # 0-100
     lead_type = Column(String(10), nullable=False, index=True)  # hot | warm | cold
+    customer_status = Column(String(20), nullable=True, index=True)  # existing_customer | new_opportunity | unknown
     recommended_action = Column(Text, nullable=True)  # Recommended next step for sales team
 
     # Signal details (stored as JSON)

@@ -1337,13 +1337,20 @@ body {
         <table class="data-table" id="waitlistTable">
           <thead>
             <tr>
+              <th>Source</th>
+              <th>Name</th>
               <th>Email</th>
+              <th>Municipality/Company</th>
+              <th>State</th>
+              <th>Current ERP</th>
+              <th>Title/Interest</th>
+              <th>Contact OK</th>
               <th>Signed Up</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody id="waitlistBody">
-            <tr><td colspan="3" class="table-empty">Loading...</td></tr>
+            <tr><td colspan="10" class="table-empty">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2088,28 +2095,53 @@ function loadWaitlist() {
   .then(data => {
     const tbody = document.getElementById('waitlistBody');
     if (!data.waitlist || data.waitlist.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No pending signups.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="table-empty">No pending signups.</td></tr>';
       return;
     }
-    tbody.innerHTML = data.waitlist.map(entry => `
+    tbody.innerHTML = data.waitlist.map(entry => {
+      const sourceBadge = entry.source === 'municipality'
+        ? '<span style="background:#4ADE80;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">Municipality</span>'
+        : entry.source === 'consultant'
+        ? '<span style="background:#FBBF24;color:#000;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">Consultant</span>'
+        : '<span style="background:#94A3B8;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">Unknown</span>';
+
+      const munOrCompany = entry.source === 'municipality'
+        ? (entry.municipality || '—')
+        : (entry.company || '—');
+
+      const titleOrInterest = entry.source === 'municipality'
+        ? (entry.title || '—')
+        : (entry.interest || '—');
+
+      const contactOK = entry.open_to_contact === true ? '✓' : entry.open_to_contact === false ? '✗' : '—';
+
+      return `
       <tr id="wl-row-${CSS.escape(entry.email)}">
+        <td>${sourceBadge}</td>
+        <td>${entry.name || '—'}</td>
         <td><strong>${entry.email}</strong></td>
+        <td>${munOrCompany}</td>
+        <td>${entry.state || '—'}</td>
+        <td>${entry.current_erp || '—'}</td>
+        <td>${titleOrInterest}</td>
+        <td style="text-align:center;">${contactOK}</td>
         <td class="text-muted">${formatDate(entry.created_at)}</td>
         <td>
           <div class="approve-form">
             <select class="role-select" id="role-${CSS.escape(entry.email)}">
               <option value="client">Client</option>
-              <option value="consultant">Consultant</option>
+              <option value="consultant" ${entry.source === 'consultant' ? 'selected' : ''}>Consultant</option>
               <option value="admin">Admin</option>
             </select>
             <button class="btn btn-primary btn-sm" onclick="approveUser('${entry.email}')">Approve</button>
           </div>
         </td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
   })
   .catch(() => {
-    document.getElementById('waitlistBody').innerHTML = '<tr><td colspan="3" class="table-empty">Failed to load.</td></tr>';
+    document.getElementById('waitlistBody').innerHTML = '<tr><td colspan="10" class="table-empty">Failed to load.</td></tr>';
   });
 }
 
