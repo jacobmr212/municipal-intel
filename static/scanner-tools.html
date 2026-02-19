@@ -103,15 +103,19 @@ header {
   font-weight: normal;
 }
 
-nav a {
+header nav {
+  display: flex;
+  gap: 32px;
+}
+
+header nav a {
   color: var(--ink-light);
   text-decoration: none;
   font-size: 15px;
-  margin-left: 32px;
   transition: color 0.2s;
 }
 
-nav a:hover { color: var(--accent); }
+header nav a:hover { color: var(--accent); }
 
 /* ===== HERO ===== */
 .hero {
@@ -587,32 +591,32 @@ footer .container {
     </div>
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon">🗺️</div>
+        <div class="feature-icon"></div>
         <h3>Nationwide Coverage</h3>
         <p>Tracks 1,376+ municipal sources across all 50 states plus DC and Puerto Rico. From meeting minutes to procurement portals to state aggregators.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🎯</div>
+        <div class="feature-icon"></div>
         <h3>Targeted Filtering</h3>
         <p>Filter by state, population tier (2.5K–250K+), and source type. Focus on your ideal market segment.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🔍</div>
+        <div class="feature-icon"></div>
         <h3>Signal Detection</h3>
         <p>AI-powered analysis detects procurement signals, budget discussions, vendor mentions, and system pain points across documents.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">⚡</div>
+        <div class="feature-icon"></div>
         <h3>Automated Scanning</h3>
         <p>Set it and forget it. Scans run in the background, analyzing hundreds of documents in 25 minutes on average.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📊</div>
+        <div class="feature-icon"></div>
         <h3>Lead Scoring</h3>
         <p>Each lead is scored (0–100) based on signal strength, urgency keywords, and procurement stage. Prioritize HOT leads first.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">👥</div>
+        <div class="feature-icon"></div>
         <h3>Customer Classification</h3>
         <p>Leads are automatically tagged as "existing customer" (retention/upsell) or "new opportunity" (acquisition).</p>
       </div>
