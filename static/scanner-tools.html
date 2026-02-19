@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary Meta Tags -->
+<title>Municipal Intel Scanner — Find ERP Opportunities Nationwide | GovTech Diagnostic</title>
+<meta name="title" content="Municipal Intel Scanner — Find ERP Opportunities Nationwide | GovTech Diagnostic">
+<meta name="description" content="Automated lead generation tool for ERP consultants. Scan 1,376+ municipal sources across 50 states to find procurement signals, RFPs, and modernization opportunities.">
+<meta name="keywords" content="ERP lead generation, municipal procurement scanner, government RFP finder, ERP sales intelligence, municipal lead generation, government technology opportunities, ERP consultant tools, municipal sales leads">
+<meta name="author" content="GovTech Diagnostic">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://govtechdiagnostic.com/scanner-tools">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://govtechdiagnostic.com/scanner-tools">
+<meta property="og:title" content="Municipal Intel Scanner — Find ERP Opportunities Nationwide">
+<meta property="og:description" content="Automated lead generation tool for ERP consultants. Scan municipal sources nationwide to find procurement signals and modernization opportunities.">
+<meta property="og:image" content="https://govtechdiagnostic.com/og-image.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://govtechdiagnostic.com/scanner-tools">
+<meta property="twitter:title" content="Municipal Intel Scanner — Find ERP Opportunities Nationwide">
+<meta property="twitter:description" content="Automated lead generation tool for ERP consultants. Scan municipal sources nationwide to find procurement signals and modernization opportunities.">
+<meta property="twitter:image" content="https://govtechdiagnostic.com/og-image.png">
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --ink: #1A1816;
+  --ink-light: #3D3A35;
+  --ink-muted: #7A756D;
+  --sand: #F7F5F0;
+  --sand-dark: #EDE9E1;
+  --cream: #FDFCFA;
+  --white: #FFFFFF;
+  --accent: #1E3BC0;
+  --accent-hover: #162D99;
+  --accent-light: #E8ECFA;
+  --warm: #C4713B;
+  --warm-light: #FDF0E6;
+  --success: #1B7A4E;
+  --success-light: #E6F5ED;
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --hot: #EF6B5A;
+  --hot-light: #FEE2E2;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, sans-serif;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--cream);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+.content-width { max-width: 800px; margin: 0 auto; }
+
+/* ===== HEADER ===== */
+header {
+  padding: 24px 0;
+  background: var(--cream);
+  border-bottom: 1px solid var(--sand-dark);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  background: rgba(253, 252, 250, 0.95);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: normal;
+}
+
+nav a {
+  color: var(--ink-light);
+  text-decoration: none;
+  font-size: 15px;
+  margin-left: 32px;
+  transition: color 0.2s;
+}
+
+nav a:hover { color: var(--accent); }
+
+/* ===== HERO ===== */
+.hero {
+  padding: 120px 0 60px;
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--warm-light) 100%);
+  border-bottom: 1px solid var(--sand-dark);
+}
+
+.hero .content-width { text-align: center; }
+
+.hero-label {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  letter-spacing: 0.02em;
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+  max-width: 700px;
+  margin: 0 auto 32px;
+}
+
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-top: 40px;
+}
+
+.hero-stat {
+  text-align: center;
+}
+
+.stat-number {
+  font-family: var(--serif);
+  font-size: 2.5rem;
+  color: var(--accent);
+  display: block;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+/* ===== SECTION ===== */
+.section {
+  padding: 80px 0;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-label {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--warm);
+  margin-bottom: 12px;
+}
+
+.section h2 {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.section-subtitle {
+  font-size: 1.05rem;
+  color: var(--ink-muted);
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ===== FEATURES GRID ===== */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  margin-top: 48px;
+}
+
+.feature-card {
+  background: var(--white);
+  border: 1px solid var(--sand-dark);
+  border-radius: 12px;
+  padding: 32px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+.feature-card p {
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+/* ===== HOW IT WORKS ===== */
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 40px;
+  margin-top: 48px;
+}
+
+.step {
+  position: relative;
+  padding-left: 60px;
+}
+
+.step-number {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.step h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.step p {
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+/* ===== SIGNALS ===== */
+.signals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.signal-card {
+  background: var(--white);
+  border-left: 4px solid var(--accent);
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.signal-card.hot { border-left-color: var(--hot); }
+.signal-card.warm { border-left-color: var(--warning); }
+.signal-card.cold { border-left-color: var(--ink-muted); }
+
+.signal-priority {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.signal-priority.hot { background: var(--hot-light); color: var(--hot); }
+.signal-priority.warm { background: var(--warning-light); color: var(--warning); }
+.signal-priority.cold { background: var(--sand-dark); color: var(--ink-muted); }
+
+.signal-card h4 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.signal-card p {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+/* ===== RESULTS ===== */
+.results-box {
+  background: var(--white);
+  border: 2px solid var(--success);
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 800px;
+  margin: 48px auto 0;
+}
+
+.results-header {
+  text-align: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--sand-dark);
+  margin-bottom: 24px;
+}
+
+.results-header h3 {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.results-date {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.results-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.result-stat {
+  text-align: center;
+  padding: 16px;
+  background: var(--sand);
+  border-radius: 8px;
+}
+
+.result-stat-number {
+  font-family: var(--serif);
+  font-size: 2rem;
+  color: var(--accent);
+  display: block;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.result-stat-label {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.results-finds {
+  margin-top: 24px;
+}
+
+.results-finds h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--success);
+  margin-bottom: 12px;
+}
+
+.results-finds ul {
+  list-style: none;
+  padding: 0;
+}
+
+.results-finds li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--sand-dark);
+  font-size: 0.9rem;
+  color: var(--ink-light);
+}
+
+.results-finds li:last-child {
+  border-bottom: none;
+}
+
+/* ===== CTA ===== */
+.cta-section {
+  padding: 100px 0;
+  background: var(--sand);
+  text-align: center;
+}
+
+.cta-box {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.cta-box h2 {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.cta-box p {
+  font-size: 1.05rem;
+  color: var(--ink-muted);
+  margin-bottom: 32px;
+  line-height: 1.7;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: var(--accent);
+  color: var(--white);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s, transform 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+/* ===== FOOTER ===== */
+footer {
+  padding: 40px 0;
+  background: var(--ink);
+  color: var(--sand);
+  text-align: center;
+}
+
+footer .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  font-size: 0.9rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-links a {
+  color: var(--sand);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--white);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .hero-stats {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .features-grid,
+  .how-steps,
+  .signals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  footer .container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <div class="header-content">
+      <a href="/" class="logo">GovTech Diagnostic</a>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/static/best-practices.html">Best Practices</a>
+        <a href="/#consultants">For Consultants</a>
+        <a href="/#waitlist">Join Waitlist</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="content-width">
+      <span class="hero-label">For ERP Consultants</span>
+      <h1>Find municipal ERP opportunities before your competition</h1>
+      <p class="hero-subtitle">Automated intelligence scanning of public documents across all 50 states. Stop cold calling — start with warm leads from municipalities actively shopping for ERP modernization.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="stat-number">50</span>
+          <span class="stat-label">States Covered</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-number">1,376+</span>
+          <span class="stat-label">Municipal Sources</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-number">~25 min</span>
+          <span class="stat-label">Average Scan Time</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS IT -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Overview</span>
+      <h2>What is the Municipal Intel Scanner?</h2>
+      <p class="section-subtitle">An automated lead generation platform that continuously monitors public municipal documents — meeting minutes, procurement pages, budget postings — to surface ERP buying signals before they become RFPs.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <h3>Nationwide Coverage</h3>
+        <p>Tracks 1,376+ municipal sources across all 50 states plus DC and Puerto Rico. From meeting minutes to procurement portals to state aggregators.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Targeted Filtering</h3>
+        <p>Filter by state, population tier (2.5K–250K+), and source type. Focus on your ideal market segment.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Signal Detection</h3>
+        <p>AI-powered analysis detects procurement signals, budget discussions, vendor mentions, and system pain points across documents.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Automated Scanning</h3>
+        <p>Set it and forget it. Scans run in the background, analyzing hundreds of documents in 25 minutes on average.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Lead Scoring</h3>
+        <p>Each lead is scored (0–100) based on signal strength, urgency keywords, and procurement stage. Prioritize HOT leads first.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>Customer Classification</h3>
+        <p>Leads are automatically tagged as "existing customer" (retention/upsell) or "new opportunity" (acquisition).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" style="background: var(--sand);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Process</span>
+      <h2>How it works</h2>
+    </div>
+    <div class="how-steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Select your targets</h3>
+        <p>Choose states, population tiers, and source types. Run a scan for your ideal customer profile.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Automated scraping</h3>
+        <p>The scanner visits municipal websites, downloads PDFs, scrapes meeting minutes, and parses procurement pages.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Signal detection</h3>
+        <p>Documents are analyzed for 138+ keywords related to ERP procurement, budget discussions, and pain points.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <h3>Lead scoring & delivery</h3>
+        <p>Leads are scored, categorized (HOT/WARM/COLD), and presented with source links and extracted context.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNALS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Detection Engine</span>
+      <h2>What signals does it detect?</h2>
+      <p class="section-subtitle">The scanner looks for 138+ weighted keywords across six categories. Each signal type contributes to the overall lead score.</p>
+    </div>
+    <div class="signals-grid">
+      <div class="signal-card hot">
+        <span class="signal-priority hot">High Priority</span>
+        <h4>Active RFPs</h4>
+        <p>Request for proposal, invitation to bid, solicitation for ERP/finance/payroll systems</p>
+      </div>
+      <div class="signal-card hot">
+        <span class="signal-priority hot">High Priority</span>
+        <h4>Budget Signals</h4>
+        <p>Capital improvement plans, IT modernization budgets, ERP line items, software procurement funds</p>
+      </div>
+      <div class="signal-card warm">
+        <span class="signal-priority warm">Medium Priority</span>
+        <h4>Direct Mentions</h4>
+        <p>Caselle, Clarity, Tyler, Munis, other ERP vendors mentioned in documents</p>
+      </div>
+      <div class="signal-card warm">
+        <span class="signal-priority warm">Medium Priority</span>
+        <h4>System Complaints</h4>
+        <p>Manual processes, reporting issues, compliance gaps, integration problems, training needs</p>
+      </div>
+      <div class="signal-card cold">
+        <span class="signal-priority cold">Low Priority</span>
+        <h4>Technical Gaps</h4>
+        <p>Discussions of GL structure, payroll complexity, fund accounting, audit findings</p>
+      </div>
+      <div class="signal-card cold">
+        <span class="signal-priority cold">Low Priority</span>
+        <h4>Modernization Intent</h4>
+        <p>Digital transformation, cloud migration, process automation, system consolidation</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="section" style="background: var(--sand);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Proven Results</span>
+      <h2>First production scan results</h2>
+      <p class="section-subtitle">Real data from our initial nationwide scan targeting small-tier municipalities.</p>
+    </div>
+    <div class="results-box">
+      <div class="results-header">
+        <h3>Small Tier Scan (2.5K–10K population)</h3>
+        <p class="results-date">February 18, 2026</p>
+      </div>
+      <div class="results-stats">
+        <div class="result-stat">
+          <span class="result-stat-number">61</span>
+          <span class="result-stat-label">Sources Scanned</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-number">241</span>
+          <span class="result-stat-label">Documents Analyzed</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-number">24 min</span>
+          <span class="result-stat-label">Scan Duration</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-number">3</span>
+          <span class="result-stat-label">Qualified Leads</span>
+        </div>
+      </div>
+      <div class="results-finds">
+        <h4>✓ Real Findings</h4>
+        <ul>
+          <li><strong>Torrington, WY:</strong> $2,652 Caselle maintenance contract payment (existing customer)</li>
+          <li><strong>Evanston, WY:</strong> $4,450 Caselle technical support (existing customer)</li>
+          <li><strong>Hit rate:</strong> ~0.6% — coverage is the key, not just analysis precision</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box">
+      <h2>Ready to find your next client?</h2>
+      <p>Request enterprise access to the Municipal Intel Scanner. Get scored leads, assessment insights, and warm introductions to decision-makers.</p>
+      <a href="/#consultants" class="btn-primary">Request Access →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-left">&copy; 2026 GovTech Diagnostic</div>
+    <div class="footer-links">
+      <a href="mailto:hello@govtechdiagnostic.com">hello@govtechdiagnostic.com</a>
+      <a href="/#consultants">For Consultants</a>
+      <a href="/static/best-practices.html">Best Practices</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
