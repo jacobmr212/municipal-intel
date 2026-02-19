@@ -1126,13 +1126,15 @@ body {
           <div class="card-tag">ERP Assessment</div>
           <h2>Run a Readiness Assessment</h2>
           <p>Answer questions about your pay codes, GL structure, and compliance gaps. Get a vendor-neutral diagnostic report with risk scores.</p>
-          <button class="btn btn-primary">Start Assessment</button>
+          <button class="btn btn-primary" onclick="startAssessment()">Start Assessment</button>
         </div>
         <div class="card">
           <div class="card-tag">My Reports</div>
-          <h2>Previous Assessments <span class="coming-soon">Coming Soon</span></h2>
+          <h2>Previous Assessments</h2>
           <p>View and download past diagnostic reports. Track readiness score changes over time.</p>
-          <button class="btn btn-ghost" disabled>View Reports</button>
+          <div id="assessmentsList" style="margin-top: 1rem;">
+            <div style="color: var(--warm-gray); font-size: 0.875rem;">Loading...</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-tag">Expert Consultation</div>
@@ -2423,6 +2425,62 @@ function loadAnalytics() {
   });
 }
 
+// ═══════════════════════════════
+// ASSESSMENTS
+// ═══════════════════════════════
+
+async function startAssessment() {
+  try {
+    const response = await fetch('/api/assessments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json();
+
+    if (data.id) {
+      // For now, just show a toast. Later we'll redirect to assessment page
+      showToast('Assessment created! Section 1 coming soon...', 'success');
+      loadAssessments(); // Refresh the list
+    }
+  } catch (err) {
+    showToast('Failed to create assessment', 'error');
+  }
+}
+
+function loadAssessments() {
+  fetch('/api/assessments')
+  .then(r => r.json())
+  .then(data => {
+    const container = document.getElementById('assessmentsList');
+    if (!data.assessments || data.assessments.length === 0) {
+      container.innerHTML = '<div style="color: var(--warm-gray); font-size: 0.875rem;">No assessments yet. Start your first one!</div>';
+      return;
+    }
+
+    container.innerHTML = data.assessments.map(a => {
+      const statusColor = a.status === 'completed' ? '#2E7D32' :
+                         a.status === 'in-progress' ? '#1976D2' : '#77716B';
+      const statusBadge = `<span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${a.status}</span>`;
+
+      return `
+        <div style="padding: 0.75rem; background: #F5F3EF; border-radius: 6px; margin-bottom: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <strong style="font-size: 0.875rem;">Assessment</strong>
+            ${statusBadge}
+          </div>
+          <div style="color: #77716B; font-size: 0.75rem;">
+            Created: ${formatDate(a.createdAt)}
+            ${a.overallScore ? ` • Score: ${a.overallScore}/100` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  })
+  .catch(() => {
+    document.getElementById('assessmentsList').innerHTML = '<div style="color: var(--warm-gray); font-size: 0.875rem;">Failed to load</div>';
+  });
+}
+
 // ── Helpers ──
 function formatDate(iso) {
   if (!iso) return '—';
@@ -2432,6 +2490,7 @@ function formatDate(iso) {
 
 // ── Init ──
 buildStateGrid();
+loadAssessments();
 
 // Wire up tier radios to trigger preview update
 document.querySelectorAll('input[name="tier"]').forEach(radio => {

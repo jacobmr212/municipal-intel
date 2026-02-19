@@ -108,6 +108,16 @@ class RoleUpdateRequest(BaseModel):
     role: str
 
 
+class AssessmentCreateRequest(BaseModel):
+    pass  # No body needed, just creates blank assessment
+
+
+class AssessmentSectionSaveRequest(BaseModel):
+    section_number: str  # "1", "3a", etc.
+    answers: dict  # JSON of all answers for this section
+    status: str = "in-progress"  # not-started | in-progress | completed
+
+
 # ============================================================
 # POPULATION TIER RANGES
 # ============================================================
@@ -1373,6 +1383,157 @@ async def get_admin_analytics(
             "userGrowth": [],
             "error": str(e)
         }
+
+
+# ============================================================
+# ASSESSMENT API ENDPOINTS
+# ============================================================
+
+@app.post("/api/assessments")
+async def create_assessment(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new assessment for the current user."""
+    import uuid as _uuid
+    from datetime import datetime
+
+    assessment_id = str(_uuid.uuid4())
+
+    db.execute(text("""
+        INSERT INTO "Assessment" (id, "userId", status, "createdAt", "updatedAt")
+        VALUES (:id, :user_id, 'draft', :now, :now)
+    """), {
+        "id": assessment_id,
+        "user_id": user["id"],
+        "now": datetime.utcnow()
+    })
+    db.commit()
+
+    return {"id": assessment_id, "status": "draft"}
+
+
+@app.get("/api/assessments")
+async def list_assessments(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List all assessments for the current user."""
+    result = db.execute(text("""
+        SELECT id, status, "createdAt", "completedAt", "overallScore"
+        FROM "Assessment"
+        WHERE "userId" = :user_id
+        ORDER BY "createdAt" DESC
+    """), {"user_id": user["id"]})
+
+    assessments = []
+    for row in result:
+        assessments.append({
+            "id": row[0],
+            "status": row[1],
+            "createdAt": row[2].isoformat() if row[2] else None,
+            "completedAt": row[3].isoformat() if row[3] else None,
+            "overallScore": row[4]
+        })
+
+    return {"assessments": assessments}
+
+
+@app.get("/api/assessments/{assessment_id}")
+async def get_assessment(
+    assessment_id: str,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a specific assessment with all sections."""
+    # Get assessment
+    result = db.execute(text("""
+        SELECT id, status, "organizationProfile", "createdAt", "completedAt", "overallScore"
+        FROM "Assessment"
+        WHERE id = :id AND "userId" = :user_id
+    """), {"id": assessment_id, "user_id": user["id"]})
+
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    # Get sections
+    sections_result = db.execute(text("""
+        SELECT "sectionNumber", status, answers
+        FROM "AssessmentSection"
+        WHERE "assessmentId" = :assessment_id
+        ORDER BY "sectionNumber"
+    """), {"assessment_id": assessment_id})
+
+    sections = []
+    for section_row in sections_result:
+        sections.append({
+            "sectionNumber": section_row[0],
+            "status": section_row[1],
+            "answers": section_row[2] or {}
+        })
+
+    return {
+        "id": row[0],
+        "status": row[1],
+        "organizationProfile": row[2] or {},
+        "createdAt": row[3].isoformat() if row[3] else None,
+        "completedAt": row[4].isoformat() if row[4] else None,
+        "overallScore": row[5],
+        "sections": sections
+    }
+
+
+@app.post("/api/assessments/{assessment_id}/section")
+async def save_assessment_section(
+    assessment_id: str,
+    request: AssessmentSectionSaveRequest,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Save answers for a specific section."""
+    import uuid as _uuid
+
+    # Verify assessment belongs to user
+    result = db.execute(text("""
+        SELECT id FROM "Assessment"
+        WHERE id = :id AND "userId" = :user_id
+    """), {"id": assessment_id, "user_id": user["id"]})
+
+    if not result.fetchone():
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    # Upsert section
+    section_id = str(_uuid.uuid4())
+    db.execute(text("""
+        INSERT INTO "AssessmentSection" (id, "assessmentId", "sectionNumber", status, answers)
+        VALUES (:id, :assessment_id, :section_number, :status, :answers)
+        ON CONFLICT ("assessmentId", "sectionNumber")
+        DO UPDATE SET
+            status = EXCLUDED.status,
+            answers = EXCLUDED.answers
+    """), {
+        "id": section_id,
+        "assessment_id": assessment_id,
+        "section_number": request.section_number,
+        "status": request.status,
+        "answers": json.dumps(request.answers)
+    })
+
+    # If section 1, also update organizationProfile
+    if request.section_number == "1":
+        db.execute(text("""
+            UPDATE "Assessment"
+            SET "organizationProfile" = :profile
+            WHERE id = :assessment_id
+        """), {
+            "profile": json.dumps(request.answers),
+            "assessment_id": assessment_id
+        })
+
+    db.commit()
+
+    return {"success": True}
 
 
 if __name__ == "__main__":
