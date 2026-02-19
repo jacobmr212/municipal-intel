@@ -223,6 +223,35 @@
     .back-btn:hover {
       color: var(--navy);
     }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .category-btn {
+      padding: 1rem;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .category-btn:hover {
+      border-color: var(--blue);
+      background: var(--light-blue);
+    }
+
+    .category-btn.selected {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -341,6 +370,27 @@
                 <option value="${opt.value}">${opt.label}</option>
               `).join('')}
             </select>
+          </div>
+        `;
+      }
+
+      if (type === 'multi-select-start') {
+        return `
+          <div class="input-component">
+            <div class="category-grid">
+              ${data.categories.map(cat => `
+                <button
+                  class="category-btn"
+                  data-category="${cat.value}"
+                  onclick="handleCategoryToggle('${cat.value}')"
+                >
+                  ${cat.label}
+                </button>
+              `).join('')}
+            </div>
+            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="handleCategoryConfirm()">
+              Continue
+            </button>
           </div>
         `;
       }

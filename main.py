@@ -1743,23 +1743,261 @@ window.handleUserInput = function(step, value) {{
 
 
 def generate_section3a_script():
-    """Generate Section 3A conversational script (placeholder)."""
+    """Generate Section 3A conversational script for pay code inventory."""
     return """
 // Section 3A: Pay Code Inventory
-// Placeholder - to be implemented
+// Conversational flow for collecting pay code details
 
+const PAY_CODE_CATEGORIES = [
+  { value: 'regular-pay', label: 'Regular Pay' },
+  { value: 'overtime', label: 'Overtime' },
+  { value: 'vacation', label: 'Vacation' },
+  { value: 'sick-leave', label: 'Sick Leave' },
+  { value: 'comp-time', label: 'Comp Time' },
+  { value: 'holiday', label: 'Holiday Pay' },
+  { value: 'longevity', label: 'Longevity Pay' },
+  { value: 'shift-differential', label: 'Shift Differential' },
+  { value: 'standby-oncall', label: 'Standby/On-Call' },
+  { value: 'bilingual-pay', label: 'Bilingual Pay' },
+  { value: 'certification-pay', label: 'Certification/Education Pay' },
+  { value: 'car-allowance', label: 'Car Allowance' },
+  { value: 'uniform-allowance', label: 'Uniform Allowance' },
+  { value: 'severance', label: 'Severance' },
+  { value: 'other', label: 'Other' }
+];
+
+const CALCULATION_METHODS = [
+  { value: 'hourly-rate', label: 'Hourly Rate (hours × rate)' },
+  { value: 'salary-flat', label: 'Salary/Flat Amount per Period' },
+  { value: 'flat-amount', label: 'One-Time Flat Amount' },
+  { value: 'percent-base', label: 'Percentage of Base Pay' },
+  { value: 'percent-gross', label: 'Percentage of Gross' },
+  { value: 'other-formula', label: 'Other Formula/Method' }
+];
+
+// Track selected categories and pay codes
+let selectedCategories = [];
+let currentCategoryIndex = 0;
+let currentCategory = null;
+let payCodesByCategory = {}; // { 'overtime': [{name, gl, method, ...}] }
+let currentPayCode = {};
+
+// Start the conversation
 setTimeout(() => {
-  addMessage('assistant', 'Section 3A: Pay Code Inventory');
+  addMessage('assistant', 'Welcome to Section 3A: Pay Code Inventory!');
   setTimeout(() => {
-    addMessage('assistant', 'This section is coming soon. You\\'ll be able to document your pay code structure here.');
+    addMessage('assistant', 'We\\'ll document your pay code structure to identify consolidation opportunities and configuration issues.');
     setTimeout(() => {
-      addMessage('assistant', 'Returning to dashboard...');
-      setTimeout(() => {
-        window.location.href = '/app';
-      }, 2000);
-    }, 1500);
+      currentStep = 'category_selection';
+      addMessage('assistant', 'First, which types of pay codes does your organization use? Select all that apply:', 'multi-select-start', {
+        categories: PAY_CODE_CATEGORIES
+      });
+    }, 800);
   }, 800);
 }, 500);
+
+// Handle category selection (multi-select pattern)
+window.handleCategoryToggle = function(category) {
+  if (selectedCategories.includes(category)) {
+    selectedCategories = selectedCategories.filter(c => c !== category);
+  } else {
+    selectedCategories.push(category);
+  }
+  // Update UI to show selected state
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  categoryBtns.forEach(btn => {
+    if (btn.dataset.category === category) {
+      btn.classList.toggle('selected');
+    }
+  });
+};
+
+window.handleCategoryConfirm = function() {
+  if (selectedCategories.length === 0) {
+    alert('Please select at least one pay code category.');
+    return;
+  }
+
+  answers['selectedCategories'] = selectedCategories;
+  const categoryLabels = selectedCategories.map(c =>
+    PAY_CODE_CATEGORIES.find(cat => cat.value === c)?.label || c
+  ).join(', ');
+
+  addMessage('user', `Selected: ${categoryLabels}`);
+
+  setTimeout(() => {
+    addMessage('assistant', `Great! You selected ${selectedCategories.length} categor${selectedCategories.length > 1 ? 'ies' : 'y'}.`);
+    setTimeout(() => {
+      addMessage('assistant', 'Now let\\'s document the pay codes in each category. I\\'ll walk you through them one at a time.');
+      setTimeout(() => {
+        currentCategory = selectedCategories[0];
+        currentCategoryIndex = 0;
+        payCodesByCategory[currentCategory] = [];
+        startPayCodeCollection(currentCategory);
+      }, 800);
+    }, 600);
+  }, 600);
+};
+
+function startPayCodeCollection(category) {
+  const categoryLabel = PAY_CODE_CATEGORIES.find(c => c.value === category)?.label || category;
+  currentStep = 'pay_code_name';
+  currentPayCode = { category: category };
+
+  setTimeout(() => {
+    addMessage('assistant', `Let\\'s start with ${categoryLabel}. What\\'s the name of the first pay code?`, 'text-input', {
+      inputType: 'text',
+      placeholder: 'e.g., OT - Time and a Half'
+    });
+  }, 600);
+}
+
+// Handle user input
+window.handleUserInput = function(step, value) {
+  if (step === 'pay_code_name') {
+    currentPayCode.name = value;
+    answers[currentStep] = value;
+    addMessage('user', value);
+
+    setTimeout(() => {
+      addMessage('assistant', `"${value}" — got it.`);
+      setTimeout(() => {
+        currentStep = 'gl_account';
+        addMessage('assistant', 'What GL account is this pay code mapped to?', 'text-input', {
+          inputType: 'text',
+          placeholder: 'e.g., 01-100-5100 or 5100'
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'gl_account') {
+    currentPayCode.glAccount = value;
+    answers[currentStep] = value;
+    addMessage('user', value);
+
+    setTimeout(() => {
+      addMessage('assistant', 'How is this pay code calculated?', 'select', {
+        options: CALCULATION_METHODS
+      });
+      currentStep = 'calculation_method';
+    }, 600);
+  }
+  else if (step === 'calculation_method') {
+    currentPayCode.calculationMethod = value;
+    const label = CALCULATION_METHODS.find(m => m.value === value)?.label || value;
+    answers[currentStep] = value;
+    addMessage('user', label);
+
+    setTimeout(() => {
+      addMessage('assistant', 'Is this pay code pensionable (counts toward retirement)?', 'choice-buttons', {
+        options: [
+          { value: 'yes', label: 'Yes' },
+          { value: 'no', label: 'No' },
+          { value: 'unsure', label: 'Unsure' }
+        ]
+      });
+      currentStep = 'is_pensionable';
+    }, 600);
+  }
+  else if (step === 'is_pensionable') {
+    currentPayCode.isPensionable = value;
+    answers[currentStep] = value;
+    addMessage('user', value.charAt(0).toUpperCase() + value.slice(1));
+
+    setTimeout(() => {
+      addMessage('assistant', 'Is this included in the FLSA overtime calculation base?', 'choice-buttons', {
+        options: [
+          { value: 'yes', label: 'Yes' },
+          { value: 'no', label: 'No' },
+          { value: 'unsure', label: 'Unsure' }
+        ]
+      });
+      currentStep = 'is_flsa_base';
+    }, 600);
+  }
+  else if (step === 'is_flsa_base') {
+    currentPayCode.isFlsaBase = value;
+    answers[currentStep] = value;
+    addMessage('user', value.charAt(0).toUpperCase() + value.slice(1));
+
+    // Save this pay code
+    payCodesByCategory[currentCategory].push({ ...currentPayCode });
+
+    setTimeout(() => {
+      addMessage('assistant', `Pay code "${currentPayCode.name}" saved.`);
+      setTimeout(() => {
+        currentStep = 'add_another';
+        const categoryLabel = PAY_CODE_CATEGORIES.find(c => c.value === currentCategory)?.label;
+        addMessage('assistant', `Do you have another ${categoryLabel} pay code to add?`, 'choice-buttons', {
+          options: [
+            { value: 'yes', label: 'Yes, add another' },
+            { value: 'no', label: 'No, move to next category' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'add_another') {
+    if (value === 'yes') {
+      addMessage('user', 'Yes, add another');
+      currentPayCode = { category: currentCategory };
+      setTimeout(() => {
+        currentStep = 'pay_code_name';
+        addMessage('assistant', 'What\\'s the name of the next pay code?', 'text-input', {
+          inputType: 'text',
+          placeholder: 'e.g., OT - Double Time'
+        });
+      }, 600);
+    } else {
+      addMessage('user', 'No, move to next category');
+
+      // Move to next category or finish
+      currentCategoryIndex++;
+      if (currentCategoryIndex < selectedCategories.length) {
+        currentCategory = selectedCategories[currentCategoryIndex];
+        payCodesByCategory[currentCategory] = [];
+        setTimeout(() => {
+          startPayCodeCollection(currentCategory);
+        }, 600);
+      } else {
+        // All categories complete
+        setTimeout(() => {
+          finishSection();
+        }, 600);
+      }
+    }
+  }
+
+  // Auto-save
+  saveProgress();
+};
+
+function finishSection() {
+  // Calculate totals
+  let totalPayCodes = 0;
+  for (let cat in payCodesByCategory) {
+    totalPayCodes += payCodesByCategory[cat].length;
+  }
+
+  answers['payCodesByCategory'] = payCodesByCategory;
+  answers['totalPayCodes'] = totalPayCodes;
+
+  addMessage('assistant', `Excellent! You\\'ve documented ${totalPayCodes} pay codes across ${selectedCategories.length} categories.`);
+
+  setTimeout(() => {
+    addMessage('assistant', 'In the full version, I\\'ll analyze these for consolidation opportunities and compliance issues.');
+    setTimeout(() => {
+      saveProgress('completed');
+      updateProgress(100);
+      setTimeout(() => {
+        addMessage('assistant', 'Section 3A complete! Returning to dashboard...');
+        setTimeout(() => {
+          window.location.href = '/app';
+        }, 2000);
+      }, 800);
+    }, 1000);
+  }, 800);
+}
 """
 
 
