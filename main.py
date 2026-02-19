@@ -1458,10 +1458,17 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1 conversational script."""
-    return """
+    """Generate Section 1 conversational script with all 13 questions."""
+    # Load retirement systems data
+    import json
+    with open('data/retirement_systems.json', 'r') as f:
+        retirement_systems = json.load(f)
+
+    retirement_systems_json = json.dumps(retirement_systems)
+
+    return f"""
 // Section 1: Organization Profile
-// Simplified version with core questions
+// Full version with 13 questions
 
 const STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -1471,88 +1478,267 @@ const STATES = [
   "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
 ];
 
+const RETIREMENT_SYSTEMS = {retirement_systems_json};
+
+const MONTHS = [
+  {{ value: '01', label: 'January' }},
+  {{ value: '02', label: 'February' }},
+  {{ value: '03', label: 'March' }},
+  {{ value: '04', label: 'April' }},
+  {{ value: '05', label: 'May' }},
+  {{ value: '06', label: 'June' }},
+  {{ value: '07', label: 'July' }},
+  {{ value: '08', label: 'August' }},
+  {{ value: '09', label: 'September' }},
+  {{ value: '10', label: 'October' }},
+  {{ value: '11', label: 'November' }},
+  {{ value: '12', label: 'December' }}
+];
+
+// Track union groups for chip builder
+let unionGroups = [];
+
 // Start the conversation
-setTimeout(() => {
+setTimeout(() => {{
   addMessage('assistant', 'Welcome! Let\\'s start by learning about your organization.');
-  setTimeout(() => {
+  setTimeout(() => {{
     currentStep = 'state';
-    addMessage('assistant', 'Which state are you in?', 'select', {
-      options: STATES.map(s => ({ value: s, label: s }))
-    });
-  }, 800);
-}, 500);
+    addMessage('assistant', 'Which state are you in?', 'select', {{
+      options: STATES.map(s => ({{ value: s, label: s }}))
+    }});
+  }}, 800);
+}}, 500);
 
 // Handle user input
-window.handleUserInput = function(step, value) {
-  if (step === 'state') {
-    setTimeout(() => {
-      addMessage('assistant', `Great! You're in ${value}.`);
-      setTimeout(() => {
+window.handleUserInput = function(step, value) {{
+  if (step === 'state') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Great! You're in ${{value}}.`);
+      setTimeout(() => {{
         currentStep = 'entity_type';
-        addMessage('assistant', 'What type of government entity are you?', 'choice-buttons', {
+        addMessage('assistant', 'What type of government entity are you?', 'choice-buttons', {{
           options: [
-            { value: 'city', label: 'City' },
-            { value: 'county', label: 'County' },
-            { value: 'town', label: 'Town' },
-            { value: 'village', label: 'Village' }
+            {{ value: 'city', label: 'City' }},
+            {{ value: 'county', label: 'County' }},
+            {{ value: 'town', label: 'Town' }},
+            {{ value: 'village', label: 'Village' }}
           ]
-        });
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'entity_type') {
-    setTimeout(() => {
-      addMessage('assistant', `Got it, you're a ${value}.`);
-      setTimeout(() => {
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'entity_type') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Got it, you're a ${{value}}.`);
+      setTimeout(() => {{
         currentStep = 'population';
-        addMessage('assistant', 'What is your population?', 'text-input', {
+        addMessage('assistant', 'What is your population?', 'text-input', {{
           inputType: 'number',
           placeholder: 'e.g., 15000'
-        });
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'population') {
-    setTimeout(() => {
-      addMessage('assistant', `Population: ${parseInt(value).toLocaleString()}`);
-      setTimeout(() => {
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'population') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Population: ${{parseInt(value).toLocaleString()}}`);
+      setTimeout(() => {{
         currentStep = 'organization';
-        addMessage('assistant', 'What is the name of your organization?', 'text-input', {
+        addMessage('assistant', 'What is the name of your organization?', 'text-input', {{
           inputType: 'text',
           placeholder: 'e.g., City of Springfield'
-        });
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'organization') {
-    setTimeout(() => {
-      addMessage('assistant', `Thank you! This is a basic prototype of Section 1.`);
-      setTimeout(() => {
-        addMessage('assistant', 'In the full version, we\\'ll ask about your retirement system, fiscal year, departments, and more.');
-        setTimeout(() => {
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'organization') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Perfect! Nice to meet you, ${{value}}.`);
+      setTimeout(() => {{
+        currentStep = 'retirement_system';
+        const selectedState = answers['state'];
+        const retirementOptions = RETIREMENT_SYSTEMS[selectedState] || [];
+        addMessage('assistant', 'Which retirement system do your employees participate in?', 'select', {{
+          options: retirementOptions
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'retirement_system') {{
+    setTimeout(() => {{
+      const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
+      addMessage('assistant', `Got it, you use ${{label}}.`);
+      setTimeout(() => {{
+        currentStep = 'fiscal_year_month';
+        addMessage('assistant', 'When does your fiscal year start? First, select the month:', 'select', {{
+          options: MONTHS
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'fiscal_year_month') {{
+    setTimeout(() => {{
+      const monthLabel = MONTHS.find(m => m.value === value)?.label || value;
+      addMessage('assistant', `${{monthLabel}} — got it.`);
+      setTimeout(() => {{
+        currentStep = 'fiscal_year_day';
+        const days = Array.from({{ length: 31 }}, (_, i) => ({{ value: String(i + 1), label: String(i + 1) }}));
+        addMessage('assistant', 'And which day of the month?', 'select', {{
+          options: days
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'fiscal_year_day') {{
+    setTimeout(() => {{
+      const month = answers['fiscal_year_month'];
+      const monthLabel = MONTHS.find(m => m.value === month)?.label || month;
+      addMessage('assistant', `Fiscal year starts: ${{monthLabel}} ${{value}}`);
+      setTimeout(() => {{
+        currentStep = 'department_count';
+        addMessage('assistant', 'How many departments does your organization have?', 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 12'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'department_count') {{
+    setTimeout(() => {{
+      addMessage('assistant', `${{value}} departments — noted.`);
+      setTimeout(() => {{
+        currentStep = 'has_unions';
+        addMessage('assistant', 'Does your organization have unionized employees?', 'choice-buttons', {{
+          options: [
+            {{ value: 'yes', label: 'Yes' }},
+            {{ value: 'no', label: 'No' }}
+          ]
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'has_unions') {{
+    if (value === 'yes') {{
+      setTimeout(() => {{
+        addMessage('assistant', 'Understood. We\\'ll need to track union groups.');
+        setTimeout(() => {{
+          currentStep = 'union_groups';
+          addMessage('assistant', 'Please list your union groups (e.g., "Police Union", "Firefighters Local 123"). Type one and press Enter, then add more. Type "done" when finished.', 'text-input', {{
+            inputType: 'text',
+            placeholder: 'e.g., Police Union'
+          }});
+        }}, 800);
+      }}, 600);
+    }} else {{
+      // Skip union groups
+      answers['union_groups'] = [];
+      setTimeout(() => {{
+        addMessage('assistant', 'No unions — got it.');
+        setTimeout(() => {{
+          currentStep = 'tax_jurisdictions';
+          addMessage('assistant', 'How many tax jurisdictions do you operate in?', 'text-input', {{
+            inputType: 'number',
+            placeholder: 'e.g., 3'
+          }});
+        }}, 800);
+      }}, 600);
+    }}
+  }}
+  else if (step === 'union_groups') {{
+    if (value.toLowerCase() === 'done') {{
+      answers['union_groups'] = unionGroups;
+      setTimeout(() => {{
+        if (unionGroups.length === 0) {{
+          addMessage('assistant', 'No union groups added.');
+        }} else {{
+          addMessage('assistant', `Union groups: ${{unionGroups.join(', ')}}`);
+        }}
+        setTimeout(() => {{
+          currentStep = 'tax_jurisdictions';
+          addMessage('assistant', 'How many tax jurisdictions do you operate in?', 'text-input', {{
+            inputType: 'number',
+            placeholder: 'e.g., 3'
+          }});
+        }}, 800);
+      }}, 600);
+    }} else {{
+      // Add to union groups
+      unionGroups.push(value);
+      setTimeout(() => {{
+        addMessage('assistant', `Added "${{value}}". Add another or type "done".`);
+        setTimeout(() => {{
+          addMessage('assistant', '', 'text-input', {{
+            inputType: 'text',
+            placeholder: 'e.g., Firefighters Local 123 or "done"'
+          }});
+        }}, 500);
+      }}, 400);
+    }}
+  }}
+  else if (step === 'tax_jurisdictions') {{
+    setTimeout(() => {{
+      addMessage('assistant', `${{value}} tax jurisdictions — noted.`);
+      setTimeout(() => {{
+        currentStep = 'current_erp';
+        addMessage('assistant', 'What ERP system are you currently using?', 'text-input', {{
+          inputType: 'text',
+          placeholder: 'e.g., Tyler Munis, SAP, Excel'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'current_erp') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Current system: ${{value}}`);
+      setTimeout(() => {{
+        currentStep = 'employee_count';
+        addMessage('assistant', 'How many employees does your organization have?', 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 250'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'employee_count') {{
+    setTimeout(() => {{
+      addMessage('assistant', `${{parseInt(value).toLocaleString()}} employees — perfect.`);
+      setTimeout(() => {{
+        addMessage('assistant', 'That\\'s all the questions for Section 1! Let me save your responses...');
+        setTimeout(() => {{
           // Save progress
           saveProgress('completed');
           updateProgress(100);
-          setTimeout(() => {
+          setTimeout(() => {{
             addMessage('assistant', 'Section 1 complete! Returning to dashboard...');
-            setTimeout(() => {
+            setTimeout(() => {{
               window.location.href = '/app';
-            }, 2000);
-          }, 800);
-        }, 1000);
-      }, 800);
-    }, 600);
-  }
+            }}, 2000);
+          }}, 800);
+        }}, 1000);
+      }}, 800);
+    }}, 600);
+  }}
 
   // Update progress
-  const steps = ['state', 'entity_type', 'population', 'organization'];
-  const currentIndex = steps.indexOf(currentStep);
-  const progress = ((currentIndex + 1) / steps.length) * 100;
+  const allSteps = [
+    'state', 'entity_type', 'population', 'organization', 'retirement_system',
+    'fiscal_year_month', 'fiscal_year_day', 'department_count', 'has_unions',
+    'union_groups', 'tax_jurisdictions', 'current_erp', 'employee_count'
+  ];
+
+  // Calculate progress (skip union_groups if no unions)
+  let relevantSteps = allSteps;
+  if (answers['has_unions'] === 'no') {{
+    relevantSteps = allSteps.filter(s => s !== 'union_groups');
+  }}
+
+  const currentIndex = relevantSteps.indexOf(currentStep);
+  const progress = currentIndex >= 0 ? ((currentIndex + 1) / relevantSteps.length) * 100 : 0;
   updateProgress(progress);
 
   // Auto-save
   saveProgress();
-};
+}};
 """
 
 
