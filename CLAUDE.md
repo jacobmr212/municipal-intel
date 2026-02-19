@@ -83,6 +83,23 @@ After discovering 111 CO sources and 42 ID sources, ran verification scan to con
 - Tests confirm 100% accuracy: Caselle mentions → existing_customer, all others → new_opportunity
 - **Sales Impact**: Enables prioritization of existing customer retention/upsell vs new acquisition
 
+### Admin Analytics API (Feb 19, 2026)
+✅ **Successfully deployed admin analytics endpoint using SQL-based approach:**
+- Endpoint: `/api/admin/analytics` (main.py:1170-1376)
+- **Architecture Decision**: Used raw SQL queries instead of SQLAlchemy ORM to avoid deployment crashes
+- **Features Implemented**:
+  - Overview statistics (total assessments, completion status, user counts)
+  - **Section interest tracking** - tracks which locked sections (4-8) users want most
+  - Section completion rates across all sections
+  - User demographics (state distribution)
+  - Recent activity feed (last 10 assessments)
+  - User growth trends (12-week chart)
+- **Technical Approach**: All queries use `db.execute(text(...))` with PostgreSQL JSONB operators
+- **Error Handling**: Returns empty data structure if Assessment tables don't exist yet
+- **Deployment Success**: Two previous attempts with SQLAlchemy models crashed with 502 errors; SQL-based approach deployed cleanly
+- **Status**: Live and stable at https://web-production-a13f5.up.railway.app/api/admin/analytics
+- **Next Step**: Build Next.js admin dashboard UI to consume this endpoint
+
 ### Priority Next Steps
 1. ~~Add lead categorization: "EXISTING CUSTOMER" vs "NEW OPPORTUNITY"~~ → ✅ Completed (Feb 18)
 2. ~~Build state portal scrapers for Colorado and Idaho~~ → ✅ Completed via direct discovery (Feb 18)
