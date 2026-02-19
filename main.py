@@ -1473,10 +1473,17 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1 conversational script."""
-    return """
+    """Generate Section 1 conversational script with all 13 questions."""
+    # Load retirement systems data
+    import json
+    with open('data/retirement_systems.json', 'r') as f:
+        retirement_systems = json.load(f)
+
+    retirement_systems_json = json.dumps(retirement_systems)
+
+    return f"""
 // Section 1: Organization Profile
-// Simplified version with core questions
+// Full version with 13 questions
 
 const STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -1486,109 +1493,526 @@ const STATES = [
   "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
 ];
 
+const RETIREMENT_SYSTEMS = {retirement_systems_json};
+
+const MONTHS = [
+  {{ value: '01', label: 'January' }},
+  {{ value: '02', label: 'February' }},
+  {{ value: '03', label: 'March' }},
+  {{ value: '04', label: 'April' }},
+  {{ value: '05', label: 'May' }},
+  {{ value: '06', label: 'June' }},
+  {{ value: '07', label: 'July' }},
+  {{ value: '08', label: 'August' }},
+  {{ value: '09', label: 'September' }},
+  {{ value: '10', label: 'October' }},
+  {{ value: '11', label: 'November' }},
+  {{ value: '12', label: 'December' }}
+];
+
+// Track union groups for chip builder
+let unionGroups = [];
+
+// Start the conversation
+setTimeout(() => {{
+  addMessage('assistant', 'Welcome! Let\\'s start by learning about your organization.');
+  setTimeout(() => {{
+    currentStep = 'state';
+    addMessage('assistant', 'Which state are you in?', 'select', {{
+      options: STATES.map(s => ({{ value: s, label: s }}))
+    }});
+  }}, 800);
+}}, 500);
+
+// Handle user input
+window.handleUserInput = function(step, value) {{
+  if (step === 'state') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Great! You're in ${{value}}.`);
+      setTimeout(() => {{
+        currentStep = 'entity_type';
+        addMessage('assistant', 'What type of government entity are you?', 'choice-buttons', {{
+          options: [
+            {{ value: 'city', label: 'City' }},
+            {{ value: 'county', label: 'County' }},
+            {{ value: 'town', label: 'Town' }},
+            {{ value: 'village', label: 'Village' }}
+          ]
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'entity_type') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Got it, you're a ${{value}}.`);
+      setTimeout(() => {{
+        currentStep = 'population';
+        addMessage('assistant', 'What is your population?', 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 15000'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'population') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Population: ${{parseInt(value).toLocaleString()}}`);
+      setTimeout(() => {{
+        currentStep = 'organization';
+        addMessage('assistant', 'What is the name of your organization?', 'text-input', {{
+          inputType: 'text',
+          placeholder: 'e.g., City of Springfield'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'organization') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Perfect! Nice to meet you, ${{value}}.`);
+      setTimeout(() => {{
+        currentStep = 'retirement_system';
+        const selectedState = answers['state'];
+        const retirementOptions = RETIREMENT_SYSTEMS[selectedState] || [];
+        addMessage('assistant', 'Which retirement system do your employees participate in?', 'select', {{
+          options: retirementOptions
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'retirement_system') {{
+    setTimeout(() => {{
+      const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
+      addMessage('assistant', `Got it, you use ${{label}}.`);
+      setTimeout(() => {{
+        currentStep = 'fiscal_year_month';
+        addMessage('assistant', 'When does your fiscal year start? First, select the month:', 'select', {{
+          options: MONTHS
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'fiscal_year_month') {{
+    setTimeout(() => {{
+      const monthLabel = MONTHS.find(m => m.value === value)?.label || value;
+      addMessage('assistant', `${{monthLabel}} — got it.`);
+      setTimeout(() => {{
+        currentStep = 'fiscal_year_day';
+        const days = Array.from({{ length: 31 }}, (_, i) => ({{ value: String(i + 1), label: String(i + 1) }}));
+        addMessage('assistant', 'And which day of the month?', 'select', {{
+          options: days
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'fiscal_year_day') {{
+    setTimeout(() => {{
+      const month = answers['fiscal_year_month'];
+      const monthLabel = MONTHS.find(m => m.value === month)?.label || month;
+      addMessage('assistant', `Fiscal year starts: ${{monthLabel}} ${{value}}`);
+      setTimeout(() => {{
+        currentStep = 'department_count';
+        addMessage('assistant', 'How many departments does your organization have?', 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 12'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'department_count') {{
+    setTimeout(() => {{
+      addMessage('assistant', `${{value}} departments — noted.`);
+      setTimeout(() => {{
+        currentStep = 'has_unions';
+        addMessage('assistant', 'Does your organization have unionized employees?', 'choice-buttons', {{
+          options: [
+            {{ value: 'yes', label: 'Yes' }},
+            {{ value: 'no', label: 'No' }}
+          ]
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'has_unions') {{
+    if (value === 'yes') {{
+      setTimeout(() => {{
+        addMessage('assistant', 'Understood. We\\'ll need to track union groups.');
+        setTimeout(() => {{
+          currentStep = 'union_groups';
+          addMessage('assistant', 'Please list your union groups (e.g., "Police Union", "Firefighters Local 123"). Type one and press Enter, then add more. Type "done" when finished.', 'text-input', {{
+            inputType: 'text',
+            placeholder: 'e.g., Police Union'
+          }});
+        }}, 800);
+      }}, 600);
+    }} else {{
+      // Skip union groups
+      answers['union_groups'] = [];
+      setTimeout(() => {{
+        addMessage('assistant', 'No unions — got it.');
+        setTimeout(() => {{
+          currentStep = 'tax_jurisdictions';
+          addMessage('assistant', 'How many tax jurisdictions do you operate in?', 'text-input', {{
+            inputType: 'number',
+            placeholder: 'e.g., 3'
+          }});
+        }}, 800);
+      }}, 600);
+    }}
+  }}
+  else if (step === 'union_groups') {{
+    if (value.toLowerCase() === 'done') {{
+      answers['union_groups'] = unionGroups;
+      setTimeout(() => {{
+        if (unionGroups.length === 0) {{
+          addMessage('assistant', 'No union groups added.');
+        }} else {{
+          addMessage('assistant', `Union groups: ${{unionGroups.join(', ')}}`);
+        }}
+        setTimeout(() => {{
+          currentStep = 'tax_jurisdictions';
+          addMessage('assistant', 'How many tax jurisdictions do you operate in?', 'text-input', {{
+            inputType: 'number',
+            placeholder: 'e.g., 3'
+          }});
+        }}, 800);
+      }}, 600);
+    }} else {{
+      // Add to union groups
+      unionGroups.push(value);
+      setTimeout(() => {{
+        addMessage('assistant', `Added "${{value}}". Add another or type "done".`);
+        setTimeout(() => {{
+          addMessage('assistant', '', 'text-input', {{
+            inputType: 'text',
+            placeholder: 'e.g., Firefighters Local 123 or "done"'
+          }});
+        }}, 500);
+      }}, 400);
+    }}
+  }}
+  else if (step === 'tax_jurisdictions') {{
+    setTimeout(() => {{
+      addMessage('assistant', `${{value}} tax jurisdictions — noted.`);
+      setTimeout(() => {{
+        currentStep = 'current_erp';
+        addMessage('assistant', 'What ERP system are you currently using?', 'text-input', {{
+          inputType: 'text',
+          placeholder: 'e.g., Tyler Munis, SAP, Excel'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'current_erp') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Current system: ${{value}}`);
+      setTimeout(() => {{
+        currentStep = 'employee_count';
+        addMessage('assistant', 'How many employees does your organization have?', 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 250'
+        }});
+      }}, 800);
+    }}, 600);
+  }}
+  else if (step === 'employee_count') {{
+    setTimeout(() => {{
+      addMessage('assistant', `${{parseInt(value).toLocaleString()}} employees — perfect.`);
+      setTimeout(() => {{
+        addMessage('assistant', 'That\\'s all the questions for Section 1! Let me save your responses...');
+        setTimeout(() => {{
+          // Save progress
+          saveProgress('completed');
+          updateProgress(100);
+          setTimeout(() => {{
+            addMessage('assistant', 'Section 1 complete! Returning to dashboard...');
+            setTimeout(() => {{
+              window.location.href = '/app';
+            }}, 2000);
+          }}, 800);
+        }}, 1000);
+      }}, 800);
+    }}, 600);
+  }}
+
+  // Update progress
+  const allSteps = [
+    'state', 'entity_type', 'population', 'organization', 'retirement_system',
+    'fiscal_year_month', 'fiscal_year_day', 'department_count', 'has_unions',
+    'union_groups', 'tax_jurisdictions', 'current_erp', 'employee_count'
+  ];
+
+  // Calculate progress (skip union_groups if no unions)
+  let relevantSteps = allSteps;
+  if (answers['has_unions'] === 'no') {{
+    relevantSteps = allSteps.filter(s => s !== 'union_groups');
+  }}
+
+  const currentIndex = relevantSteps.indexOf(currentStep);
+  const progress = currentIndex >= 0 ? ((currentIndex + 1) / relevantSteps.length) * 100 : 0;
+  updateProgress(progress);
+
+  // Auto-save
+  saveProgress();
+}};
+"""
+
+
+def generate_section3a_script():
+    """Generate Section 3A conversational script for pay code inventory."""
+    return """
+// Section 3A: Pay Code Inventory
+// Conversational flow for collecting pay code details
+
+const PAY_CODE_CATEGORIES = [
+  { value: 'regular-pay', label: 'Regular Pay' },
+  { value: 'overtime', label: 'Overtime' },
+  { value: 'vacation', label: 'Vacation' },
+  { value: 'sick-leave', label: 'Sick Leave' },
+  { value: 'comp-time', label: 'Comp Time' },
+  { value: 'holiday', label: 'Holiday Pay' },
+  { value: 'longevity', label: 'Longevity Pay' },
+  { value: 'shift-differential', label: 'Shift Differential' },
+  { value: 'standby-oncall', label: 'Standby/On-Call' },
+  { value: 'bilingual-pay', label: 'Bilingual Pay' },
+  { value: 'certification-pay', label: 'Certification/Education Pay' },
+  { value: 'car-allowance', label: 'Car Allowance' },
+  { value: 'uniform-allowance', label: 'Uniform Allowance' },
+  { value: 'severance', label: 'Severance' },
+  { value: 'other', label: 'Other' }
+];
+
+const CALCULATION_METHODS = [
+  { value: 'hourly-rate', label: 'Hourly Rate (hours × rate)' },
+  { value: 'salary-flat', label: 'Salary/Flat Amount per Period' },
+  { value: 'flat-amount', label: 'One-Time Flat Amount' },
+  { value: 'percent-base', label: 'Percentage of Base Pay' },
+  { value: 'percent-gross', label: 'Percentage of Gross' },
+  { value: 'other-formula', label: 'Other Formula/Method' }
+];
+
+// Track selected categories and pay codes
+let selectedCategories = [];
+let currentCategoryIndex = 0;
+let currentCategory = null;
+let payCodesByCategory = {}; // { 'overtime': [{name, gl, method, ...}] }
+let currentPayCode = {};
+
 // Start the conversation
 setTimeout(() => {
-  addMessage('assistant', 'Welcome! Let\\'s start by learning about your organization.');
+  addMessage('assistant', 'Welcome to Section 3A: Pay Code Inventory!');
   setTimeout(() => {
-    currentStep = 'state';
-    addMessage('assistant', 'Which state are you in?', 'select', {
-      options: STATES.map(s => ({ value: s, label: s }))
-    });
+    addMessage('assistant', 'We\\'ll document your pay code structure to identify consolidation opportunities and configuration issues.');
+    setTimeout(() => {
+      currentStep = 'category_selection';
+      addMessage('assistant', 'First, which types of pay codes does your organization use? Select all that apply:', 'multi-select-start', {
+        categories: PAY_CODE_CATEGORIES
+      });
+    }, 800);
   }, 800);
 }, 500);
 
+// Handle category selection (multi-select pattern)
+window.handleCategoryToggle = function(category) {
+  if (selectedCategories.includes(category)) {
+    selectedCategories = selectedCategories.filter(c => c !== category);
+  } else {
+    selectedCategories.push(category);
+  }
+  // Update UI to show selected state
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  categoryBtns.forEach(btn => {
+    if (btn.dataset.category === category) {
+      btn.classList.toggle('selected');
+    }
+  });
+};
+
+window.handleCategoryConfirm = function() {
+  if (selectedCategories.length === 0) {
+    alert('Please select at least one pay code category.');
+    return;
+  }
+
+  answers['selectedCategories'] = selectedCategories;
+  const categoryLabels = selectedCategories.map(c =>
+    PAY_CODE_CATEGORIES.find(cat => cat.value === c)?.label || c
+  ).join(', ');
+
+  addMessage('user', `Selected: ${categoryLabels}`);
+
+  setTimeout(() => {
+    addMessage('assistant', `Great! You selected ${selectedCategories.length} categor${selectedCategories.length > 1 ? 'ies' : 'y'}.`);
+    setTimeout(() => {
+      addMessage('assistant', 'Now let\\'s document the pay codes in each category. I\\'ll walk you through them one at a time.');
+      setTimeout(() => {
+        currentCategory = selectedCategories[0];
+        currentCategoryIndex = 0;
+        payCodesByCategory[currentCategory] = [];
+        startPayCodeCollection(currentCategory);
+      }, 800);
+    }, 600);
+  }, 600);
+};
+
+function startPayCodeCollection(category) {
+  const categoryLabel = PAY_CODE_CATEGORIES.find(c => c.value === category)?.label || category;
+  currentStep = 'pay_code_name';
+  currentPayCode = { category: category };
+
+  setTimeout(() => {
+    addMessage('assistant', `Let\\'s start with ${categoryLabel}. What\\'s the name of the first pay code?`, 'text-input', {
+      inputType: 'text',
+      placeholder: 'e.g., OT - Time and a Half'
+    });
+  }, 600);
+}
+
 // Handle user input
 window.handleUserInput = function(step, value) {
-  if (step === 'state') {
+  if (step === 'pay_code_name') {
+    currentPayCode.name = value;
+    answers[currentStep] = value;
+    addMessage('user', value);
+
     setTimeout(() => {
-      addMessage('assistant', `Great! You're in ${value}.`);
+      addMessage('assistant', `"${value}" — got it.`);
       setTimeout(() => {
-        currentStep = 'entity_type';
-        addMessage('assistant', 'What type of government entity are you?', 'choice-buttons', {
+        currentStep = 'gl_account';
+        addMessage('assistant', 'What GL account is this pay code mapped to?', 'text-input', {
+          inputType: 'text',
+          placeholder: 'e.g., 01-100-5100 or 5100'
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'gl_account') {
+    currentPayCode.glAccount = value;
+    answers[currentStep] = value;
+    addMessage('user', value);
+
+    setTimeout(() => {
+      addMessage('assistant', 'How is this pay code calculated?', 'select', {
+        options: CALCULATION_METHODS
+      });
+      currentStep = 'calculation_method';
+    }, 600);
+  }
+  else if (step === 'calculation_method') {
+    currentPayCode.calculationMethod = value;
+    const label = CALCULATION_METHODS.find(m => m.value === value)?.label || value;
+    answers[currentStep] = value;
+    addMessage('user', label);
+
+    setTimeout(() => {
+      addMessage('assistant', 'Is this pay code pensionable (counts toward retirement)?', 'choice-buttons', {
+        options: [
+          { value: 'yes', label: 'Yes' },
+          { value: 'no', label: 'No' },
+          { value: 'unsure', label: 'Unsure' }
+        ]
+      });
+      currentStep = 'is_pensionable';
+    }, 600);
+  }
+  else if (step === 'is_pensionable') {
+    currentPayCode.isPensionable = value;
+    answers[currentStep] = value;
+    addMessage('user', value.charAt(0).toUpperCase() + value.slice(1));
+
+    setTimeout(() => {
+      addMessage('assistant', 'Is this included in the FLSA overtime calculation base?', 'choice-buttons', {
+        options: [
+          { value: 'yes', label: 'Yes' },
+          { value: 'no', label: 'No' },
+          { value: 'unsure', label: 'Unsure' }
+        ]
+      });
+      currentStep = 'is_flsa_base';
+    }, 600);
+  }
+  else if (step === 'is_flsa_base') {
+    currentPayCode.isFlsaBase = value;
+    answers[currentStep] = value;
+    addMessage('user', value.charAt(0).toUpperCase() + value.slice(1));
+
+    // Save this pay code
+    payCodesByCategory[currentCategory].push({ ...currentPayCode });
+
+    setTimeout(() => {
+      addMessage('assistant', `Pay code "${currentPayCode.name}" saved.`);
+      setTimeout(() => {
+        currentStep = 'add_another';
+        const categoryLabel = PAY_CODE_CATEGORIES.find(c => c.value === currentCategory)?.label;
+        addMessage('assistant', `Do you have another ${categoryLabel} pay code to add?`, 'choice-buttons', {
           options: [
-            { value: 'city', label: 'City' },
-            { value: 'county', label: 'County' },
-            { value: 'town', label: 'Town' },
-            { value: 'village', label: 'Village' }
+            { value: 'yes', label: 'Yes, add another' },
+            { value: 'no', label: 'No, move to next category' }
           ]
         });
       }, 800);
     }, 600);
   }
-  else if (step === 'entity_type') {
-    setTimeout(() => {
-      addMessage('assistant', `Got it, you're a ${value}.`);
+  else if (step === 'add_another') {
+    if (value === 'yes') {
+      addMessage('user', 'Yes, add another');
+      currentPayCode = { category: currentCategory };
       setTimeout(() => {
-        currentStep = 'population';
-        addMessage('assistant', 'What is your population?', 'text-input', {
-          inputType: 'number',
-          placeholder: 'e.g., 15000'
-        });
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'population') {
-    setTimeout(() => {
-      addMessage('assistant', `Population: ${parseInt(value).toLocaleString()}`);
-      setTimeout(() => {
-        currentStep = 'organization';
-        addMessage('assistant', 'What is the name of your organization?', 'text-input', {
+        currentStep = 'pay_code_name';
+        addMessage('assistant', 'What\\'s the name of the next pay code?', 'text-input', {
           inputType: 'text',
-          placeholder: 'e.g., City of Springfield'
+          placeholder: 'e.g., OT - Double Time'
         });
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'organization') {
-    setTimeout(() => {
-      addMessage('assistant', `Thank you! This is a basic prototype of Section 1.`);
-      setTimeout(() => {
-        addMessage('assistant', 'In the full version, we\\'ll ask about your retirement system, fiscal year, departments, and more.');
-        setTimeout(() => {
-          // Save progress
-          saveProgress('completed');
-          updateProgress(100);
-          setTimeout(() => {
-            addMessage('assistant', 'Section 1 complete! Returning to dashboard...');
-            setTimeout(() => {
-              window.location.href = '/app';
-            }, 2000);
-          }, 800);
-        }, 1000);
-      }, 800);
-    }, 600);
-  }
+      }, 600);
+    } else {
+      addMessage('user', 'No, move to next category');
 
-  // Update progress
-  const steps = ['state', 'entity_type', 'population', 'organization'];
-  const currentIndex = steps.indexOf(currentStep);
-  const progress = ((currentIndex + 1) / steps.length) * 100;
-  updateProgress(progress);
+      // Move to next category or finish
+      currentCategoryIndex++;
+      if (currentCategoryIndex < selectedCategories.length) {
+        currentCategory = selectedCategories[currentCategoryIndex];
+        payCodesByCategory[currentCategory] = [];
+        setTimeout(() => {
+          startPayCodeCollection(currentCategory);
+        }, 600);
+      } else {
+        // All categories complete
+        setTimeout(() => {
+          finishSection();
+        }, 600);
+      }
+    }
+  }
 
   // Auto-save
   saveProgress();
 };
-"""
 
+function finishSection() {
+  // Calculate totals
+  let totalPayCodes = 0;
+  for (let cat in payCodesByCategory) {
+    totalPayCodes += payCodesByCategory[cat].length;
+  }
 
-def generate_section3a_script():
-    """Generate Section 3A conversational script (placeholder)."""
-    return """
-// Section 3A: Pay Code Inventory
-// Placeholder - to be implemented
+  answers['payCodesByCategory'] = payCodesByCategory;
+  answers['totalPayCodes'] = totalPayCodes;
 
-setTimeout(() => {
-  addMessage('assistant', 'Section 3A: Pay Code Inventory');
+  addMessage('assistant', `Excellent! You\\'ve documented ${totalPayCodes} pay codes across ${selectedCategories.length} categories.`);
+
   setTimeout(() => {
-    addMessage('assistant', 'This section is coming soon. You\\'ll be able to document your pay code structure here.');
+    addMessage('assistant', 'In the full version, I\\'ll analyze these for consolidation opportunities and compliance issues.');
     setTimeout(() => {
-      addMessage('assistant', 'Returning to dashboard...');
+      saveProgress('completed');
+      updateProgress(100);
       setTimeout(() => {
-        window.location.href = '/app';
-      }, 2000);
-    }, 1500);
+        addMessage('assistant', 'Section 3A complete! Returning to dashboard...');
+        setTimeout(() => {
+          window.location.href = '/app';
+        }, 2000);
+      }, 800);
+    }, 1000);
   }, 800);
-}, 500);
+}
 """
 
 

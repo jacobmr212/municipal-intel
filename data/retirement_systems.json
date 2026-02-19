@@ -1,0 +1,326 @@
+{
+  "AL": [
+    {"value": "RSA", "label": "RSA (Retirement Systems of Alabama)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "ERS", "label": "ERS (Employees' Retirement System)"},
+    {"value": "TRS", "label": "TRS (Teachers' Retirement System)"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "AK": [
+    {"value": "PERS", "label": "PERS (Public Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "AZ": [
+    {"value": "ASRS", "label": "ASRS (Arizona State Retirement System)"},
+    {"value": "PSPRS", "label": "PSPRS (Public Safety Personnel Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "AR": [
+    {"value": "APERS", "label": "APERS (Arkansas Public Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "CA": [
+    {"value": "CalPERS", "label": "CalPERS"},
+    {"value": "1937-Act", "label": "1937 Act county system"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "CO": [
+    {"value": "PERA", "label": "PERA (Colorado Public Employees' Retirement Association)"},
+    {"value": "FPPA", "label": "FPPA (Fire & Police Pension Association)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "CT": [
+    {"value": "CMERS", "label": "CMERS (Connecticut Municipal Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "DE": [
+    {"value": "DPERS", "label": "DPERS (Delaware Public Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "FL": [
+    {"value": "FRS", "label": "FRS (Florida Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "GA": [
+    {"value": "ERS", "label": "ERS (Employees' Retirement System)"},
+    {"value": "GMEBS", "label": "GMEBS (Georgia Municipal Employees Benefit System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "HI": [
+    {"value": "ERS", "label": "ERS (Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "ID": [
+    {"value": "PERSI", "label": "PERSI (Public Employee Retirement System of Idaho)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "IL": [
+    {"value": "IMRF", "label": "IMRF (Illinois Municipal Retirement Fund)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "Police-Pension", "label": "Police Pension"},
+    {"value": "Fire-Pension", "label": "Fire Pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "IN": [
+    {"value": "PERF", "label": "PERF (Public Employees' Retirement Fund)"},
+    {"value": "1977-Police-Fire", "label": "1977 Police/Fire Fund"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "IA": [
+    {"value": "IPERS", "label": "IPERS (Iowa Public Employees' Retirement System)"},
+    {"value": "MFPRSI", "label": "MFPRSI (Municipal Fire & Police Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "KS": [
+    {"value": "KPERS", "label": "KPERS (Kansas Public Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "KY": [
+    {"value": "CERS", "label": "CERS (County Employees Retirement System)"},
+    {"value": "KRS", "label": "KRS (Kentucky Retirement Systems)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "LA": [
+    {"value": "MERS", "label": "MERS (Municipal Employees' Retirement System)"},
+    {"value": "MPERS", "label": "MPERS (Municipal Police Employees' Retirement System)"},
+    {"value": "Firefighters", "label": "Firefighters' Retirement System"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "ME": [
+    {"value": "MainePERS", "label": "MainePERS (Maine Public Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "MD": [
+    {"value": "SRPS", "label": "SRPS (State Retirement and Pension System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "MA": [
+    {"value": "local-board", "label": "Local retirement system (municipal board)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "MI": [
+    {"value": "MERS", "label": "MERS (Municipal Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "MN": [
+    {"value": "PERA-General", "label": "PERA — General Employees"},
+    {"value": "PERA-Police-Fire", "label": "PERA — Police & Fire"},
+    {"value": "PERA-Correctional", "label": "PERA — Correctional"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "MS": [
+    {"value": "PERS", "label": "PERS (Public Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "MO": [
+    {"value": "LAGERS", "label": "LAGERS (Local Government Employees Retirement System)"},
+    {"value": "MOSERS", "label": "MOSERS"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "MT": [
+    {"value": "MPERA", "label": "MPERA (Montana Public Employee Retirement Administration)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "NE": [
+    {"value": "county-plan", "label": "County retirement plan"},
+    {"value": "city-plan", "label": "City retirement plan"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "NV": [
+    {"value": "PERS", "label": "PERS (Public Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "NH": [
+    {"value": "NHRS", "label": "NHRS (New Hampshire Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "NJ": [
+    {"value": "PERS", "label": "PERS (Public Employees' Retirement System)"},
+    {"value": "PFRS", "label": "PFRS (Police and Firemen's Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "NM": [
+    {"value": "PERA", "label": "PERA (Public Employees Retirement Association)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "NY": [
+    {"value": "NYSLRS", "label": "NYSLRS (New York State and Local Retirement System)"},
+    {"value": "NYCERS", "label": "NYCERS (for NYC entities)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "NC": [
+    {"value": "LGERS", "label": "LGERS (Local Governmental Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "ND": [
+    {"value": "NDPERS", "label": "NDPERS (North Dakota Public Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "OH": [
+    {"value": "OPERS", "label": "OPERS (Ohio Public Employees Retirement System)"},
+    {"value": "OP&F", "label": "OP&F (Ohio Police & Fire Pension Fund)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "OK": [
+    {"value": "OPERS", "label": "OPERS (Oklahoma Public Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "OR": [
+    {"value": "OPERS", "label": "OPERS (Oregon Public Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "PA": [
+    {"value": "municipal-plan", "label": "Municipal pension plan (Act 205)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "RI": [
+    {"value": "ERSRI", "label": "ERSRI (Employees' Retirement System of Rhode Island)"},
+    {"value": "MERS", "label": "MERS"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "SC": [
+    {"value": "PEBA", "label": "PEBA (Public Employee Benefit Authority)"},
+    {"value": "SCRS", "label": "SCRS"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "SD": [
+    {"value": "SDRS", "label": "SDRS (South Dakota Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "TN": [
+    {"value": "TCRS", "label": "TCRS (Tennessee Consolidated Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "TX": [
+    {"value": "TMRS", "label": "TMRS (Texas Municipal Retirement System)"},
+    {"value": "TCDRS", "label": "TCDRS (Texas County & District Retirement System)"},
+    {"value": "independent", "label": "Independent city pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "UT": [
+    {"value": "URS", "label": "URS (Utah Retirement Systems)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "VT": [
+    {"value": "VMERS", "label": "VMERS (Vermont Municipal Employees' Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "VA": [
+    {"value": "VRS", "label": "VRS (Virginia Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "WA": [
+    {"value": "PERS", "label": "PERS (Public Employees' Retirement System)"},
+    {"value": "LEOFF", "label": "LEOFF (Law Enforcement Officers & Fire Fighters)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "WV": [
+    {"value": "PERS", "label": "PERS (Public Employees Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "WI": [
+    {"value": "WRS", "label": "WRS (Wisconsin Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ],
+  "WY": [
+    {"value": "WRS", "label": "WRS (Wyoming Retirement System)"},
+    {"value": "independent", "label": "Independent city/county pension"},
+    {"value": "other", "label": "Other"},
+    {"value": "none", "label": "None / Not applicable"}
+  ]
+}
