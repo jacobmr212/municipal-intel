@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin v2 - GovTech Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-bg: #111110;
+  --sidebar-border: #2A2926;
+  --sidebar-text: #C8C4BC;
+  --sidebar-active: #FFFFFF;
+  --sidebar-hover: rgba(255,255,255,0.07);
+  --white: #FFFFFF;
+  --offwhite: #FAFAF9;
+  --sand: #F5F3EF;
+  --stone: #E8E4DD;
+  --warm-gray: #9C9689;
+  --text: #1A1816;
+  --text-secondary: #3D3A35;
+  --accent: #1E3BC0;
+  --accent-hover: #162DA8;
+  --accent-light: #EEF1FC;
+  --green: #1A7F37;
+  --green-bg: #D1FAE5;
+  --red: #991B1B;
+  --red-bg: #FEE2E2;
+  --hot: #EF6B5A;
+  --warm: #FBBF24;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--offwhite);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--stone);
+}
+
+.header h1 {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+}
+
+.user-email {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  font-family: var(--sans);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--stone);
+}
+
+.btn-secondary:hover {
+  background: var(--sand);
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.btn-danger {
+  background: var(--red);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #7F1D1D;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--stone);
+  margin-bottom: 2rem;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+  font-family: var(--sans);
+}
+
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid var(--stone);
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  color: var(--warm-gray);
+  margin-bottom: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-trend {
+  font-size: 0.8125rem;
+  color: var(--green);
+  font-weight: 500;
+}
+
+/* Panel Header with Search */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+  max-width: 450px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-family: var(--sans);
+  transition: all 0.15s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--warm-gray);
+  pointer-events: none;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-family: var(--sans);
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+  display: none;
+  background: var(--accent-light);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bulk-actions-bar.active {
+  display: flex;
+}
+
+.bulk-count {
+  font-size: 0.9375rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: 0.625rem;
+  margin-left: auto;
+}
+
+/* Table */
+.table-container {
+  background: white;
+  border: 1px solid var(--stone);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  background: var(--sand);
+  border-bottom: 2px solid var(--stone);
+}
+
+.data-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.data-table th:hover {
+  background: var(--stone);
+}
+
+.data-table th.sortable::after {
+  content: '⇅';
+  margin-left: 0.5rem;
+  opacity: 0.3;
+}
+
+.data-table th.sorted-asc::after {
+  content: '↑';
+  opacity: 1;
+}
+
+.data-table th.sorted-desc::after {
+  content: '↓';
+  opacity: 1;
+}
+
+.data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--stone);
+  font-size: 0.875rem;
+}
+
+.data-table tbody tr:hover {
+  background: var(--sand);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-empty {
+  text-align: center;
+  padding: 3rem !important;
+  color: var(--warm-gray);
+  font-style: italic;
+}
+
+.role-select {
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--stone);
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-family: var(--sans);
+  background: white;
+  cursor: pointer;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-success { background: var(--green-bg); color: var(--green); }
+.status-warning { background: #FEF3C7; color: #92400E; }
+.status-error { background: var(--red-bg); color: var(--red); }
+.status-info { background: var(--accent-light); color: var(--accent); }
+
+/* Checkbox */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--text);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  transform: translateY(200%);
+  transition: transform 0.3s;
+  z-index: 1000;
+  max-width: 400px;
+}
+
+.toast.show {
+  transform: translateY(0);
+}
+
+/* Loading spinner */
+.loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--stone);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.text-muted { color: var(--warm-gray); }
+.text-sm { font-size: 0.8125rem; }
+.mb-2 { margin-bottom: 2rem; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <h1>Admin Dashboard v2</h1>
+    <div class="header-actions">
+      <div class="user-badge">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="10" cy="7" r="4"/>
+          <path d="M3 20c0-4.418 3.582-8 8-8s8 3.582 8 8"/>
+        </svg>
+        <span class="user-email">{{ user.email }}</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="window.location.href='/app'">Back to App</button>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview', this)">Overview</button>
+    <button class="tab-btn" onclick="switchTab('waitlist', this)">Waitlist</button>
+    <button class="tab-btn" onclick="switchTab('users', this)">Users</button>
+    <button class="tab-btn" onclick="switchTab('scans', this)">Scans</button>
+    <button class="tab-btn" onclick="switchTab('analytics', this)">Analytics</button>
+  </div>
+
+  <!-- ═══ OVERVIEW TAB ═══ -->
+  <div id="tab-overview" class="tab-panel active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value" id="overview-users">-</div>
+        <div class="stat-trend">↗ Active platform</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending Waitlist</div>
+        <div class="stat-value" id="overview-waitlist">-</div>
+        <div class="stat-trend">Needs approval</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Scans</div>
+        <div class="stat-value" id="overview-scans">-</div>
+        <div class="stat-trend">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Municipalities</div>
+        <div class="stat-value" id="overview-municipalities">1,376</div>
+        <div class="stat-trend">49 states covered</div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Recent Activity</th>
+            <th>User</th>
+            <th>Type</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="recent-activity-body">
+          <tr><td colspan="4" class="table-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ WAITLIST TAB ═══ -->
+  <div id="tab-waitlist" class="tab-panel">
+    <div class="panel-header">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="8.5" cy="8.5" r="5.5"/>
+          <path d="M12.5 12.5L16.5 16.5"/>
+        </svg>
+        <input type="text" class="search-input" id="waitlist-search" placeholder="Search by email, name, or company..." onkeyup="filterTable('waitlist')">
+      </div>
+      <div class="panel-actions">
+        <select class="filter-select" id="waitlist-filter" onchange="filterTable('waitlist')">
+          <option value="">All Sources</option>
+          <option value="landing">Landing Page</option>
+          <option value="consultant">Consultant</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bulk-actions-bar" id="waitlist-bulk">
+      <span class="bulk-count"><span id="waitlist-selected-count">0</span> selected</span>
+      <div class="bulk-buttons">
+        <button class="btn btn-primary btn-sm" onclick="bulkApprove()">Approve Selected</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSelection('waitlist')">Clear</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="waitlist-select-all" onchange="toggleSelectAll('waitlist')"></th>
+            <th class="sortable" onclick="sortTable('waitlist', 0)">Source</th>
+            <th class="sortable" onclick="sortTable('waitlist', 1)">Name</th>
+            <th class="sortable" onclick="sortTable('waitlist', 2)">Email</th>
+            <th class="sortable" onclick="sortTable('waitlist', 3)">Organization</th>
+            <th class="sortable" onclick="sortTable('waitlist', 4)">State</th>
+            <th>Current ERP</th>
+            <th>Role</th>
+            <th class="sortable" onclick="sortTable('waitlist', 8)">Joined</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="waitlist-body">
+          <tr><td colspan="10" class="table-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ USERS TAB ═══ -->
+  <div id="tab-users" class="tab-panel">
+    <div class="panel-header">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="8.5" cy="8.5" r="5.5"/>
+          <path d="M12.5 12.5L16.5 16.5"/>
+        </svg>
+        <input type="text" class="search-input" id="users-search" placeholder="Search by email..." onkeyup="filterTable('users')">
+      </div>
+      <div class="panel-actions">
+        <select class="filter-select" id="users-filter" onchange="filterTable('users')">
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="consultant">Consultant</option>
+          <option value="client">Client</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="sortable" onclick="sortTable('users', 0)">Email</th>
+            <th>Role</th>
+            <th class="sortable" onclick="sortTable('users', 2)">Created</th>
+            <th class="sortable" onclick="sortTable('users', 3)">Last Login</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-body">
+          <tr><td colspan="5" class="table-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ SCANS TAB ═══ -->
+  <div id="tab-scans" class="tab-panel">
+    <div class="panel-header">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="8.5" cy="8.5" r="5.5"/>
+          <path d="M12.5 12.5L16.5 16.5"/>
+        </svg>
+        <input type="text" class="search-input" id="scans-search" placeholder="Search scans..." onkeyup="filterTable('scans')">
+      </div>
+      <div class="panel-actions">
+        <select class="filter-select" id="scans-filter" onchange="filterTable('scans')">
+          <option value="">All Status</option>
+          <option value="completed">Completed</option>
+          <option value="in_progress">In Progress</option>
+          <option value="failed">Failed</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="loadScans()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th class="sortable" onclick="sortTable('scans', 2)">Status</th>
+            <th>Config</th>
+            <th>Progress</th>
+            <th>Leads</th>
+            <th class="sortable" onclick="sortTable('scans', 6)">Started</th>
+            <th>Duration</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="scans-body">
+          <tr><td colspan="9" class="table-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ ANALYTICS TAB ═══ -->
+  <div id="tab-analytics" class="tab-panel">
+    <div class="stats-grid mb-2">
+      <div class="stat-card">
+        <div class="stat-label">Total Assessments</div>
+        <div class="stat-value" id="stat-total">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value" id="stat-completed">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value" id="stat-in-progress">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value" id="stat-users">-</div>
+      </div>
+    </div>
+
+    <div class="table-container mb-2">
+      <div style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.125rem; font-weight: 600;">Section Interest Tracking</h3>
+        <p class="text-muted text-sm" style="margin-bottom: 1.5rem;">Which locked sections users want most - prioritize development</p>
+        <div id="section-interest-content">
+          <div class="text-muted">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.125rem; font-weight: 600;">State Distribution</h3>
+        <div id="state-distribution-content">
+          <div class="text-muted">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ UTILITY FUNCTIONS ═══
+function showToast(message, duration = 3000) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function logout() {
+  document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  window.location.href = '/login';
+}
+
+// ═══ TAB SWITCHING ═══
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  // Load data when tab opens
+  if (name === 'overview') loadOverview();
+  if (name === 'waitlist') loadWaitlist();
+  if (name === 'users') loadUsers();
+  if (name === 'scans') loadScans();
+  if (name === 'analytics') loadAnalytics();
+}
+
+// ═══ TABLE FILTERING ═══
+function filterTable(tableId) {
+  const searchInput = document.getElementById(tableId + '-search');
+  const filterSelect = document.getElementById(tableId + '-filter');
+  const search = searchInput ? searchInput.value.toLowerCase() : '';
+  const filter = filterSelect ? filterSelect.value.toLowerCase() : '';
+  const tbody = document.getElementById(tableId + '-body');
+  const rows = tbody.getElementsByTagName('tr');
+
+  for (let row of rows) {
+    const cells = row.getElementsByTagName('td');
+    if (cells.length === 0) continue;
+
+    let textMatch = false;
+    let filterMatch = !filter;
+
+    // Search across all cells
+    for (let cell of cells) {
+      if (cell.textContent.toLowerCase().includes(search)) {
+        textMatch = true;
+        break;
+      }
+    }
+
+    // Check filter
+    if (filter && row.dataset.filter && row.dataset.filter.toLowerCase() === filter) {
+      filterMatch = true;
+    }
+
+    row.style.display = (textMatch && filterMatch) ? '' : 'none';
+  }
+}
+
+// ═══ TABLE SORTING ═══
+function sortTable(tableId, colIndex) {
+  const tbody = document.getElementById(tableId + '-body');
+  const rows = Array.from(tbody.getElementsByTagName('tr'));
+  const th = tbody.previousElementSibling.getElementsByTagName('th')[colIndex];
+
+  const isAsc = th.classList.contains('sorted-asc');
+
+  // Remove all sorted classes
+  tbody.previousElementSibling.querySelectorAll('th').forEach(h => {
+    h.classList.remove('sorted-asc', 'sorted-desc');
+  });
+
+  // Add new sorted class
+  th.classList.add(isAsc ? 'sorted-desc' : 'sorted-asc');
+
+  rows.sort((a, b) => {
+    const aText = a.cells[colIndex]?.textContent.trim() || '';
+    const bText = b.cells[colIndex]?.textContent.trim() || '';
+    return isAsc ? bText.localeCompare(aText) : aText.localeCompare(bText);
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+// ═══ BULK SELECTION ═══
+function toggleSelectAll(tableId) {
+  const selectAll = document.getElementById(tableId + '-select-all');
+  const checkboxes = document.querySelectorAll(`#${tableId}-body input[type="checkbox"]`);
+  checkboxes.forEach(cb => cb.checked = selectAll.checked);
+  updateBulkBar(tableId);
+}
+
+function updateBulkBar(tableId) {
+  const checkboxes = document.querySelectorAll(`#${tableId}-body input[type="checkbox"]:checked`);
+  const bulkBar = document.getElementById(tableId + '-bulk');
+  const countSpan = document.getElementById(tableId + '-selected-count');
+
+  if (checkboxes.length > 0) {
+    bulkBar.classList.add('active');
+    countSpan.textContent = checkboxes.length;
+  } else {
+    bulkBar.classList.remove('active');
+  }
+}
+
+function clearSelection(tableId) {
+  const checkboxes = document.querySelectorAll(`#${tableId}-body input[type="checkbox"]`);
+  checkboxes.forEach(cb => cb.checked = false);
+  document.getElementById(tableId + '-select-all').checked = false;
+  updateBulkBar(tableId);
+}
+
+// ═══ API CALLS ═══
+async function loadOverview() {
+  try {
+    const [usersRes, waitlistRes, scansRes] = await Promise.all([
+      fetch('/api/admin/users'),
+      fetch('/api/admin/waitlist'),
+      fetch('/api/scans')
+    ]);
+
+    const users = await usersRes.json();
+    const waitlist = await waitlistRes.json();
+    const scans = await scansRes.json();
+
+    document.getElementById('overview-users').textContent = users.length;
+    document.getElementById('overview-waitlist').textContent = waitlist.length;
+    document.getElementById('overview-scans').textContent = scans.length;
+
+    // Recent activity (stub)
+    const tbody = document.getElementById('recent-activity-body');
+    tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No recent activity</td></tr>';
+  } catch (err) {
+    console.error('Failed to load overview:', err);
+  }
+}
+
+async function loadWaitlist() {
+  try {
+    const res = await fetch('/api/admin/waitlist');
+    const data = await res.json();
+
+    const tbody = document.getElementById('waitlist-body');
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="table-empty">No pending waitlist entries</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(entry => `
+      <tr data-filter="${entry.source}">
+        <td><input type="checkbox" onchange="updateBulkBar('waitlist')"></td>
+        <td><span class="status-badge status-info">${entry.source}</span></td>
+        <td>${entry.name || '-'}</td>
+        <td>${entry.email}</td>
+        <td>${entry.organization || '-'}</td>
+        <td>${entry.state || '-'}</td>
+        <td>${entry.current_erp || '-'}</td>
+        <td>
+          <select class="role-select" id="role-${CSS.escape(entry.email)}">
+            <option value="client">Client</option>
+            <option value="consultant" ${entry.source === 'consultant' ? 'selected' : ''}>Consultant</option>
+            <option value="admin">Admin</option>
+          </select>
+        </td>
+        <td>${formatDate(entry.created_at)}</td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="approveUser('${entry.email}')">Approve</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load waitlist:', err);
+    showToast('Failed to load waitlist');
+  }
+}
+
+async function loadUsers() {
+  try {
+    const res = await fetch('/api/admin/users');
+    const data = await res.json();
+
+    document.getElementById('overview-users').textContent = data.length;
+
+    const tbody = document.getElementById('users-body');
+    tbody.innerHTML = data.map(u => `
+      <tr data-filter="${u.role}">
+        <td>${u.email}</td>
+        <td>
+          <select class="role-select" onchange="updateRole('${u.id}', this.value)">
+            <option value="client" ${u.role==='client'?'selected':''}>Client</option>
+            <option value="consultant" ${u.role==='consultant'?'selected':''}>Consultant</option>
+            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+          </select>
+        </td>
+        <td>${formatDate(u.created_at)}</td>
+        <td>${formatDate(u.last_login_at) || 'Never'}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="viewUserDetails('${u.id}')">View</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load users:', err);
+    showToast('Failed to load users');
+  }
+}
+
+async function loadScans() {
+  try {
+    const res = await fetch('/api/scans');
+    const data = await res.json();
+
+    document.getElementById('overview-scans').textContent = data.length;
+
+    const tbody = document.getElementById('scans-body');
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="table-empty">No scans yet</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(scan => {
+      const config = scan.config_json || {};
+      const stats = scan.stats_json || {};
+      const statusClass = scan.status === 'completed' ? 'status-success' :
+                         scan.status === 'failed' ? 'status-error' : 'status-warning';
+
+      return `
+        <tr data-filter="${scan.status}">
+          <td class="text-sm">${scan.id.substring(0, 8)}...</td>
+          <td>${scan.user_email || 'Unknown'}</td>
+          <td><span class="status-badge ${statusClass}">${scan.status}</span></td>
+          <td class="text-sm">${config.states?.slice(0, 3).join(', ') || '-'}</td>
+          <td>${scan.progress_pct || 0}%</td>
+          <td>${stats.total_leads || 0}</td>
+          <td>${formatDateTime(scan.created_at)}</td>
+          <td>${calculateDuration(scan.created_at, scan.completed_at)}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="viewScan('${scan.id}')">View</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Failed to load scans:', err);
+    showToast('Failed to load scans');
+  }
+}
+
+async function loadAnalytics() {
+  try {
+    const res = await fetch('/api/admin/analytics');
+    const data = await res.json();
+
+    document.getElementById('stat-total').textContent = data.overview?.total || 0;
+    document.getElementById('stat-completed').textContent = data.overview?.completed || 0;
+    document.getElementById('stat-in-progress').textContent = data.overview?.in_progress || 0;
+    document.getElementById('stat-users').textContent = data.overview?.total_users || 0;
+
+    // Section interest
+    const interestDiv = document.getElementById('section-interest-content');
+    if (data.section_interest && Object.keys(data.section_interest).length > 0) {
+      interestDiv.innerHTML = Object.entries(data.section_interest)
+        .sort((a, b) => b[1] - a[1])
+        .map(([section, count]) => `
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--stone);">
+            <span>Section ${section}</span>
+            <strong>${count} interests</strong>
+          </div>
+        `).join('');
+    } else {
+      interestDiv.innerHTML = '<div class="text-muted">No interest data yet</div>';
+    }
+
+    // State distribution
+    const stateDiv = document.getElementById('state-distribution-content');
+    if (data.state_distribution && Object.keys(data.state_distribution).length > 0) {
+      stateDiv.innerHTML = Object.entries(data.state_distribution)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([state, count]) => `
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--stone);">
+            <span>${state}</span>
+            <strong>${count} assessments</strong>
+          </div>
+        `).join('');
+    } else {
+      stateDiv.innerHTML = '<div class="text-muted">No state data yet</div>';
+    }
+  } catch (err) {
+    console.error('Failed to load analytics:', err);
+    showToast('Failed to load analytics');
+  }
+}
+
+// ═══ ACTIONS ═══
+async function approveUser(email) {
+  const roleEl = document.getElementById('role-' + CSS.escape(email));
+  const role = roleEl ? roleEl.value : 'client';
+
+  try {
+    const res = await fetch('/api/admin/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, role })
+    });
+
+    if (res.ok) {
+      showToast(`Approved ${email} as ${role}`);
+      loadWaitlist();
+      loadOverview();
+    } else {
+      throw new Error('Approval failed');
+    }
+  } catch (err) {
+    console.error('Approve failed:', err);
+    showToast('Failed to approve user');
+  }
+}
+
+async function bulkApprove() {
+  const checkboxes = document.querySelectorAll('#waitlist-body input[type="checkbox"]:checked');
+  const emails = Array.from(checkboxes).map(cb => {
+    const row = cb.closest('tr');
+    return row.cells[3].textContent; // Email column
+  });
+
+  if (emails.length === 0) return;
+
+  if (!confirm(`Approve ${emails.length} users?`)) return;
+
+  for (const email of emails) {
+    await approveUser(email);
+  }
+
+  clearSelection('waitlist');
+}
+
+async function updateRole(userId, newRole) {
+  try {
+    const res = await fetch(`/api/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: newRole })
+    });
+
+    if (res.ok) {
+      showToast(`Role updated to ${newRole}`);
+    } else {
+      throw new Error('Update failed');
+    }
+  } catch (err) {
+    console.error('Update role failed:', err);
+    showToast('Failed to update role');
+  }
+}
+
+function calculateDuration(start, end) {
+  if (!start) return '-';
+  if (!end) return 'In progress';
+  const duration = new Date(end) - new Date(start);
+  const minutes = Math.floor(duration / 60000);
+  return minutes > 0 ? `${minutes}m` : '<1m';
+}
+
+function viewScan(scanId) {
+  window.location.href = `/scanner?scan_id=${scanId}`;
+}
+
+function viewUserDetails(userId) {
+  showToast('User details view coming soon');
+}
+
+// ═══ INIT ═══
+loadOverview();
+</script>
+
+</body>
+</html>

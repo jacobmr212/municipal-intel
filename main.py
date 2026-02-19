@@ -626,6 +626,21 @@ async def app_shell(request: Request, user: dict = Depends(get_current_user)):
     })
 
 
+@app.get("/admin/v2", response_class=HTMLResponse)
+async def admin_v2(request: Request, user: dict = Depends(require_role("admin"))):
+    """
+    New admin interface (v2) with enhanced features:
+      - 5 tabs: Overview, Waitlist, Users, Scans, Analytics
+      - Search and filter functionality
+      - Bulk actions
+      - Better data visualization
+    """
+    return templates.TemplateResponse("admin_v2.html", {
+        "request": request,
+        "user": user
+    })
+
+
 @app.get("/api/states")
 async def get_covered_states(
     user: dict = Depends(get_current_user),
