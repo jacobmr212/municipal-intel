@@ -654,12 +654,17 @@ async def test_assessment(user: dict = Depends(get_current_user), db: Session = 
 
     assessment_id = str(_uuid.uuid4())
 
+    # Get user_id safely
+    user_id = user.get("user_id") or user.get("id")
+    if not user_id:
+        raise HTTPException(status_code=500, detail=f"No user ID in user dict. Keys: {list(user.keys())}")
+
     db.execute(text("""
         INSERT INTO "Assessment" (id, "userId", status, "createdAt", "updatedAt")
         VALUES (:id, :user_id, 'draft', :now, :now)
     """), {
         "id": assessment_id,
-        "user_id": user["user_id"],
+        "user_id": user_id,
         "now": datetime.utcnow()
     })
     db.commit()
