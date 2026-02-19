@@ -1157,7 +1157,7 @@ body {
         <!-- Config panel -->
         <div class="scanner-config">
           <div class="config-section">
-            <span class="config-label">States</span>
+            <span class="config-label">States <span id="stateCount" style="color:var(--warm-gray);font-weight:400;font-size:0.7rem;margin-left:0.3rem;"></span></span>
             <div class="state-grid" id="stateGrid">
               <!-- Populated by JS -->
             </div>
@@ -1440,15 +1440,21 @@ const CASELLE_STATES = ['UT','ID','WY','MT','NV','CO','NM','AZ','SD','ND','NE','
 // Build state grid from DB-backed coverage list
 async function buildStateGrid() {
   const grid = document.getElementById('stateGrid');
+  const counter = document.getElementById('stateCount');
   if (!grid) return;
   try {
     const data = await fetch('/api/states').then(r => r.json());
     _coveredStates = data.states || [];
+    const totalSources = _coveredStates.reduce((sum, s) => sum + s.source_count, 0);
     grid.innerHTML = _coveredStates.map(s =>
       `<button class="state-btn" data-state="${s.code}" title="${s.source_count} sources" onclick="toggleState(this)">${s.code}</button>`
     ).join('');
+    if (counter) {
+      counter.textContent = `(${_coveredStates.length} ${_coveredStates.length === 1 ? 'state' : 'states'}, ${totalSources.toLocaleString()} sources)`;
+    }
   } catch (e) {
     grid.innerHTML = '<span style="font-size:0.78rem;color:var(--warm-gray)">Failed to load states</span>';
+    if (counter) counter.textContent = '';
   }
 }
 
@@ -2230,6 +2236,19 @@ buildStateGrid();
 document.querySelectorAll('input[name="tier"]').forEach(radio => {
   radio.addEventListener('change', debouncedUpdatePreview);
 });
+
+// Auto-refresh state grid every 30 seconds to pick up newly enriched states
+setInterval(() => {
+  const currentSelected = getSelectedStates();
+  buildStateGrid().then(() => {
+    // Restore previously selected states after refresh
+    currentSelected.forEach(state => {
+      const btn = document.querySelector(`.state-btn[data-state="${state}"]`);
+      if (btn) btn.classList.add('selected');
+    });
+    debouncedUpdatePreview();
+  });
+}, 30000);
 </script>
 
 </body>

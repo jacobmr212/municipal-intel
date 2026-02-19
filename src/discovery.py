@@ -156,10 +156,19 @@ class SourceDiscovery:
 
         # Add third-party platform subdomains
         third_party_platforms = [
+            # Meeting minutes platforms
             f"https://{city_slug}.civicweb.net",
             f"https://{city_slug}.legistar.com",
             f"https://{city_slug}.granicus.com",
+            f"https://{city_slug}.boarddocs.com",
+            f"https://{city_slug}.novusagenda.com",
             f"https://{city_slug}-{state.lower()}.municode.com",
+            # Procurement/transparency platforms
+            f"https://{city_slug}.primegov.com",
+            f"https://{city_slug}.opengov.com",
+            # Alternative city name formats
+            f"https://{city_slug}{state.lower()}.civicweb.net",
+            f"https://{city_slug}{state.lower()}.legistar.com",
         ]
 
         # Try most common patterns first (CivicPlus AgendaCenter is #1)
@@ -175,11 +184,17 @@ class SourceDiscovery:
 
         checked_count = 0
 
-        # First: Try own domain with common patterns (limit to 8 for speed)
-        max_patterns_to_check = 8
+        # First: Try own domain with common patterns (adaptive limit based on city size)
+        # Larger cities have more complex site structures, so check more patterns
+        if population >= 50000:
+            max_patterns_to_check = 16  # Large cities
+        elif population >= 10000:
+            max_patterns_to_check = 12  # Medium cities
+        else:
+            max_patterns_to_check = 8   # Small cities
         for base_url in base_urls:
             for pattern in ordered_patterns:
-                # Hard limit: stop after checking 8 patterns
+                # Stop after reaching population-based pattern limit
                 if checked_count >= max_patterns_to_check:
                     logger.info(f"  Checked {checked_count} patterns — moving on")
                     break

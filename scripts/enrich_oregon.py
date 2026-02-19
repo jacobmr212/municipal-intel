@@ -30,12 +30,11 @@ def main():
     print(f'\n{'='*60}')
     print(f'RESULTS')
     print(f'{'='*60}')
-    print(f'Domains verified: {results["verified"]}')
-    print(f'Domains failed: {results["failed"]}')
+    print(f'Total municipalities: {results["total"]}')
+    print(f'Already enriched: {results["already_verified"]}')
+    print(f'Domains verified: {results["domains_verified"]}')
+    print(f'Domains dead: {results["domains_dead"]}')
     print(f'Sources discovered: {results["sources_found"]}')
-    print(f'  Meeting minutes: {results.get("meeting_minutes", 0)}')
-    print(f'  Procurement: {results.get("procurement", 0)}')
-    print(f'  Budget: {results.get("budget", 0)}')
 
     print(f'\n✓ Oregon enrichment complete!')
 

@@ -258,6 +258,45 @@ PROCUREMENT_PATTERNS = [
 ]
 
 # ============================================================
+# BUDGET DOCUMENT URL PATTERNS
+# Used to discover municipal budget and financial documents
+# ============================================================
+
+BUDGET_PATTERNS = [
+    # Common budget page paths
+    "/budget",
+    "/annual-budget",
+    "/adopted-budget",
+    "/proposed-budget",
+    "/budget-documents",
+    # Finance department paths
+    "/finance/budget",
+    "/departments/finance/budget",
+    "/departments/finance",
+    "/finance",
+    # Financial reporting paths
+    "/financial-reports",
+    "/financial-statements",
+    "/audited-financials",
+    "/annual-financial-report",
+    # CAFR/ACFR (Comprehensive Annual Financial Report)
+    "/cafr",
+    "/comprehensive-annual-financial-report",
+    "/acfr",
+    "/annual-comprehensive-financial-report",
+    # Transparency portals
+    "/transparency",
+    "/financial-transparency",
+    "/budget-transparency",
+    "/open-books",
+    "/checkbook",
+    # Government/business paths
+    "/government/budget",
+    "/government/finance",
+    "/business/budget",
+]
+
+# ============================================================
 # COMMON MEETING MINUTES URL PATTERNS
 # Used by the discovery engine to find meeting pages.
 # ============================================================

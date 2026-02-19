@@ -19,39 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import requests
 from src.database import SessionLocal, Municipality, MunicipalSource
-
-# Procurement URL patterns (ordered by likelihood)
-PROCUREMENT_PATTERNS = [
-    "/bids-procurement",
-    "/bids",
-    "/Bids.aspx",
-    "/purchasing",
-    "/procurement",
-    "/rfp",
-    "/government/purchasing",
-    "/government/procurement",
-    "/city-clerk/bids",
-    "/finance/purchasing",
-    "/finance/bids",
-    "/business/bids",
-    "/business/procurement",
-    "/doing-business/bids",
-    "/doing-business/procurement",
-    "/how-do-i/bid-on-a-city-contract",
-]
-
-# Budget URL patterns
-BUDGET_PATTERNS = [
-    "/budget",
-    "/government/budget",
-    "/finance/budget",
-    "/city-hall/budget",
-    "/city-budget",
-    "/annual-budget",
-    "/proposed-budget",
-    "/finance",
-    "/government/finance",
-]
+from src.signals import PROCUREMENT_PATTERNS, BUDGET_PATTERNS
 
 PROCUREMENT_INDICATORS = [
     "bid", "rfp", "rfq", "procurement", "vendor",

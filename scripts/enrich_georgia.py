@@ -1,11 +1,11 @@
 """
-Arizona State Enrichment Script
+Georgia State Enrichment Script
 
-Discovers meeting minutes sources for all Arizona municipalities using
+Discovers meeting minutes sources for all Georgia municipalities using
 domain verification and URL pattern probing.
 
 Run:
-    DATABASE_URL=... python3 scripts/enrich_arizona.py
+    DATABASE_URL=... python3 scripts/enrich_georgia.py
 """
 import os
 import sys
@@ -21,11 +21,11 @@ def progress_callback(current, total, message):
 
 def main():
     print('='*60)
-    print('ARIZONA ENRICHMENT')
+    print('GEORGIA ENRICHMENT')
     print('='*60)
 
     enricher = EnrichmentEngine(request_delay=1.0, timeout=10)
-    results = enricher.enrich_state('AZ', progress_callback=progress_callback)
+    results = enricher.enrich_state('GA', progress_callback=progress_callback)
 
     print(f'\n{'='*60}')
     print(f'RESULTS')
@@ -36,7 +36,7 @@ def main():
     print(f'Domains dead: {results["domains_dead"]}')
     print(f'Sources discovered: {results["sources_found"]}')
 
-    print(f'\n✓ Arizona enrichment complete!')
+    print(f'\n✓ Georgia enrichment complete!')
 
 
 if __name__ == '__main__':
