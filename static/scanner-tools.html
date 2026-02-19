@@ -755,24 +755,28 @@ footer .container {
     <div class="results-box" style="max-width: 100%;">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
         <div class="results-finds">
-          <h4>Real Findings</h4>
+          <h4>Signal Types Detected</h4>
           <ul>
-            <li><strong>Torrington, WY:</strong> $2,652 Caselle maintenance contract payment</li>
-            <li><strong>Evanston, WY:</strong> $4,450 Caselle technical support renewal</li>
+            <li><strong>Active RFPs:</strong> Solicitations for integrated financial/payroll systems</li>
+            <li><strong>Budget allocations:</strong> IT modernization and software procurement line items</li>
+            <li><strong>System complaints:</strong> Discussions of legacy system limitations and reporting gaps</li>
+            <li><strong>Vendor mentions:</strong> References to current ERP providers in meeting minutes</li>
           </ul>
         </div>
 
         <div class="results-finds">
-          <h4 style="color: var(--ink-muted);">False Positives Filtered</h4>
+          <h4 style="color: var(--ink-muted);">Precision Filtering</h4>
           <ul>
-            <li><strong>Rawlins, WY:</strong> Agenda submission deadline (not procurement)</li>
-            <li><strong>Douglas, WY:</strong> Street sweeper RFP (equipment, not ERP)</li>
+            <li><strong>Physical equipment RFPs:</strong> Vehicles, machinery, infrastructure (filtered out)</li>
+            <li><strong>Non-procurement mentions:</strong> Agenda deadlines, training sessions (filtered out)</li>
+            <li><strong>Unrelated software:</strong> GIS, CAD, public safety systems (filtered out)</li>
+            <li><strong>Context validation:</strong> Keywords verified within 50 words of tech terms</li>
           </ul>
         </div>
       </div>
 
       <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--sand-dark); text-align: center;">
-        <p style="font-size: 0.9rem; color: var(--ink-muted);"><strong>Hit rate:</strong> ~0.6% across 531 documents — coverage is the bottleneck, not analysis precision</p>
+        <p style="font-size: 0.9rem; color: var(--ink-muted);"><strong>Signal precision:</strong> 0.6% hit rate across 531 documents — scanning at scale finds the needles in the haystack</p>
       </div>
     </div>
   </div>
