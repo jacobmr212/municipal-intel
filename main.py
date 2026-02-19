@@ -1413,8 +1413,78 @@ async def assessment_dashboard(
     db: Session = Depends(get_db)
 ):
     """Assessment dashboard showing all sections."""
-    # TODO: Create assessment dashboard template
-    return RedirectResponse(url=f"/assessment/{assessment_id}/section/1", status_code=303)
+    # Verify assessment belongs to user
+    result = db.execute(text("""
+        SELECT id, status FROM "Assessment"
+        WHERE id = :id AND "userId" = :user_id
+    """), {"id": assessment_id, "user_id": user["id"]})
+
+    assessment_row = result.fetchone()
+    if not assessment_row:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    # Query section statuses
+    sections_result = db.execute(text("""
+        SELECT "sectionNumber", status
+        FROM "AssessmentSection"
+        WHERE "assessmentId" = :assessment_id
+        ORDER BY "sectionNumber"
+    """), {"assessment_id": assessment_id})
+
+    section_statuses = {row[0]: row[1] for row in sections_result.fetchall()}
+
+    # Build sections list with metadata
+    sections = [
+        {
+            "number": "1",
+            "title": "Organization Profile",
+            "description": "Tell us about your municipality and current systems",
+            "status": section_statuses.get("1", "not-started"),
+            "locked": False,
+            "estimated_minutes": 10
+        },
+        {
+            "number": "2",
+            "title": "General Ledger & Chart of Accounts",
+            "description": "Assess your GL structure and identify optimization opportunities",
+            "status": section_statuses.get("2", "not-started"),
+            "locked": section_statuses.get("1") != "completed",
+            "requires": "1",
+            "estimated_minutes": 7
+        },
+        {
+            "number": "3a",
+            "title": "Pay Code Inventory",
+            "description": "Document your current pay codes and structure",
+            "status": section_statuses.get("3a", "not-started"),
+            "locked": section_statuses.get("1") != "completed",
+            "requires": "1",
+            "estimated_minutes": 15
+        }
+    ]
+
+    # Calculate progress
+    completed_count = sum(1 for s in sections if s["status"] == "completed")
+    total_sections = len(sections)
+    overall_progress = int((completed_count / total_sections) * 100) if total_sections > 0 else 0
+
+    # Calculate estimated time remaining
+    estimated_time = sum(
+        s["estimated_minutes"]
+        for s in sections
+        if s["status"] != "completed" and not s["locked"]
+    )
+
+    return templates.TemplateResponse("assessment_dashboard.html", {
+        "request": request,
+        "user": user,
+        "assessment_id": assessment_id,
+        "sections": sections,
+        "overall_progress": overall_progress,
+        "completed_count": completed_count,
+        "total_sections": total_sections,
+        "estimated_time": estimated_time
+    })
 
 
 @app.get("/assessment/{assessment_id}/section/{section_number}", response_class=HTMLResponse)
