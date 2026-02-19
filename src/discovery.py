@@ -290,6 +290,52 @@ class SourceDiscovery:
                     logger.info(f"  ~ Found (low confidence): {found_url}")
                     break
 
+        # Fourth: Try JS rendering fallback for larger cities (pop >= 10K)
+        # Tech-forward cities often have JavaScript-heavy sites that fail with static requests
+        if not discovered and population >= 10000:
+            logger.info(f"  Trying JavaScript rendering fallback for {name} (pop {population:,})...")
+
+            try:
+                # Lazy import to avoid Playwright dependency if not needed
+                from .discovery_js import check_urls_with_js
+
+                # Build list of URLs to retry with JS (top priority patterns only)
+                js_retry_urls = []
+                for base_url in base_urls[:1]:  # Just primary base URL
+                    for pattern in priority_patterns[:5]:  # Top 5 patterns only
+                        js_retry_urls.append(f"{base_url}{pattern}")
+
+                # Try JS rendering in batch
+                js_results = check_urls_with_js(js_retry_urls, timeout=15000)
+
+                for original_url, final_url, source_type in js_results:
+                    # Avoid duplicates
+                    if any(d.url == final_url for d in discovered):
+                        continue
+
+                    # JS-rendered sources are high confidence
+                    confidence = 0.85
+                    if source_type == "civicplus":
+                        confidence = 0.9
+                    elif source_type == "granicus":
+                        confidence = 0.9
+
+                    source = DiscoveredSource(
+                        municipality=name,
+                        state=state,
+                        url=final_url,
+                        source_type=source_type,
+                        confidence=confidence,
+                        population=population,
+                    )
+                    discovered.append(source)
+                    logger.info(f"  ✓ Found via JS rendering: {final_url} ({source_type})")
+
+            except ImportError:
+                logger.warning("  Playwright not available - skipping JS rendering fallback")
+            except Exception as e:
+                logger.warning(f"  JS rendering fallback failed: {str(e)[:60]}")
+
         # Log if nothing found
         if not discovered:
             logger.warning(f"  ✗ No sources found for {name}, {state} ({domain}) — checked {checked_count} URLs")
