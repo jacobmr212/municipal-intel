@@ -1425,23 +1425,24 @@ function logout() {
 // SCANNER
 // ═══════════════════════════════
 
-const ALL_STATES = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
-  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
-  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
-  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
-  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
-];
+// Populated from /api/states on page load — only states with sources in the DB
+let _coveredStates = [];
 
 const CASELLE_STATES = ['UT','ID','WY','MT','NV','CO','NM','AZ','SD','ND','NE','KS','OK'];
 
-// Build state grid
-function buildStateGrid() {
+// Build state grid from DB-backed coverage list
+async function buildStateGrid() {
   const grid = document.getElementById('stateGrid');
   if (!grid) return;
-  grid.innerHTML = ALL_STATES.map(s =>
-    `<button class="state-btn" data-state="${s}" onclick="toggleState(this)">${s}</button>`
-  ).join('');
+  try {
+    const data = await fetch('/api/states').then(r => r.json());
+    _coveredStates = data.states || [];
+    grid.innerHTML = _coveredStates.map(s =>
+      `<button class="state-btn" data-state="${s.code}" title="${s.source_count} sources" onclick="toggleState(this)">${s.code}</button>`
+    ).join('');
+  } catch (e) {
+    grid.innerHTML = '<span style="font-size:0.78rem;color:var(--warm-gray)">Failed to load states</span>';
+  }
 }
 
 function toggleState(btn) {

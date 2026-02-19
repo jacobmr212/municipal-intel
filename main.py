@@ -452,6 +452,26 @@ async def app_shell(request: Request, user: dict = Depends(get_current_user)):
     })
 
 
+@app.get("/api/states")
+async def get_covered_states(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Return states that have municipal sources in the database, sorted alphabetically.
+    Used to populate the scanner state selector with only covered states.
+    """
+    from sqlalchemy import func
+    rows = (
+        db.query(Municipality.state, func.count(MunicipalSource.id).label("source_count"))
+        .join(MunicipalSource, MunicipalSource.municipality_id == Municipality.id)
+        .group_by(Municipality.state)
+        .order_by(Municipality.state)
+        .all()
+    )
+    return {"states": [{"code": row.state, "source_count": row.source_count} for row in rows]}
+
+
 @app.post("/api/scans")
 async def create_scan(
     config: ScanConfig,
