@@ -49,6 +49,26 @@
    - Auto-save functionality
    - Summary with total counts
 
+5. **Section 2: General Ledger & Chart of Accounts** ✅
+   - Conversational questionnaire with 6 key questions:
+     - GL account count
+     - Last COA review
+     - Inactive account percentage
+     - Fund count
+     - Month-end close duration
+     - Known issues (multi-select)
+   - Real-time contextual AI responses
+   - AI-powered analysis and findings
+
+6. **Claude AI Integration** ✅
+   - Anthropic Claude API client (claude-sonnet-4-5-20250929)
+   - analyze_coa_structure() function
+   - analyze_pay_codes() function
+   - State-specific analysis
+   - Structured findings with severity levels
+   - API endpoint: POST /api/assessments/{id}/analyze
+   - Graceful fallback if API key not configured
+
 ### 🚧 What Still Needs Porting
 
 #### **Section 1 Enhancements (Optional)**
@@ -162,12 +182,14 @@ Based on code complexity:
 | ✅ Union groups chip builder | ~50 lines | **COMPLETE** | ~30 min |
 | ✅ Section 3A Basic (pay code inventory) | ~250 JS lines | **COMPLETE** | ~2 hours |
 | ✅ Multi-select category component | ~30 lines | **COMPLETE** | ~30 min |
+| ✅ Section 2: GL & COA (6 questions) | ~260 JS lines | **COMPLETE** | ~2 hours |
+| ✅ AI Integration Module | ~180 Python lines | **COMPLETE** | ~1.5 hours |
+| ✅ AI Analysis API Endpoint | ~50 Python lines | **COMPLETE** | ~30 min |
 | Summary review card (optional) | ~200 lines | Not started | 2-3 hours |
-| Section 3A AI enhancements (optional) | ~500 lines | Not started | 4-6 hours |
+| Section 3A AI enhancements (optional) | ~200 lines | Not started | 2-3 hours |
 | Data import system | ~400 lines | Not started | 4-6 hours |
-| AI integration | ~200 lines | Not started | 2-3 hours |
 | Assessment dashboard | ~300 lines | Not started | 3-4 hours |
-| **TOTAL** | **~2,200 lines** | **32% complete** | **6/26 hours** |
+| **TOTAL** | **~2,200 lines** | **55% complete** | **12/26 hours** |
 
 This is a **multi-session project**. Recommended approach:
 
@@ -319,6 +341,43 @@ Regular Pay, Overtime, Vacation, Sick Leave, Comp Time, Holiday, Longevity, Shif
 - Calculation method (hourly rate, salary, flat amount, percent of base, percent of gross, other)
 - Pensionable status (yes/no/unsure)
 - FLSA overtime base status (yes/no/unsure)
+
+### Session 5 (Complete) — **This Session**
+**Files Modified:**
+- `src/ai_client.py` (NEW - Claude AI integration module)
+- `main.py` (MODIFIED - added Section 2 script + AI analysis endpoint)
+- `ASSESSMENT_PORT_PROGRESS.md` (UPDATED - marked Section 2 and AI integration complete)
+
+**Achievements:**
+- ✅ Created AI integration module with Anthropic Claude API
+- ✅ Built Section 2: General Ledger & Chart of Accounts (6 questions)
+- ✅ Implemented real-time AI analysis with Claude API
+- ✅ Added structured findings display with severity levels
+- ✅ Created AI analysis API endpoint: POST /api/assessments/{id}/analyze
+- ✅ State-specific analysis using organization profile
+- ✅ Graceful fallback if API key not configured
+
+**Code Stats:**
+- Added 525 lines total
+- AI module: ~180 Python lines
+- Section 2 script: ~260 JavaScript lines
+- AI API endpoint: ~50 Python lines
+
+**Section 2 Features:**
+- 6-question conversational flow
+- Real-time contextual AI responses
+- Multi-select for known issues
+- AI-powered COA bloat detection
+- Municipal best practice benchmarks
+- Severity-based findings (🚨 ⚠️ ⚡ ℹ️)
+
+**AI Integration:**
+- Model: claude-sonnet-4-5-20250929
+- analyze_coa_structure() - COA analysis with state-specific rules
+- analyze_pay_codes() - Pay code consolidation analysis
+- JSON-formatted findings with impact & recommendations
+- Temperature: 0 (deterministic)
+- Max tokens: 2048-4096
 
 ## Recommendation
 
