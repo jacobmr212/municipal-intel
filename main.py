@@ -337,9 +337,93 @@ class WaitlistRequest(BaseModel):
     interest: Optional[str] = None
     source: Optional[str] = None  # 'municipality' or 'consultant'
 
+
+def send_waitlist_notification(request: WaitlistRequest):
+    """Send email notification to admin when someone joins the waitlist."""
+    if not RESEND_API_KEY:
+        print(f"[DEV MODE] Waitlist signup: {request.email} ({request.source})")
+        return False
+
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+
+        # Build details based on source type
+        if request.source == 'municipality':
+            source_label = "Municipality Official"
+            details = f"""
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Name:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.name or 'Not provided'}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Title:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.title or 'Not provided'}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Municipality:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.municipality or 'Not provided'}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>State:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.state or 'Not provided'}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Current ERP:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.current_erp or 'Not provided'}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Open to Contact:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{'Yes' if request.open_to_contact else 'No' if request.open_to_contact is False else 'Not specified'}</td></tr>
+            """
+        elif request.source == 'consultant':
+            source_label = "Consultant"
+            details = f"""
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Name:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.name or 'Not provided'}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Company:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.company or 'Not provided'}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Interest:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.interest or 'Not provided'}</td></tr>
+            """
+        else:
+            source_label = "Unknown"
+            details = f"""
+            <tr><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;"><strong>Name:</strong></td><td style="padding: 8px; border-bottom: 1px solid #E5E1DC;">{request.name or 'Not provided'}</td></tr>
+            """
+
+        admin_email = os.getenv("ADMIN_EMAIL", "jacob@govtechdiagnostic.com")
+
+        params = {
+            "from": "GovTech Diagnostic <noreply@govtechdiagnostic.com>",
+            "to": [admin_email],
+            "subject": f"New Waitlist Signup: {source_label}",
+            "html": f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #1A1816; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
+                    .header {{ font-size: 24px; font-weight: 600; margin-bottom: 24px; color: #2B4AE0; }}
+                    .badge {{ display: inline-block; background: #4ADE80; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }}
+                    .badge.consultant {{ background: #FBBF24; color: #000; }}
+                    table {{ width: 100%; border-collapse: collapse; margin: 24px 0; background: #F9F8F6; border-radius: 8px; overflow: hidden; }}
+                    .footer {{ margin-top: 40px; padding-top: 24px; border-top: 1px solid #E5E1DC; font-size: 14px; color: #5C574F; }}
+                    .cta {{ display: inline-block; background: #2B4AE0; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; margin-top: 16px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">New Waitlist Signup</div>
+                    <div class="badge {'consultant' if request.source == 'consultant' else ''}">{source_label}</div>
+                    <p><strong>Email:</strong> {request.email}</p>
+                    <table>
+                        {details}
+                    </table>
+                    <a href="{APP_URL}/admin" class="cta">View in Admin Dashboard</a>
+                    <div class="footer">
+                        GovTech Diagnostic<br>
+                        Automated Waitlist Notification
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+        }
+
+        resend.Emails.send(params)
+        return True
+
+    except Exception as e:
+        print(f"Error sending waitlist notification: {e}")
+        return False
+
+
 @app.post("/api/waitlist")
 async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db)):
     """Add email to waitlist. Returns 200 even on duplicate to avoid leaking whether an email exists."""
+    is_new_signup = False
     try:
         db.execute(
             text("""
@@ -359,6 +443,16 @@ async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db))
                 )
             """)
         )
+
+        # Check if this is a new signup (not a duplicate)
+        existing = db.execute(
+            text("SELECT email FROM waitlist WHERE email = :email"),
+            {"email": request.email.lower().strip()}
+        ).fetchone()
+
+        if not existing:
+            is_new_signup = True
+
         db.execute(
             text("""
                 INSERT INTO waitlist
@@ -380,6 +474,11 @@ async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db))
             }
         )
         db.commit()
+
+        # Send notification email only for new signups
+        if is_new_signup:
+            send_waitlist_notification(request)
+
     except Exception:
         db.rollback()
     return {"status": "ok"}
