@@ -70,7 +70,12 @@ def run_scan(scan_id: str, config: dict):
             Municipality.population <= pop_max
         ).all()
 
-        total_cities = len(municipalities)
+        # Snapshot municipality data into plain tuples immediately.
+        # SQLAlchemy expires all loaded objects on commit (expire_on_commit=True),
+        # so after db.commit() or db.close() the ORM objects become detached/expired.
+        # Using plain tuples avoids lazy-load failures when the session cycles.
+        muni_rows = [(m.id, m.name, m.state, m.population) for m in municipalities]
+        total_cities = len(muni_rows)
         update_scan_progress(db, scan_id, "discovery", 10, f"Found {total_cities} cities to scan")
 
         sources_found = 0
@@ -79,82 +84,131 @@ def run_scan(scan_id: str, config: dict):
         leads_warm = 0
         leads_cold = 0
 
-        for idx, muni in enumerate(municipalities):
+        for idx, (muni_id, muni_name, muni_state, muni_pop) in enumerate(muni_rows):
             progress_pct = 10 + int((idx / total_cities) * 80)
-            update_scan_progress(db, scan_id, "scraping", progress_pct, f"Scanning {muni.name}, {muni.state}...")
+            update_scan_progress(db, scan_id, "scraping", progress_pct, f"Scanning {muni_name}, {muni_state}...")
 
             enriched_sources = db.query(MunicipalSource).filter(
-                MunicipalSource.municipality_id == muni.id
+                MunicipalSource.municipality_id == muni_id
             ).all()
 
-            if enriched_sources:
-                sources_found += len(enriched_sources)
-                for source in enriched_sources:
-                    try:
-                        scraped_docs = scraper.scrape_source(source)
-                        docs_scraped += len(scraped_docs)
+            if not enriched_sources:
+                continue
 
-                        for doc in scraped_docs:
-                            result = analyzer.analyze_document(
-                                doc,
-                                population=muni.population,
-                                min_score=30,
-                                source_type=source.source_type
-                            )
+            # Collect source data before closing DB — scraping can take minutes
+            # and Neon will drop idle SSL connections, causing PendingRollbackError.
+            source_snapshots = [
+                (s.url, s.source_type, s.platform, s.confidence,
+                 s.municipality_id, muni_name, muni_state, muni_pop)
+                for s in enriched_sources
+            ]
+            sources_found += len(enriched_sources)
+            db.close()
+            db = None
 
-                            if result:
-                                lead = Lead(
-                                    scan_id=scan_id,
-                                    municipality=result.municipality,
-                                    state=result.state,
-                                    population=result.population,
-                                    title=result.title,
-                                    url=result.url,
-                                    date=result.date,
-                                    source_type=result.source_type,
-                                    relevance_score=result.relevance_score,
-                                    lead_type=result.lead_type,
-                                    recommended_action=result.recommended_action,
-                                    signal_matches_json={
-                                        m.signal_type: {
-                                            "keyword": m.keyword,
-                                            "context": m.context,
-                                            "weight": m.weight
-                                        }
-                                        for m in result.signal_matches
+            for (src_url, src_type, src_platform, src_conf,
+                 src_muni_id, muni_name, muni_state, muni_pop) in source_snapshots:
+
+                # Rebuild a lightweight source object for the scraper.
+                # The scraper accesses source.municipality.name/.state so we
+                # include a mock municipality to avoid lazy-load on closed session.
+                class _Muni:
+                    pass
+                muni_mock = _Muni()
+                muni_mock.name = muni_name
+                muni_mock.state = muni_state
+                muni_mock.population = muni_pop
+
+                class _Src:
+                    pass
+                src = _Src()
+                src.url = src_url
+                src.source_type = src_type
+                src.platform = src_platform
+                src.confidence = src_conf
+                src.municipality_id = src_muni_id
+                src.municipality = muni_mock
+
+                try:
+                    scraped_docs = scraper.scrape_source(src)
+                    docs_scraped += len(scraped_docs)
+
+                    new_leads = []
+                    for doc in scraped_docs:
+                        result = analyzer.analyze_document(
+                            doc,
+                            population=muni_pop,
+                            min_score=30,
+                            source_type=src_type
+                        )
+
+                        if result:
+                            new_leads.append(Lead(
+                                scan_id=scan_id,
+                                municipality=result.municipality,
+                                state=result.state,
+                                population=result.population,
+                                title=result.title,
+                                url=result.url,
+                                date=result.date,
+                                source_type=result.source_type,
+                                relevance_score=result.relevance_score,
+                                lead_type=result.lead_type,
+                                recommended_action=result.recommended_action,
+                                signal_matches_json={
+                                    m.signal_type: {
+                                        "keyword": m.keyword,
+                                        "context": m.context,
+                                        "weight": m.weight
                                     }
-                                )
-                                db.add(lead)
-                                db.commit()
+                                    for m in result.signal_matches
+                                }
+                            ))
 
-                                if lead.lead_type == "hot":
-                                    leads_hot += 1
-                                elif lead.lead_type == "warm":
-                                    leads_warm += 1
-                                else:
-                                    leads_cold += 1
+                    # Reopen DB only when ready to write
+                    if new_leads:
+                        db = SessionLocal()
+                        for lead in new_leads:
+                            db.add(lead)
+                            db.commit()
+                            if lead.lead_type == "hot":
+                                leads_hot += 1
+                            elif lead.lead_type == "warm":
+                                leads_warm += 1
+                            else:
+                                leads_cold += 1
+                        db.close()
+                        db = None
 
-                    except Exception as e:
-                        print(f"    Error scraping {source.url}: {str(e)[:80]}")
-                        continue
+                except Exception as e:
+                    print(f"    Error scraping {src_url}: {str(e)[:80]}")
+                    continue
+
+            # Reopen DB for next city's progress update
+            db = SessionLocal()
 
         update_scan_progress(db, scan_id, "complete", 100, "Scan complete")
 
-        scan.status = "completed"
-        scan.completed_at = datetime.utcnow()
-        scan.stats_json = {
-            "sources_found": sources_found,
-            "docs_scraped": docs_scraped,
-            "leads_hot": leads_hot,
-            "leads_warm": leads_warm,
-            "leads_cold": leads_cold,
-            "total_leads": leads_hot + leads_warm + leads_cold
-        }
-        db.commit()
+        # Re-fetch scan from current session (original session was closed during loop)
+        scan = db.query(Scan).filter(Scan.id == scan_id).first()
+        if scan:
+            scan.status = "completed"
+            scan.completed_at = datetime.utcnow()
+            scan.stats_json = {
+                "sources_found": sources_found,
+                "docs_scraped": docs_scraped,
+                "leads_hot": leads_hot,
+                "leads_warm": leads_warm,
+                "leads_cold": leads_cold,
+                "total_leads": leads_hot + leads_warm + leads_cold
+            }
+            db.commit()
 
     except Exception as e:
         import traceback
         traceback.print_exc()
+        if db is None:
+            db = SessionLocal()
         scan = db.query(Scan).filter(Scan.id == scan_id).first()
         if scan:
             scan.status = "failed"
@@ -162,7 +216,8 @@ def run_scan(scan_id: str, config: dict):
             db.commit()
 
     finally:
-        db.close()
+        if db is not None:
+            db.close()
 
 
 def print_results(scan_id: str, tier: str):
