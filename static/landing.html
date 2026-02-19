@@ -102,20 +102,13 @@ body {
 .stagger-1 { transition-delay:0.1s; } .stagger-2 { transition-delay:0.2s; } .stagger-3 { transition-delay:0.3s; }
 .stagger-4 { transition-delay:0.4s; } .stagger-5 { transition-delay:0.5s; }
 
-/* ===== NAV ===== */
-nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(253,252,250,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(26,24,22,0.06); transition:all 0.3s; }
-nav.scrolled { box-shadow:0 1px 20px rgba(0,0,0,0.06); }
-nav .container { display:flex; align-items:center; justify-content:space-between; height:72px; }
-.nav-logo { font-weight:600; font-size:1.1rem; color:var(--ink); letter-spacing:-0.02em; }
-.nav-links { display:flex; align-items:center; gap:36px; }
-.nav-links a { font-size:0.9rem; font-weight:500; color:var(--ink-muted); text-decoration:none; transition:color 0.2s; }
-.nav-links a:hover { color:var(--ink); }
-.nav-cta { display:inline-flex; align-items:center; gap:8px; padding:10px 24px; background:var(--accent); color:var(--white) !important; border-radius:8px; font-weight:600 !important; transition:background 0.2s, transform 0.2s; }
-.nav-cta:hover { background:var(--accent-hover) !important; transform:translateY(-1px); }
-.nav-consultant { display:inline-flex; align-items:center; gap:5px; padding:8px 16px; border:1.5px solid var(--sand-dark); border-radius:8px; color:var(--warm) !important; font-weight:600 !important; transition:all 0.2s; }
-.nav-consultant:hover { border-color:var(--warm); background:var(--warm-light); }
-.nav-consultant svg { transition:transform 0.2s; }
-.nav-consultant:hover svg { transform:translate(2px,-2px); }
+/* ===== HEADER ===== */
+header { padding:24px 0; background:var(--cream); border-bottom:1px solid var(--sand-dark); position:fixed; top:0; left:0; right:0; z-index:100; backdrop-filter:blur(8px); background:rgba(253,252,250,0.95); }
+.header-content { display:flex; justify-content:space-between; align-items:center; }
+.logo { font-family:var(--serif); font-size:24px; color:var(--ink); text-decoration:none; font-weight:normal; }
+header nav { display:flex; gap:32px; }
+header nav a { color:var(--ink-light); text-decoration:none; font-size:15px; transition:color 0.2s; }
+header nav a:hover { color:var(--accent); }
 
 /* ===== HERO ===== */
 .hero { padding:160px 0 100px; position:relative; overflow:hidden; }
@@ -324,18 +317,19 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
 </head>
 <body>
 
-<!-- NAV -->
-<nav id="nav">
+<!-- HEADER -->
+<header>
   <div class="container">
-    <div class="nav-logo">GovTech Diagnostic</div>
-    <div class="nav-links">
-      <a href="#how-it-works">How it works</a>
-      <a href="/static/best-practices.html">Best Practices</a>
-      <a href="#consultants" class="nav-consultant">For consultants <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg></a>
-      <a href="#start" class="nav-cta">Join the waitlist</a>
+    <div class="header-content">
+      <a href="/" class="logo">GovTech Diagnostic</a>
+      <nav>
+        <a href="#how-it-works">How it works</a>
+        <a href="/static/best-practices.html">Best Practices</a>
+        <a href="#start">Join Waitlist</a>
+      </nav>
     </div>
   </div>
-</nav>
+</header>
 
 <!-- HERO -->
 <section class="hero">
