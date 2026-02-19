@@ -37,6 +37,7 @@ from src.auth import (
     APP_URL,
     RESEND_API_KEY
 )
+from src.ai_client import analyze_coa_structure, analyze_pay_codes
 
 # Initialize FastAPI app
 app = FastAPI(title="Municipal Intel", version="2.0")
@@ -1412,8 +1413,78 @@ async def assessment_dashboard(
     db: Session = Depends(get_db)
 ):
     """Assessment dashboard showing all sections."""
-    # TODO: Create assessment dashboard template
-    return RedirectResponse(url=f"/assessment/{assessment_id}/section/1", status_code=303)
+    # Verify assessment belongs to user
+    result = db.execute(text("""
+        SELECT id, status FROM "Assessment"
+        WHERE id = :id AND "userId" = :user_id
+    """), {"id": assessment_id, "user_id": user["id"]})
+
+    assessment_row = result.fetchone()
+    if not assessment_row:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    # Query section statuses
+    sections_result = db.execute(text("""
+        SELECT "sectionNumber", status
+        FROM "AssessmentSection"
+        WHERE "assessmentId" = :assessment_id
+        ORDER BY "sectionNumber"
+    """), {"assessment_id": assessment_id})
+
+    section_statuses = {row[0]: row[1] for row in sections_result.fetchall()}
+
+    # Build sections list with metadata
+    sections = [
+        {
+            "number": "1",
+            "title": "Organization Profile",
+            "description": "Tell us about your municipality and current systems",
+            "status": section_statuses.get("1", "not-started"),
+            "locked": False,
+            "estimated_minutes": 10
+        },
+        {
+            "number": "2",
+            "title": "General Ledger & Chart of Accounts",
+            "description": "Assess your GL structure and identify optimization opportunities",
+            "status": section_statuses.get("2", "not-started"),
+            "locked": section_statuses.get("1") != "completed",
+            "requires": "1",
+            "estimated_minutes": 7
+        },
+        {
+            "number": "3a",
+            "title": "Pay Code Inventory",
+            "description": "Document your current pay codes and structure",
+            "status": section_statuses.get("3a", "not-started"),
+            "locked": section_statuses.get("1") != "completed",
+            "requires": "1",
+            "estimated_minutes": 15
+        }
+    ]
+
+    # Calculate progress
+    completed_count = sum(1 for s in sections if s["status"] == "completed")
+    total_sections = len(sections)
+    overall_progress = int((completed_count / total_sections) * 100) if total_sections > 0 else 0
+
+    # Calculate estimated time remaining
+    estimated_time = sum(
+        s["estimated_minutes"]
+        for s in sections
+        if s["status"] != "completed" and not s["locked"]
+    )
+
+    return templates.TemplateResponse("assessment_dashboard.html", {
+        "request": request,
+        "user": user,
+        "assessment_id": assessment_id,
+        "sections": sections,
+        "overall_progress": overall_progress,
+        "completed_count": completed_count,
+        "total_sections": total_sections,
+        "estimated_time": estimated_time
+    })
 
 
 @app.get("/assessment/{assessment_id}/section/{section_number}", response_class=HTMLResponse)
@@ -1441,6 +1512,11 @@ async def assessment_section(
             "description": "Tell us about your municipality and current systems",
             "script": "section1_script.js"
         },
+        "2": {
+            "title": "General Ledger & Chart of Accounts",
+            "description": "Assess your GL structure and identify optimization opportunities",
+            "script": "section2_script.js"
+        },
         "3a": {
             "title": "Pay Code Inventory",
             "description": "Document your current pay codes and structure",
@@ -1458,6 +1534,8 @@ async def assessment_section(
     section_script = ""
     if section_number == "1":
         section_script = generate_section1_script()
+    elif section_number == "2":
+        section_script = generate_section2_script()
     elif section_number == "3a":
         section_script = generate_section3a_script()
 
@@ -1754,6 +1832,271 @@ window.handleUserInput = function(step, value) {{
   // Auto-save
   saveProgress();
 }};
+"""
+
+
+def generate_section2_script():
+    """Generate Section 2 conversational script for GL & COA assessment."""
+    return """
+// Section 2: General Ledger & Chart of Accounts
+// Conversational flow to assess COA structure and identify optimization opportunities
+
+// Start the conversation
+setTimeout(() => {
+  addMessage('assistant', 'Welcome to Section 2: General Ledger & Chart of Accounts!');
+  setTimeout(() => {
+    addMessage('assistant', 'This section helps identify bloat, inefficiencies, and optimization opportunities in your COA structure. It takes about 5-7 minutes.');
+    setTimeout(() => {
+      currentStep = 'account_count';
+      addMessage('assistant', 'Let\\'s start. Approximately how many GL accounts do you have in total?', 'select', {
+        options: [
+          { value: 'under-500', label: 'Under 500' },
+          { value: '500-1000', label: '500-1,000' },
+          { value: '1000-2000', label: '1,000-2,000' },
+          { value: '2000-5000', label: '2,000-5,000' },
+          { value: 'over-5000', label: 'Over 5,000' },
+          { value: 'not-sure', label: 'Not sure' }
+        ]
+      });
+    }, 800);
+  }, 800);
+}, 500);
+
+// Handle user input
+window.handleUserInput = function(step, value) {
+  if (step === 'account_count') {
+    answers['account_count'] = value;
+    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
+    addMessage('user', label);
+
+    setTimeout(() => {
+      if (value === '2000-5000' || value === 'over-5000') {
+        addMessage('assistant', 'That\\'s quite a few accounts. This could indicate COA bloat, which we\\'ll explore more.');
+      } else if (value === 'under-500') {
+        addMessage('assistant', 'That\\'s a lean structure. For small municipalities, this is typically ideal.');
+      } else {
+        addMessage('assistant', 'That\\'s in the normal range for most municipalities.');
+      }
+
+      setTimeout(() => {
+        currentStep = 'last_review';
+        addMessage('assistant', 'When was your Chart of Accounts last comprehensively reviewed?', 'select', {
+          options: [
+            { value: 'within-1-year', label: 'Within the last year' },
+            { value: '1-2-years', label: '1-2 years ago' },
+            { value: '2-5-years', label: '2-5 years ago' },
+            { value: '5-10-years', label: '5-10 years ago' },
+            { value: 'over-10-years', label: 'Over 10 years ago' },
+            { value: 'never', label: 'Never / Not sure' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'last_review') {
+    answers['last_review'] = value;
+    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
+    addMessage('user', label);
+
+    setTimeout(() => {
+      if (value === '5-10-years' || value === 'over-10-years' || value === 'never') {
+        addMessage('assistant', '⚠️ COAs that haven\\'t been reviewed in 5+ years almost always have significant bloat and structural issues.');
+      } else if (value === 'within-1-year' || value === '1-2-years') {
+        addMessage('assistant', 'Great! Regular reviews keep your COA clean and efficient.');
+      }
+
+      setTimeout(() => {
+        currentStep = 'inactive_percentage';
+        addMessage('assistant', 'Approximately what percentage of your GL accounts had NO transaction activity last fiscal year?', 'select', {
+          options: [
+            { value: 'under-5', label: 'Under 5%' },
+            { value: '5-15', label: '5-15%' },
+            { value: '15-30', label: '15-30%' },
+            { value: '30-50', label: '30-50%' },
+            { value: 'over-50', label: 'Over 50%' },
+            { value: 'not-sure', label: 'Not sure' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'inactive_percentage') {
+    answers['inactive_percentage'] = value;
+    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
+    addMessage('user', label);
+
+    setTimeout(() => {
+      if (value === '15-30' || value === '30-50' || value === 'over-50') {
+        addMessage('assistant', '⚠️ High percentages of inactive accounts signal COA bloat. Well-maintained municipal COAs typically have fewer than 10% inactive accounts.');
+      } else if (value === 'under-5') {
+        addMessage('assistant', 'Excellent! A low percentage of inactive accounts indicates a well-maintained COA.');
+      }
+
+      setTimeout(() => {
+        currentStep = 'fund_count';
+        addMessage('assistant', 'How many funds does your municipality operate?', 'select', {
+          options: [
+            { value: '1-3', label: '1-3 funds' },
+            { value: '4-7', label: '4-7 funds' },
+            { value: '8-15', label: '8-15 funds' },
+            { value: 'over-15', label: 'Over 15 funds' },
+            { value: 'not-sure', label: 'Not sure' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'fund_count') {
+    answers['fund_count'] = value;
+    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
+    addMessage('user', label);
+
+    setTimeout(() => {
+      if (value === 'over-15') {
+        addMessage('assistant', 'A large number of funds can complicate reporting. We\\'ll note this for our analysis.');
+      }
+
+      setTimeout(() => {
+        currentStep = 'month_close';
+        addMessage('assistant', 'How long does your typical month-end close process take?', 'select', {
+          options: [
+            { value: 'under-5-days', label: 'Under 5 business days' },
+            { value: '5-8-days', label: '5-8 business days' },
+            { value: '8-15-days', label: '8-15 business days' },
+            { value: 'over-15-days', label: 'Over 15 business days' },
+            { value: 'not-sure', label: 'Not sure' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'month_close') {
+    answers['month_close'] = value;
+    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
+    addMessage('user', label);
+
+    setTimeout(() => {
+      if (value === '8-15-days' || value === 'over-15-days') {
+        addMessage('assistant', '⚠️ Extended close cycles often stem from COA complexity, reconciliation difficulties, or manual processes.');
+      } else if (value === 'under-5-days') {
+        addMessage('assistant', 'Excellent! A quick close indicates efficient processes.');
+      }
+
+      setTimeout(() => {
+        currentStep = 'known_issues';
+        addMessage('assistant', 'Finally, are you aware of any specific issues with your current Chart of Accounts? (You can select "No known issues" if not)', 'multi-select-start', {
+          categories: [
+            { value: 'duplicate-accounts', label: 'Duplicate or similar accounts' },
+            { value: 'confusing-names', label: 'Confusing account names' },
+            { value: 'high-inactive', label: 'Too many inactive accounts' },
+            { value: 'mispostings', label: 'Frequent mispostings' },
+            { value: 'reporting-difficulty', label: 'Difficult to generate reports' },
+            { value: 'none', label: 'No known issues' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'known_issues_confirmed') {
+    // Multi-select completed via handleCategoryConfirm
+    setTimeout(() => {
+      addMessage('assistant', 'Great! I have all the information I need.');
+      setTimeout(() => {
+        addMessage('assistant', 'Let me analyze your COA structure using AI...');
+        currentStep = 'analyzing';
+
+        // Call AI analysis API
+        fetch(`/api/assessments/${ASSESSMENT_ID}/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section_number: '2',
+            data: {
+              account_count: answers['account_count'],
+              last_review: answers['last_review'],
+              inactive_percentage: answers['inactive_percentage'],
+              fund_count: answers['fund_count'],
+              month_close: answers['month_close'],
+              known_issues: answers['known_issues'] || []
+            }
+          })
+        })
+        .then(r => r.json())
+        .then(result => {
+          if (result.analysis && result.analysis.summary) {
+            setTimeout(() => {
+              addMessage('assistant', '✨ **Analysis Complete**');
+              setTimeout(() => {
+                addMessage('assistant', result.analysis.summary);
+                setTimeout(() => {
+                  if (result.analysis.findings && result.analysis.findings.length > 0) {
+                    addMessage('assistant', `I've identified ${result.analysis.findings.length} finding${result.analysis.findings.length > 1 ? 's' : ''} that you should be aware of:`);
+                    result.analysis.findings.forEach((finding, idx) => {
+                      setTimeout(() => {
+                        const severityEmoji = {
+                          'critical': '🚨',
+                          'high': '⚠️',
+                          'medium': '⚡',
+                          'low': 'ℹ️'
+                        }[finding.severity] || '•';
+                        addMessage('assistant', `${severityEmoji} **${finding.title}**\\n\\n${finding.description}\\n\\n**Impact:** ${finding.impact}\\n\\n**Recommendation:** ${finding.recommendation}`);
+                      }, idx * 1000);
+                    });
+                  }
+                  setTimeout(() => {
+                    finishSection();
+                  }, (result.analysis.findings?.length || 0) * 1000 + 1500);
+                }, 800);
+              }, 600);
+            }, 1000);
+          } else {
+            addMessage('assistant', 'AI analysis is currently unavailable, but your responses have been saved.');
+            setTimeout(() => {
+              finishSection();
+            }, 1500);
+          }
+        })
+        .catch(err => {
+          console.error('AI analysis error:', err);
+          addMessage('assistant', 'Unable to complete AI analysis, but your responses have been saved.');
+          setTimeout(() => {
+            finishSection();
+          }, 1500);
+        });
+      }, 800);
+    }, 600);
+  }
+
+  // Auto-save
+  saveProgress();
+};
+
+// Override handleCategoryConfirm for known issues
+window.handleCategoryConfirm = function() {
+  answers['known_issues'] = selectedCategories;
+
+  const categoryLabels = selectedCategories.map(c =>
+    document.querySelectorAll('.category-btn[data-category="' + c + '"]')[0]?.textContent || c
+  ).join(', ');
+
+  if (selectedCategories.length === 0 || (selectedCategories.length === 1 && selectedCategories[0] === 'none')) {
+    addMessage('user', 'No known issues');
+  } else {
+    addMessage('user', `Selected: ${categoryLabels}`);
+  }
+
+  currentStep = 'known_issues_confirmed';
+  window.handleUserInput('known_issues_confirmed', selectedCategories);
+};
+
+function finishSection() {
+  addMessage('assistant', 'Section 2 complete! Returning to dashboard...');
+  saveProgress('completed');
+  updateProgress(100);
+  setTimeout(() => {
+    window.location.href = '/app';
+  }, 2000);
+}
 """
 
 
@@ -2165,6 +2508,59 @@ async def save_assessment_section(
     db.commit()
 
     return {"success": True}
+
+
+class AIAnalysisRequest(BaseModel):
+    section_number: str
+    data: dict  # Section-specific data to analyze
+
+
+@app.post("/api/assessments/{assessment_id}/analyze")
+async def analyze_with_ai(
+    assessment_id: str,
+    request: AIAnalysisRequest,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Analyze assessment data using Claude AI."""
+    # Verify assessment belongs to user
+    result = db.execute(text("""
+        SELECT "organizationProfile" FROM "Assessment"
+        WHERE id = :id AND "userId" = :user_id
+    """), {"id": assessment_id, "user_id": user["id"]})
+
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    org_profile = json.loads(row[0]) if row[0] else {}
+
+    # Get state from organization profile
+    state = org_profile.get("state", "Unknown")
+
+    # Route to appropriate analysis function
+    if request.section_number == "2":
+        # COA Analysis
+        analysis = await analyze_coa_structure(
+            account_count=request.data.get("account_count", "unknown"),
+            last_review=request.data.get("last_review", "unknown"),
+            state=state,
+            inactive_percentage=request.data.get("inactive_percentage", "unknown")
+        )
+    elif request.section_number == "3a":
+        # Pay Code Analysis
+        analysis = await analyze_pay_codes(
+            pay_codes_by_category=request.data.get("payCodesByCategory", {}),
+            state=state,
+            retirement_system=org_profile.get("retirement_system", "Unknown")
+        )
+    else:
+        return {"error": "AI analysis not available for this section"}
+
+    if not analysis:
+        return {"error": "AI analysis unavailable (API key not configured)"}
+
+    return {"analysis": analysis}
 
 
 if __name__ == "__main__":
