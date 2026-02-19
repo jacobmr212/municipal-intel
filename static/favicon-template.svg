@@ -1,0 +1,19 @@
+<svg width="180" height="180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="180" height="180" fill="#1E3BC0" rx="20"/>
+
+  <!-- Stylized "G" lettermark -->
+  <g transform="translate(90, 90)">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="55" fill="none" stroke="white" stroke-width="12"/>
+
+    <!-- Gap in circle (right side) -->
+    <rect x="35" y="-15" width="25" height="30" fill="#1E3BC0"/>
+
+    <!-- Horizontal bar -->
+    <rect x="0" y="-6" width="40" height="12" fill="white"/>
+
+    <!-- Inner dot (representing municipal building/government) -->
+    <circle cx="0" cy="0" r="8" fill="white"/>
+  </g>
+</svg>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.og-image {
+  width: 1200px;
+  height: 630px;
+  background: linear-gradient(135deg, #1E3BC0 0%, #162DA8 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding: 60px;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+.og-image::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 800px;
+  height: 800px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+.og-image::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 50%;
+}
+.content {
+  position: relative;
+  z-index: 1;
+}
+.logo {
+  font-size: 72px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  letter-spacing: -1px;
+}
+.tagline {
+  font-size: 36px;
+  font-weight: 400;
+  opacity: 0.95;
+  line-height: 1.4;
+  max-width: 900px;
+  margin-bottom: 32px;
+}
+.subline {
+  font-size: 24px;
+  opacity: 0.8;
+  font-weight: 300;
+}
+.badge {
+  background: rgba(255,255,255,0.15);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 20px;
+  display: inline-block;
+  margin-top: 24px;
+  backdrop-filter: blur(10px);
+}
+</style>
+</head>
+<body>
+<div class="og-image">
+  <div class="content">
+    <div class="logo">GovTech Diagnostic</div>
+    <div class="tagline">Free ERP Readiness Assessment<br>for Municipalities</div>
+    <div class="subline">Analyze payroll codes, GL structure,<br>compliance gaps, and modernization readiness</div>
+    <div class="badge">govtechdiagnostic.com</div>
+  </div>
+</div>
+
+<script>
+// Instructions: Open this file in your browser, then:
+// 1. Press F12 to open DevTools
+// 2. Press Ctrl+Shift+P (or Cmd+Shift+P on Mac)
+// 3. Type "screenshot" and select "Capture node screenshot"
+// 4. Click on the .og-image div
+// 5. Save as og-image.png
+//
+// Or just take a screenshot of the image area and crop to 1200x630
+</script>
+</body>
+</html>
