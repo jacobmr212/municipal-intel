@@ -66,12 +66,26 @@ After discovering 111 CO sources and 42 ID sources, ran verification scan to con
   - Live state/source counter: "(49 states, 1,376 sources)"
 - ✅ **Top Coverage**: UT (177), TX (111), CO (111), IL (58), MN (57), CA (52), FL (50), OH (49), WA (46), MI (44)
 
+### JavaScript Fallback for Tech-Forward Cities (Feb 19, 2026 — commit 2cfda11)
+✅ **Fixed critical enrichment bottleneck preventing discovery of major metro sources:**
+- **Problem**: EnrichmentEngine had ~100 lines of inline discovery logic that bypassed SourceDiscovery
+- **Impact**: JavaScript fallback (for cities >= 10K pop) was never activated during enrichment
+- **Cities affected**: LA, SF, Oakland, NYC, Philadelphia, etc. (tech-forward sites with JS-heavy pages)
+- **Solution**: Refactored EnrichmentEngine to delegate to SourceDiscovery.discover_municipality()
+- **Code reduction**: Removed ~100 lines of duplicated logic
+- **Domain fix**: Now uses resolved_url instead of stale domain values
+- **File**: src/enrichment.py:236-307 (delegation pattern implemented)
+- **Next**: Re-run enrichment on underperforming states (CA 8.6%, NY 9.7%, PA 1.5%, NJ 4.6%) with NEW code
+- **Expected**: 50-100+ new sources in major metros, 3-4x coverage improvement in underperforming states
+
 ### Known Issues
 1. ~~Source coverage thin outside Utah~~ → ✅ Fixed: Nationwide coverage with 1,376+ sources across 49 jurisdictions
 2. ~~Neon SSL idle timeout during scans~~ → ✅ Fixed: Session-cycling pattern (scripts/verify_scan.py:98-106)
-3. Smaller/rural states rely primarily on meeting_minutes sources (limited procurement/budget page standardization)
-4. Hawaii enrichment still in progress (will auto-appear when complete via 30sec UI refresh)
-5. Landing page hero may need breakpoint check on some viewports
+3. ~~JS fallback not activating during enrichment~~ → ✅ Fixed: EnrichmentEngine now delegates to SourceDiscovery (commit 2cfda11)
+4. Smaller/rural states rely primarily on meeting_minutes sources (limited procurement/budget page standardization)
+5. Hawaii enrichment still in progress (will auto-appear when complete via 30sec UI refresh)
+6. Landing page hero may need breakpoint check on some viewports
+7. Playwright browser binaries may need installation: `playwright install chromium`
 
 ### Customer Status Categorization (Feb 18, 2026)
 ✅ **Implemented automatic customer status detection for leads:**
