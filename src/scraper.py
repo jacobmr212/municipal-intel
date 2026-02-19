@@ -271,6 +271,167 @@ class MunicipalScraper:
 
         return docs
 
+    def _scrape_primegov_portal(self, source, soup: BeautifulSoup) -> list[ScrapedDocument]:
+        """
+        Scrape meeting documents from a PrimeGov public portal.
+        PrimeGov is a React SPA but exposes a JSON API at /api/v2/PublicPortal/ListMeetings.
+        Falls back to page-text document if API is unavailable.
+        """
+        docs = []
+        municipality = source.municipality
+
+        # Extract the base URL (e.g. https://thorntonco.primegov.com)
+        from urllib.parse import urlparse
+        parsed = urlparse(source.url)
+        api_base = f"{parsed.scheme}://{parsed.netloc}"
+
+        # Try the PrimeGov API for recent meetings
+        api_url = f"{api_base}/api/v2/PublicPortal/ListMeetings"
+        try:
+            resp = self._fetch(api_url)
+            if resp and resp.headers.get("content-type", "").startswith("application/json"):
+                import json
+                data = resp.json()
+                meetings = data if isinstance(data, list) else data.get("meetings", data.get("items", []))
+                for meeting in meetings[:self.max_docs]:
+                    meeting_id = meeting.get("id") or meeting.get("meetingId")
+                    meeting_title = meeting.get("name") or meeting.get("title") or "Meeting"
+                    meeting_date = meeting.get("meetingDate") or meeting.get("date") or ""
+                    if not meeting_id:
+                        continue
+                    # Try to get the agenda PDF
+                    agenda_url = f"{api_base}/api/v2/PublicPortal/ListMeetingDocuments?meetingId={meeting_id}"
+                    doc_resp = self._fetch(agenda_url)
+                    if doc_resp and "json" in doc_resp.headers.get("content-type", ""):
+                        docs_data = doc_resp.json()
+                        for doc_info in (docs_data if isinstance(docs_data, list) else []):
+                            doc_url = doc_info.get("url") or doc_info.get("path") or ""
+                            if not doc_url:
+                                continue
+                            if not doc_url.startswith("http"):
+                                doc_url = api_base + doc_url
+                            pdf_resp = self._fetch(doc_url)
+                            if pdf_resp:
+                                text = self._extract_pdf_text(pdf_resp.content)
+                                if text and len(text) > 200:
+                                    doc_hash = hashlib.md5(text.encode()).hexdigest()
+                                    if doc_hash not in self.seen_hashes:
+                                        self.seen_hashes.add(doc_hash)
+                                        docs.append(ScrapedDocument(
+                                            municipality=municipality.name,
+                                            state=municipality.state,
+                                            title=f"{meeting_title} - {doc_info.get('name', 'Document')}",
+                                            url=doc_url,
+                                            text=text,
+                                            date=self._parse_date(meeting_date),
+                                        ))
+        except Exception as e:
+            logger.debug(f"PrimeGov API failed: {e}")
+
+        # Fallback: scrape the portal page as regular HTML
+        if not docs:
+            docs = self._scrape_links_page(source, source.url, soup)
+
+        # Final fallback: use page text itself
+        if not docs:
+            page_text = soup.get_text(separator="\n", strip=True)
+            if len(page_text) > 300:
+                docs.append(ScrapedDocument(
+                    municipality=municipality.name,
+                    state=municipality.state,
+                    title="PrimeGov Meeting Portal",
+                    url=source.url,
+                    text=page_text,
+                    date=self._parse_date(page_text),
+                ))
+
+        return docs
+
+    def _scrape_civicweb_portal(self, source, soup: BeautifulSoup) -> list[ScrapedDocument]:
+        """
+        Scrape meeting documents from a CivicWeb portal.
+        CivicWeb lists meeting types on MeetingTypeList.aspx;
+        individual meetings are at MeetingInformation.aspx?Id=XXXX.
+        """
+        docs = []
+        municipality = source.municipality
+
+        from urllib.parse import urlparse, urljoin as urljoin2
+        parsed = urlparse(source.url)
+        portal_base = f"{parsed.scheme}://{parsed.netloc}{parsed.path.rsplit('/', 1)[0]}/"
+
+        # Find links to individual meeting pages
+        meeting_page_links = []
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            text = a.get_text(strip=True)
+            if "MeetingInformation" in href or "Meeting" in href and "aspx" in href:
+                meeting_url = urljoin2(source.url, href)
+                if meeting_url not in meeting_page_links:
+                    meeting_page_links.append((meeting_url, text))
+
+        # Visit meeting type pages to get individual meetings
+        if not meeting_page_links:
+            # Try to find meeting type links from the main list
+            for a in soup.find_all("a", href=True):
+                href = a["href"]
+                if "MeetingType" in href or "Category" in href:
+                    meeting_type_url = urljoin2(source.url, href)
+                    resp = self._fetch(meeting_type_url)
+                    if resp:
+                        type_soup = BeautifulSoup(resp.text, "html.parser")
+                        for a2 in type_soup.find_all("a", href=True):
+                            if "MeetingInformation" in a2["href"]:
+                                meeting_url = urljoin2(meeting_type_url, a2["href"])
+                                meeting_page_links.append((meeting_url, a2.get_text(strip=True)))
+
+        # Scrape individual meeting pages for documents
+        for meeting_url, title in meeting_page_links[:self.max_docs]:
+            resp = self._fetch(meeting_url)
+            if not resp:
+                continue
+            m_soup = BeautifulSoup(resp.text, "html.parser")
+
+            # Look for document links on the meeting page
+            for a in m_soup.find_all("a", href=True):
+                href = a["href"]
+                if ".pdf" in href.lower() or "document" in href.lower():
+                    doc_url = urljoin2(meeting_url, href)
+                    pdf_resp = self._fetch(doc_url)
+                    if pdf_resp:
+                        if ".pdf" in href.lower() or "pdf" in pdf_resp.headers.get("content-type", ""):
+                            text = self._extract_pdf_text(pdf_resp.content)
+                        else:
+                            doc_soup = BeautifulSoup(pdf_resp.text, "html.parser")
+                            text = doc_soup.get_text(separator="\n", strip=True)
+                        if text and len(text) > 200:
+                            doc_hash = hashlib.md5(text.encode()).hexdigest()
+                            if doc_hash not in self.seen_hashes:
+                                self.seen_hashes.add(doc_hash)
+                                docs.append(ScrapedDocument(
+                                    municipality=municipality.name,
+                                    state=municipality.state,
+                                    title=f"{title} - {a.get_text(strip=True) or 'Document'}",
+                                    url=doc_url,
+                                    text=text,
+                                    date=self._parse_date(text),
+                                ))
+
+        # Fallback: use page text
+        if not docs:
+            page_text = soup.get_text(separator="\n", strip=True)
+            if len(page_text) > 300:
+                docs.append(ScrapedDocument(
+                    municipality=municipality.name,
+                    state=municipality.state,
+                    title="CivicWeb Meeting Portal",
+                    url=source.url,
+                    text=page_text,
+                    date=self._parse_date(page_text),
+                ))
+
+        return docs
+
     def scrape_source(self, source) -> list[ScrapedDocument]:
         """Scrape all available meeting documents from a discovered source."""
         docs = []
@@ -313,6 +474,18 @@ class MunicipalScraper:
             logger.info(f"    Using Utah PMN portal scraper")
             docs = self._scrape_utah_portal(source, soup)
             logger.info(f"    Found {len(docs)} documents from portal")
+            return docs
+
+        if source.platform == "primegov":
+            logger.info(f"    Using PrimeGov portal scraper")
+            docs = self._scrape_primegov_portal(source, soup)
+            logger.info(f"    Found {len(docs)} documents from PrimeGov")
+            return docs
+
+        if source.platform == "civicweb":
+            logger.info(f"    Using CivicWeb portal scraper")
+            docs = self._scrape_civicweb_portal(source, soup)
+            logger.info(f"    Found {len(docs)} documents from CivicWeb")
             return docs
 
         # Strategy 1: Look for direct links to meeting documents
