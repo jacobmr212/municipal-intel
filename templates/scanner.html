@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner — Municipal Intel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgb(59, 130, 246); }
+            50% { border-color: rgb(147, 197, 253); }
+        }
+        .scanning { animation: pulse-border 2s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">Municipal Intel</h1>
+                    <span class="ml-4 px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">Scanner</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">{{ user.email }}</span>
+                    <span class="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">{{ user.role }}</span>
+                    <a href="/app" class="text-sm text-blue-600 hover:text-blue-800">← Back to Dashboard</a>
+                    <a href="/logout" class="text-sm text-gray-600 hover:text-gray-800">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Coverage Stats -->
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-blue-900">Nationwide Coverage</h2>
+                    <p class="text-sm text-blue-700" id="coverage-stats">Loading coverage data...</p>
+                </div>
+                <button onclick="refreshCoverage()" class="px-3 py-1 text-sm text-blue-700 hover:text-blue-900">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scan Configuration -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Configure Scan</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- State Selector -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        States
+                        <span class="text-xs text-gray-500 ml-1">(multi-select)</span>
+                    </label>
+                    <select id="state-select" multiple
+                            class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 h-48">
+                        <!-- Populated via JavaScript -->
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        <span id="state-count">0</span> states selected
+                    </p>
+                </div>
+
+                <!-- Population Tier -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Population Tier</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" value="micro" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Micro (&lt; 2.5K)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="small" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-gray-700">Small (2.5K – 10K)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="small-mid" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Small-Mid (10K – 25K)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="mid" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Mid (25K – 50K)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="large" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Large (50K+)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Source Types -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Source Types</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" value="meeting_minutes" class="source-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-gray-700">Meeting Minutes</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="procurement" class="source-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-gray-700">Procurement Portals</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="state_portal" class="source-checkbox rounded text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">State Portals</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-6 flex items-center justify-between">
+                <div>
+                    <button onclick="selectAllStates()" class="text-sm text-blue-600 hover:text-blue-800 mr-4">Select All States</button>
+                    <button onclick="clearSelection()" class="text-sm text-gray-600 hover:text-gray-800">Clear All</button>
+                </div>
+                <button id="start-scan-btn" onclick="startScan()"
+                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors">
+                    Start Scan
+                </button>
+            </div>
+        </div>
+
+        <!-- Scan Progress (Hidden initially) -->
+        <div id="scan-progress" class="hidden bg-white shadow rounded-lg p-6 mb-6 border-2 scanning">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Scan in Progress</h3>
+                <button onclick="stopPolling()" class="text-sm text-gray-600 hover:text-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between text-sm text-gray-600 mb-1">
+                    <span id="progress-phase">Initializing...</span>
+                    <span id="progress-pct">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-600" id="progress-message">Starting scan...</p>
+
+            <!-- Quick Stats -->
+            <div class="mt-4 grid grid-cols-4 gap-4 text-center">
+                <div>
+                    <div class="text-2xl font-bold text-gray-900" id="stat-sources">0</div>
+                    <div class="text-xs text-gray-500">Sources</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900" id="stat-docs">0</div>
+                    <div class="text-xs text-gray-500">Docs</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-blue-600" id="stat-hot">0</div>
+                    <div class="text-xs text-gray-500">HOT</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-orange-600" id="stat-warm">0</div>
+                    <div class="text-xs text-gray-500">WARM</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div id="results-section" class="hidden bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Scan Results</h3>
+                <div class="flex items-center space-x-2">
+                    <select id="lead-filter" onchange="filterResults()"
+                            class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="all">All Leads</option>
+                        <option value="hot">HOT Only</option>
+                        <option value="warm">WARM Only</option>
+                        <option value="cold">COLD Only</option>
+                    </select>
+                    <button onclick="exportResults()" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800">
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Municipality</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signals</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody" class="bg-white divide-y divide-gray-200">
+                        <!-- Populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScanId = null;
+        let pollInterval = null;
+        let allLeads = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStates();
+            refreshCoverage();
+            updateStateCount();
+
+            // Auto-refresh coverage every 30 seconds
+            setInterval(refreshCoverage, 30000);
+
+            // Update state count when selection changes
+            document.getElementById('state-select').addEventListener('change', updateStateCount);
+        });
+
+        async function loadStates() {
+            try {
+                const response = await fetch('/api/states');
+                const data = await response.json();
+                const select = document.getElementById('state-select');
+
+                data.states.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.abbr;
+                    option.textContent = `${state.name} (${state.source_count} sources)`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load states:', error);
+            }
+        }
+
+        async function refreshCoverage() {
+            try {
+                const response = await fetch('/api/states');
+                const data = await response.json();
+                const statsEl = document.getElementById('coverage-stats');
+                statsEl.textContent = `${data.states.length} states, ${data.total_sources} sources`;
+            } catch (error) {
+                console.error('Failed to refresh coverage:', error);
+            }
+        }
+
+        function updateStateCount() {
+            const select = document.getElementById('state-select');
+            const count = select.selectedOptions.length;
+            document.getElementById('state-count').textContent = count;
+        }
+
+        function selectAllStates() {
+            const select = document.getElementById('state-select');
+            for (let i = 0; i < select.options.length; i++) {
+                select.options[i].selected = true;
+            }
+            updateStateCount();
+        }
+
+        function clearSelection() {
+            const select = document.getElementById('state-select');
+            select.selectedIndex = -1;
+            updateStateCount();
+        }
+
+        async function startScan() {
+            // Gather configuration
+            const stateSelect = document.getElementById('state-select');
+            const selectedStates = Array.from(stateSelect.selectedOptions).map(opt => opt.value);
+
+            const tierCheckboxes = document.querySelectorAll('.tier-checkbox:checked');
+            const selectedTiers = Array.from(tierCheckboxes).map(cb => cb.value);
+
+            const sourceCheckboxes = document.querySelectorAll('.source-checkbox:checked');
+            const selectedSources = Array.from(sourceCheckboxes).map(cb => cb.value);
+
+            // Validation
+            if (selectedStates.length === 0) {
+                alert('Please select at least one state');
+                return;
+            }
+            if (selectedTiers.length === 0) {
+                alert('Please select at least one population tier');
+                return;
+            }
+            if (selectedSources.length === 0) {
+                alert('Please select at least one source type');
+                return;
+            }
+
+            // Start scan
+            const config = {
+                states: selectedStates,
+                tiers: selectedTiers,
+                source_types: selectedSources
+            };
+
+            try {
+                document.getElementById('start-scan-btn').disabled = true;
+                document.getElementById('start-scan-btn').textContent = 'Starting...';
+
+                const response = await fetch('/api/scan/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const data = await response.json();
+                currentScanId = data.scan_id;
+
+                // Show progress section
+                document.getElementById('scan-progress').classList.remove('hidden');
+                document.getElementById('results-section').classList.add('hidden');
+
+                // Start polling
+                startPolling();
+
+            } catch (error) {
+                console.error('Failed to start scan:', error);
+                alert('Failed to start scan: ' + error.message);
+                document.getElementById('start-scan-btn').disabled = false;
+                document.getElementById('start-scan-btn').textContent = 'Start Scan';
+            }
+        }
+
+        function startPolling() {
+            stopPolling(); // Clear any existing interval
+            pollInterval = setInterval(pollScanStatus, 2000);
+            pollScanStatus(); // Immediate first poll
+        }
+
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        async function pollScanStatus() {
+            if (!currentScanId) return;
+
+            try {
+                const response = await fetch(`/api/scan/status/${currentScanId}`);
+                const data = await response.json();
+
+                // Update progress
+                document.getElementById('progress-phase').textContent = data.progress_phase || 'Processing';
+                document.getElementById('progress-pct').textContent = `${data.progress_pct}%`;
+                document.getElementById('progress-bar').style.width = `${data.progress_pct}%`;
+                document.getElementById('progress-message').textContent = data.progress_message || '';
+
+                // Update stats
+                if (data.stats) {
+                    document.getElementById('stat-sources').textContent = data.stats.sources_checked || 0;
+                    document.getElementById('stat-docs').textContent = data.stats.docs_scraped || 0;
+                    document.getElementById('stat-hot').textContent = data.stats.leads_hot || 0;
+                    document.getElementById('stat-warm').textContent = data.stats.leads_warm || 0;
+                }
+
+                // Check if complete
+                if (data.status === 'completed') {
+                    stopPolling();
+                    loadResults(currentScanId);
+                    document.getElementById('scan-progress').classList.remove('scanning');
+                    document.getElementById('start-scan-btn').disabled = false;
+                    document.getElementById('start-scan-btn').textContent = 'Start New Scan';
+                } else if (data.status === 'failed') {
+                    stopPolling();
+                    alert('Scan failed: ' + (data.progress_message || 'Unknown error'));
+                    document.getElementById('start-scan-btn').disabled = false;
+                    document.getElementById('start-scan-btn').textContent = 'Start Scan';
+                }
+
+            } catch (error) {
+                console.error('Failed to poll scan status:', error);
+            }
+        }
+
+        async function loadResults(scanId) {
+            try {
+                const response = await fetch(`/api/scan/results/${scanId}`);
+                const data = await response.json();
+                allLeads = data.leads || [];
+
+                // Show results section
+                document.getElementById('results-section').classList.remove('hidden');
+
+                // Populate table
+                filterResults();
+
+            } catch (error) {
+                console.error('Failed to load results:', error);
+            }
+        }
+
+        function filterResults() {
+            const filter = document.getElementById('lead-filter').value;
+            const filteredLeads = filter === 'all'
+                ? allLeads
+                : allLeads.filter(lead => lead.lead_type === filter);
+
+            const tbody = document.getElementById('results-tbody');
+            tbody.innerHTML = '';
+
+            filteredLeads.forEach(lead => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                const typeColor = lead.lead_type === 'hot' ? 'text-blue-800 bg-blue-100'
+                    : lead.lead_type === 'warm' ? 'text-orange-800 bg-orange-100'
+                    : 'text-gray-800 bg-gray-100';
+
+                const signals = Object.keys(lead.signal_matches || {}).join(', ');
+
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${typeColor}">
+                            ${lead.lead_type.toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        ${lead.municipality}, ${lead.state}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900">
+                        ${lead.title.substring(0, 60)}${lead.title.length > 60 ? '...' : ''}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        ${Math.round(lead.relevance_score)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        ${signals.substring(0, 50)}${signals.length > 50 ? '...' : ''}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                        <a href="${lead.url}" target="_blank" class="text-blue-600 hover:text-blue-800">View</a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function exportResults() {
+            // Simple CSV export
+            const filter = document.getElementById('lead-filter').value;
+            const filteredLeads = filter === 'all'
+                ? allLeads
+                : allLeads.filter(lead => lead.lead_type === filter);
+
+            let csv = 'Type,Municipality,State,Title,Score,Signals,URL\n';
+            filteredLeads.forEach(lead => {
+                const signals = Object.keys(lead.signal_matches || {}).join('; ');
+                csv += `${lead.lead_type},${lead.municipality},${lead.state},"${lead.title}",${Math.round(lead.relevance_score)},"${signals}",${lead.url}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scan-results-${currentScanId}.csv`;
+            a.click();
+        }
+    </script>
+</body>
+</html>

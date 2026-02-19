@@ -627,6 +627,25 @@ async def app_shell(request: Request, user: dict = Depends(get_current_user)):
     })
 
 
+@app.get("/scanner", response_class=HTMLResponse)
+async def scanner(request: Request, user: dict = Depends(require_role(["consultant", "admin"]))):
+    """
+    Dedicated scanner page for consultants and admins.
+    Full-width interface for configuring and running scans across municipal sources.
+
+    Features:
+      - Dynamic state selector (all 49 covered states)
+      - Population tier filter
+      - Source type selection
+      - Real-time scan progress
+      - Live results table
+    """
+    return templates.TemplateResponse("scanner.html", {
+        "request": request,
+        "user": user
+    })
+
+
 @app.get("/admin/v2", response_class=HTMLResponse)
 async def admin_v2(request: Request, user: dict = Depends(require_role("admin"))):
     """
