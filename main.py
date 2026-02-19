@@ -659,7 +659,7 @@ async def test_assessment(user: dict = Depends(get_current_user), db: Session = 
         VALUES (:id, :user_id, 'draft', :now, :now)
     """), {
         "id": assessment_id,
-        "user_id": user["id"],
+        "user_id": user["user_id"],
         "now": datetime.utcnow()
     })
     db.commit()
@@ -1455,7 +1455,7 @@ async def assessment_dashboard(
     result = db.execute(text("""
         SELECT id, status FROM "Assessment"
         WHERE id = :id AND "userId" = :user_id
-    """), {"id": assessment_id, "user_id": user["id"]})
+    """), {"id": assessment_id, "user_id": user["user_id"]})
 
     assessment_row = result.fetchone()
     if not assessment_row:
@@ -1538,7 +1538,7 @@ async def assessment_section(
     result = db.execute(text("""
         SELECT id FROM "Assessment"
         WHERE id = :id AND "userId" = :user_id
-    """), {"id": assessment_id, "user_id": user["id"]})
+    """), {"id": assessment_id, "user_id": user["user_id"]})
 
     if not result.fetchone():
         raise HTTPException(status_code=404, detail="Assessment not found")
@@ -2419,7 +2419,7 @@ async def create_assessment(
             VALUES (:id, :user_id, 'draft', :now, :now)
         """), {
             "id": assessment_id,
-            "user_id": user["id"],
+            "user_id": user["user_id"],  # Fixed: use user_id instead of id
             "now": datetime.utcnow()
         })
         db.commit()
@@ -2443,7 +2443,7 @@ async def list_assessments(
         FROM "Assessment"
         WHERE "userId" = :user_id
         ORDER BY "createdAt" DESC
-    """), {"user_id": user["id"]})
+    """), {"user_id": user["user_id"]})
 
     assessments = []
     for row in result:
@@ -2469,7 +2469,7 @@ async def get_assessment(
         SELECT id, status, "organizationProfile", "createdAt", "updatedAt"
         FROM "Assessment"
         WHERE id = :id AND "userId" = :user_id
-    """), {"id": assessment_id, "user_id": user["id"]})
+    """), {"id": assessment_id, "user_id": user["user_id"]})
 
     row = result.fetchone()
     if not row:
@@ -2515,7 +2515,7 @@ async def save_assessment_section(
     result = db.execute(text("""
         SELECT id FROM "Assessment"
         WHERE id = :id AND "userId" = :user_id
-    """), {"id": assessment_id, "user_id": user["id"]})
+    """), {"id": assessment_id, "user_id": user["user_id"]})
 
     if not result.fetchone():
         raise HTTPException(status_code=404, detail="Assessment not found")
@@ -2570,7 +2570,7 @@ async def analyze_with_ai(
     result = db.execute(text("""
         SELECT "organizationProfile" FROM "Assessment"
         WHERE id = :id AND "userId" = :user_id
-    """), {"id": assessment_id, "user_id": user["id"]})
+    """), {"id": assessment_id, "user_id": user["user_id"]})
 
     row = result.fetchone()
     if not row:
