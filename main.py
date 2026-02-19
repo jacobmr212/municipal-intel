@@ -1167,6 +1167,214 @@ async def update_user_role(
     return {"success": True, "user_id": user_id, "role": update.role}
 
 
+@app.get("/api/admin/analytics")
+async def get_admin_analytics(
+    user: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Get comprehensive admin analytics for Assessment platform.
+
+    Returns:
+    - Overview statistics (total assessments, completed, in-progress, draft)
+    - Section interest tracking (which locked sections users want most)
+    - Section completion rates
+    - User demographics
+    - Recent activity
+    - User growth trends
+    """
+    try:
+        # Overview statistics
+        overview_result = db.execute(text("""
+            SELECT
+                COUNT(*) as total,
+                COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+                COUNT(CASE WHEN status = 'in-progress' THEN 1 END) as in_progress,
+                COUNT(CASE WHEN status = 'draft' THEN 1 END) as draft
+            FROM "Assessment"
+        """))
+        overview_row = overview_result.fetchone()
+
+        total_users_result = db.execute(text('SELECT COUNT(*) FROM users'))
+        total_users = total_users_result.fetchone()[0]
+
+        anonymous_count_result = db.execute(text('SELECT COUNT(DISTINCT "sessionId") FROM "AnonymousAssessment"'))
+        anonymous_count = anonymous_count_result.fetchone()[0]
+
+        # Section interest tracking - NEW FEATURE
+        # Tracks which locked sections (4-8) users are most interested in
+        section_interest_result = db.execute(text("""
+            SELECT
+                a.id as assessment_id,
+                a."userId",
+                a."interestedSections",
+                u.email,
+                a."organizationProfile"
+            FROM "Assessment" a
+            JOIN users u ON a."userId" = u.id
+            WHERE a."interestedSections" IS NOT NULL
+            AND jsonb_array_length(a."interestedSections") > 0
+        """))
+
+        # Process section interest data
+        section_interest_counts = {}
+        section_interest_details = {}
+
+        for row in section_interest_result:
+            interested_sections = row[2] if row[2] else []
+            user_email = row[3]
+            org_profile = row[4] if row[4] else {}
+
+            for section_num in interested_sections:
+                # Count
+                if section_num not in section_interest_counts:
+                    section_interest_counts[section_num] = 0
+                section_interest_counts[section_num] += 1
+
+                # Details
+                if section_num not in section_interest_details:
+                    section_interest_details[section_num] = []
+
+                section_interest_details[section_num].append({
+                    "userEmail": user_email,
+                    "organization": org_profile.get('organization') if isinstance(org_profile, dict) else None,
+                    "state": org_profile.get('state') if isinstance(org_profile, dict) else None,
+                })
+
+        # Section completion rates
+        section_completion_result = db.execute(text("""
+            SELECT
+                "sectionNumber",
+                COUNT(*) as total,
+                COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed
+            FROM "AssessmentSection"
+            GROUP BY "sectionNumber"
+            ORDER BY "sectionNumber"
+        """))
+
+        section_completion = {}
+        for row in section_completion_result:
+            section_num = row[0]
+            total = row[1]
+            completed = row[2]
+            section_completion[section_num] = {
+                "total": total,
+                "completed": completed,
+                "completion_rate": round((completed / total * 100) if total > 0 else 0, 1)
+            }
+
+        # Demographics (state distribution)
+        demographics_result = db.execute(text("""
+            SELECT
+                a."organizationProfile"->>'state' as state,
+                COUNT(*) as count
+            FROM "Assessment" a
+            WHERE a."organizationProfile"->>'state' IS NOT NULL
+            GROUP BY a."organizationProfile"->>'state'
+            ORDER BY count DESC
+            LIMIT 10
+        """))
+
+        state_distribution = {}
+        for row in demographics_result:
+            state = row[0]
+            count = row[1]
+            if state:
+                state_distribution[state] = count
+
+        # Recent activity (last 10 assessments)
+        recent_activity_result = db.execute(text("""
+            SELECT
+                a.id,
+                a.status,
+                a."createdAt",
+                a."completedAt",
+                u.email,
+                a."organizationProfile"->>'organization' as organization,
+                a."organizationProfile"->>'state' as state
+            FROM "Assessment" a
+            JOIN users u ON a."userId" = u.id
+            ORDER BY a."createdAt" DESC
+            LIMIT 10
+        """))
+
+        recent_activity = []
+        for row in recent_activity_result:
+            recent_activity.append({
+                "assessmentId": row[0],
+                "status": row[1],
+                "createdAt": row[2].isoformat() if row[2] else None,
+                "completedAt": row[3].isoformat() if row[3] else None,
+                "userEmail": row[4],
+                "organization": row[5],
+                "state": row[6]
+            })
+
+        # User growth (assessments created per week, last 12 weeks)
+        user_growth_result = db.execute(text("""
+            SELECT
+                DATE_TRUNC('week', "createdAt") as week,
+                COUNT(*) as count
+            FROM "Assessment"
+            WHERE "createdAt" >= NOW() - INTERVAL '12 weeks'
+            GROUP BY week
+            ORDER BY week
+        """))
+
+        user_growth = []
+        for row in user_growth_result:
+            user_growth.append({
+                "week": row[0].isoformat() if row[0] else None,
+                "count": row[1]
+            })
+
+        return {
+            "overview": {
+                "totalAssessments": overview_row[0],
+                "completed": overview_row[1],
+                "inProgress": overview_row[2],
+                "draft": overview_row[3],
+                "totalUsers": total_users,
+                "anonymousCount": anonymous_count
+            },
+            "sectionInterest": {
+                "counts": section_interest_counts,
+                "details": section_interest_details
+            },
+            "sectionCompletion": section_completion,
+            "demographics": {
+                "stateDistribution": state_distribution
+            },
+            "recentActivity": recent_activity,
+            "userGrowth": user_growth
+        }
+
+    except Exception as e:
+        # Return empty data structure if Assessment tables don't exist yet
+        # This allows the endpoint to work even before first assessment is created
+        return {
+            "overview": {
+                "totalAssessments": 0,
+                "completed": 0,
+                "inProgress": 0,
+                "draft": 0,
+                "totalUsers": total_users if 'total_users' in locals() else 0,
+                "anonymousCount": 0
+            },
+            "sectionInterest": {
+                "counts": {},
+                "details": {}
+            },
+            "sectionCompletion": {},
+            "demographics": {
+                "stateDistribution": {}
+            },
+            "recentActivity": [],
+            "userGrowth": [],
+            "error": str(e)
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
