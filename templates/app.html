@@ -407,64 +407,26 @@ body {
   min-height: 400px;
 }
 
-.results-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--stone);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.results-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.results-stats {
-  display: flex;
-  gap: 1rem;
+/* Ghost / small button variants */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--stone);
+  color: var(--text-secondary);
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
   font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
-
-.stat-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--text-secondary);
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
 }
+.btn-sm { font-size: 0.78rem; padding: 0.28rem 0.7rem; }
 
-.dot-hot { width: 7px; height: 7px; border-radius: 50%; background: var(--hot); display: inline-block; }
-.dot-warm { width: 7px; height: 7px; border-radius: 50%; background: var(--warm); display: inline-block; }
-
-/* Progress bar */
-.scan-progress {
-  padding: 2rem 1.5rem;
-  display: none;
-}
-
-.progress-label {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.75rem;
-}
-
-.progress-bar-track {
-  height: 6px;
-  background: var(--stone);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 3px;
-  transition: width 0.4s ease;
-  width: 0%;
-}
-
-/* Empty state */
+/* ── Empty state ── */
 .results-empty {
   display: flex;
   flex-direction: column;
@@ -474,56 +436,196 @@ body {
   text-align: center;
   color: var(--warm-gray);
 }
-
 .results-empty-icon {
-  font-size: 2rem;
-  margin-bottom: 0.75rem;
-  opacity: 0.4;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 1rem;
+  opacity: 0.35;
 }
-
-.results-empty p { font-size: 0.9rem; }
-
-/* Lead rows */
-.leads-list {
-  display: none;
-}
-
-.lead-row {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--stone);
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 1rem;
-  align-items: start;
-}
-
-.lead-row:last-child { border-bottom: none; }
-
-.lead-city {
-  font-size: 0.9rem;
+.results-empty-title {
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
 }
+.results-empty p { font-size: 0.88rem; max-width: 320px; line-height: 1.5; }
 
-.lead-title {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  line-height: 1.45;
+/* ── Scan progress view ── */
+.scan-progress-view {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
 }
+.progress-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.progress-bar-track {
+  height: 6px;
+  background: var(--stone);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+.progress-phase-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+.progress-phase-label { font-weight: 600; color: var(--text); }
+.progress-city-label { color: var(--text-secondary); font-size: 0.82rem; }
 
-.lead-source {
+.progress-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.progress-stat {
+  background: var(--sand);
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+.progress-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.progress-stat-label {
   font-size: 0.72rem;
   color: var(--warm-gray);
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.progress-time-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
 }
 
-.lead-score {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-align: right;
+/* ── Results view ── */
+.results-view {
+  display: none;
+  flex-direction: column;
 }
+.results-summary-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--stone);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.results-summary-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.results-actions { display: flex; gap: 0.5rem; }
+
+.filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--stone);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.filter-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.filter-pill {
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  border: 1px solid var(--stone);
+  background: var(--white);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.filter-pill:hover { border-color: var(--accent); color: var(--accent); }
+.filter-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.filter-pill.pill-hot.active  { background: #DC3545; border-color: #DC3545; }
+.filter-pill.pill-warm.active { background: #D97706; border-color: #D97706; }
+.filter-pill.pill-cold.active { background: #3B82F6; border-color: #3B82F6; }
+
+.view-toggle { display: flex; gap: 0; border: 1px solid var(--stone); border-radius: 6px; overflow: hidden; }
+.view-toggle-btn {
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  background: var(--white);
+  border: none;
+  border-right: 1px solid var(--stone);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.view-toggle-btn:last-child { border-right: none; }
+.view-toggle-btn.active { background: var(--accent); color: #fff; }
+
+/* ── Table view ── */
+.leads-table-wrap { overflow-x: auto; }
+.leads-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.leads-table th {
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  border-bottom: 1px solid var(--stone);
+  background: var(--sand);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+.leads-table th:hover { color: var(--accent); }
+.leads-table th.sort-asc::after  { content: ' ↑'; }
+.leads-table th.sort-desc::after { content: ' ↓'; }
+.leads-table td {
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--stone);
+  vertical-align: top;
+  font-size: 0.85rem;
+  color: var(--text);
+  min-width: 60px;
+}
+.leads-table tr:last-child td { border-bottom: none; }
+.leads-table tbody tr:hover td { background: var(--sand); }
+.leads-table td.col-action {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  max-width: 280px;
+}
+.leads-table td a { color: var(--accent); text-decoration: none; }
+.leads-table td a:hover { text-decoration: underline; }
+
+.score-hot  { font-weight: 700; color: #DC3545; }
+.score-warm { font-weight: 700; color: #D97706; }
+.score-cold { font-weight: 700; color: #3B82F6; }
 
 .tag {
   font-size: 0.62rem;
@@ -534,10 +636,136 @@ body {
   border-radius: 3px;
   white-space: nowrap;
 }
+.tag-hot  { background: rgba(220,53,69,0.1);  color: #DC3545; }
+.tag-warm { background: rgba(217,119,6,0.1);  color: #D97706; }
+.tag-cold { background: rgba(59,130,246,0.1); color: #3B82F6; }
 
-.tag-hot { background: rgba(239,107,90,0.12); color: #D95B4A; }
-.tag-warm { background: rgba(251,191,36,0.12); color: #B45309; }
-.tag-cold { background: var(--sand); color: var(--warm-gray); }
+/* ── Card view ── */
+.leads-card-grid {
+  display: none;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+}
+.lead-card {
+  background: var(--white);
+  border: 1px solid #E8E4DD;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+.lead-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.85rem 1rem 0.6rem;
+  border-bottom: 1px solid var(--stone);
+  gap: 0.5rem;
+}
+.lead-card-city {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.lead-card-meta {
+  font-size: 0.75rem;
+  color: var(--warm-gray);
+  margin-top: 0.15rem;
+}
+.lead-card-badge-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+.lead-card-score {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.lead-card-body {
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.lead-card-title a {
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-decoration: none;
+  line-height: 1.4;
+}
+.lead-card-title a:hover { text-decoration: underline; }
+.lead-card-action {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  padding: 0.5rem 0.65rem;
+  background: var(--sand);
+  border-radius: 6px;
+  border-left: 3px solid var(--stone);
+}
+
+.signal-matches-list { display: flex; flex-direction: column; gap: 0.45rem; }
+.signal-match-item {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.signal-match-kw {
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(30,59,192,0.07);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+}
+.signal-match-ctx {
+  display: block;
+  color: var(--warm-gray);
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.notes-field {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.82rem;
+  font-family: inherit;
+  border: 1px solid var(--stone);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  resize: vertical;
+  min-height: 54px;
+  color: var(--text);
+  background: var(--white);
+  transition: border-color 0.12s;
+}
+.notes-field:focus { outline: none; border-color: var(--accent); }
+.notes-saved {
+  font-size: 0.72rem;
+  color: #16a34a;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.notes-saved.visible { opacity: 1; }
+.notes-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--warm-gray);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
 
 /* ═══ ADMIN TAB ═══ */
 .admin-tabs {
@@ -809,9 +1037,9 @@ body {
   border-radius: 3px;
 }
 
-.recent-result.hot { background: rgba(239,107,90,0.12); color: #D95B4A; }
-.recent-result.warm { background: rgba(251,191,36,0.12); color: #B45309; }
-.recent-result.cold { background: var(--sand); color: var(--warm-gray); }
+.recent-result.hot  { background: rgba(220,53,69,0.1);  color: #DC3545; }
+.recent-result.warm { background: rgba(217,119,6,0.1);  color: #D97706; }
+.recent-result.cold { background: rgba(59,130,246,0.1); color: #3B82F6; }
 
 .recent-scan-status {
   font-size: 0.75rem;
@@ -993,27 +1221,91 @@ body {
 
         <!-- Results panel -->
         <div class="scanner-results" id="scannerResults">
-          <div class="results-header">
-            <span class="results-title" id="resultsTitle">Results</span>
-            <div class="results-stats" id="resultsStats" style="display:none;">
-              <span class="stat-chip"><span class="dot-hot"></span><span id="hotCount">0</span> Hot</span>
-              <span class="stat-chip"><span class="dot-warm"></span><span id="warmCount">0</span> Warm</span>
-            </div>
+
+          <!-- 1. EMPTY STATE -->
+          <div class="results-empty" id="resultsEmpty">
+            <svg class="results-empty-icon" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="6" width="30" height="38" rx="3" stroke="currentColor" stroke-width="2.5" fill="none"/>
+              <line x1="14" y1="16" x2="32" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="14" y1="22" x2="32" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="14" y1="28" x2="24" y2="28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="40" cy="38" r="9" stroke="currentColor" stroke-width="2.5" fill="none"/>
+              <line x1="46.5" y1="44.5" x2="52" y2="50" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <div class="results-empty-title">No scan results yet</div>
+            <p>Select states and a population tier above, then click Run Scan to surface procurement signals.</p>
           </div>
 
-          <div class="scan-progress" id="scanProgress">
-            <div class="progress-label" id="progressMsg">Initializing...</div>
+          <!-- 2. SCANNING IN PROGRESS -->
+          <div class="scan-progress-view" id="scanProgressView">
+            <div class="progress-heading">Scanning in progress</div>
             <div class="progress-bar-track">
               <div class="progress-bar-fill" id="progressFill"></div>
             </div>
+            <div class="progress-phase-row">
+              <span class="progress-phase-label" id="progressPhase">Initializing</span>
+              <span class="progress-city-label" id="progressCity"></span>
+            </div>
+            <div class="progress-stats-grid">
+              <div class="progress-stat">
+                <div class="progress-stat-value" id="progressCitiesCount">0</div>
+                <div class="progress-stat-label">Cities scanned</div>
+              </div>
+              <div class="progress-stat">
+                <div class="progress-stat-value" id="progressDocsCount">0</div>
+                <div class="progress-stat-label">Docs processed</div>
+              </div>
+              <div class="progress-stat">
+                <div class="progress-stat-value" id="progressLeadsCount">0</div>
+                <div class="progress-stat-label">Leads found</div>
+              </div>
+            </div>
+            <div class="progress-time-row">
+              <span>Elapsed: <strong id="progressElapsed">0:00</strong></span>
+              <span>Estimated remaining: <strong id="progressRemaining">—</strong></span>
+            </div>
           </div>
 
-          <div class="results-empty" id="resultsEmpty">
-            <div class="results-empty-icon">&#x2315;</div>
-            <p>Configure states and tier, then start a scan.</p>
+          <!-- 3. RESULTS VIEW -->
+          <div class="results-view" id="resultsView">
+            <div class="results-summary-bar">
+              <div class="results-summary-text" id="resultsSummaryText"></div>
+              <div class="results-actions">
+                <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+                <button class="btn btn-ghost btn-sm" onclick="exportHTML()">Export Report</button>
+              </div>
+            </div>
+            <div class="filter-bar">
+              <div class="filter-pills">
+                <button class="filter-pill active" data-filter="all" onclick="setFilter('all',this)">All (<span id="countAll">0</span>)</button>
+                <button class="filter-pill pill-hot" data-filter="hot" onclick="setFilter('hot',this)">Hot (<span id="countHot">0</span>)</button>
+                <button class="filter-pill pill-warm" data-filter="warm" onclick="setFilter('warm',this)">Warm (<span id="countWarm">0</span>)</button>
+                <button class="filter-pill pill-cold" data-filter="cold" onclick="setFilter('cold',this)">Cold (<span id="countCold">0</span>)</button>
+              </div>
+              <div class="view-toggle">
+                <button class="view-toggle-btn active" id="toggleTable" onclick="setView('table')">Table</button>
+                <button class="view-toggle-btn" id="toggleCard" onclick="setView('card')">Cards</button>
+              </div>
+            </div>
+            <div class="leads-table-wrap" id="leadsTableView">
+              <table class="leads-table" id="leadsTable">
+                <thead>
+                  <tr>
+                    <th id="th-municipality" onclick="sortTable('municipality')">City</th>
+                    <th id="th-state" onclick="sortTable('state')">St</th>
+                    <th id="th-population" onclick="sortTable('population')">Pop</th>
+                    <th id="th-relevance_score" onclick="sortTable('relevance_score')">Score</th>
+                    <th id="th-lead_type" onclick="sortTable('lead_type')">Type</th>
+                    <th>Source</th>
+                    <th class="col-action">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="leadsTableBody"></tbody>
+              </table>
+            </div>
+            <div class="leads-card-grid" id="leadsCardGrid"></div>
           </div>
 
-          <div class="leads-list" id="leadsList"></div>
         </div>
       </div>
 
@@ -1185,9 +1477,51 @@ function getSelectedTier() {
   return checked ? checked.value : 'small';
 }
 
+// ── Scanner state management ──
 let activeScanId = null;
 let pollInterval = null;
+let currentLeads = [];
+let filteredLeads = [];
+let currentFilter = 'all';
+let currentView = 'table';
+let sortKey = 'relevance_score';
+let sortDir = 'desc';
+let scanStartTime = null;
+let elapsedTimer = null;
+let _activeScanData = null;  // holds last scan's stats/config for summary bar
 
+function showState(state) {
+  // state: 'empty' | 'scanning' | 'results'
+  const empty = document.getElementById('resultsEmpty');
+  const prog  = document.getElementById('scanProgressView');
+  const res   = document.getElementById('resultsView');
+  empty.style.display = state === 'empty'    ? 'flex'   : 'none';
+  prog.style.display  = state === 'scanning' ? 'flex'   : 'none';
+  res.style.display   = state === 'results'  ? 'flex'   : 'none';
+}
+
+// ── Elapsed timer ──
+function startElapsedTimer() {
+  scanStartTime = Date.now();
+  stopElapsedTimer();
+  elapsedTimer = setInterval(() => {
+    const secs = Math.floor((Date.now() - scanStartTime) / 1000);
+    const el = document.getElementById('progressElapsed');
+    if (el) el.textContent = formatDuration(secs);
+  }, 1000);
+}
+
+function stopElapsedTimer() {
+  if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
+}
+
+function formatDuration(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+// ── Scan control ──
 function startScan() {
   const states = getSelectedStates();
   if (states.length === 0) { showToast('Select at least one state.', 'error'); return; }
@@ -1196,11 +1530,15 @@ function startScan() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Starting...';
 
-  document.getElementById('resultsEmpty').style.display = 'none';
-  document.getElementById('leadsList').style.display = 'none';
-  document.getElementById('scanProgress').style.display = 'block';
-  document.getElementById('resultsStats').style.display = 'none';
-  document.getElementById('resultsTitle').textContent = 'Scanning...';
+  showState('scanning');
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressPhase').textContent = 'Initializing';
+  document.getElementById('progressCity').textContent = '';
+  document.getElementById('progressCitiesCount').textContent = '0';
+  document.getElementById('progressDocsCount').textContent = '0';
+  document.getElementById('progressLeadsCount').textContent = '0';
+  document.getElementById('progressRemaining').textContent = '—';
+  startElapsedTimer();
 
   fetch('/api/scans', {
     method: 'POST',
@@ -1214,6 +1552,8 @@ function startScan() {
   })
   .catch(() => {
     showToast('Failed to start scan. Try again.', 'error');
+    stopElapsedTimer();
+    showState('empty');
     resetScanBtn();
   });
 }
@@ -1223,18 +1563,47 @@ function pollScan() {
   fetch('/api/scans/' + activeScanId)
   .then(r => r.json())
   .then(data => {
-    document.getElementById('progressMsg').textContent = data.progress_message || 'Scanning...';
-    document.getElementById('progressFill').style.width = (data.progress_pct || 0) + '%';
+    const pct = data.progress_pct || 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+
+    // Parse phase and city from progress_message: "Phase: City Name" or just "Phase"
+    const msg = data.progress_message || '';
+    const colonIdx = msg.indexOf(':');
+    if (colonIdx > -1) {
+      document.getElementById('progressPhase').textContent = msg.slice(0, colonIdx).trim();
+      document.getElementById('progressCity').textContent = msg.slice(colonIdx + 1).trim();
+    } else {
+      document.getElementById('progressPhase').textContent = msg || 'Scanning';
+      document.getElementById('progressCity').textContent = '';
+    }
+
+    // Update stats grid
+    const stats = data.stats || {};
+    document.getElementById('progressDocsCount').textContent =
+      (stats.docs_scraped || 0).toLocaleString();
+    const leads = (stats.leads_hot || 0) + (stats.leads_warm || 0) + (stats.leads_cold || 0);
+    document.getElementById('progressLeadsCount').textContent = leads;
+
+    // Estimate remaining time
+    if (pct > 5 && scanStartTime) {
+      const elapsed = (Date.now() - scanStartTime) / 1000;
+      const totalEst = elapsed / (pct / 100);
+      const remaining = Math.max(0, Math.round(totalEst - elapsed));
+      document.getElementById('progressRemaining').textContent = formatDuration(remaining);
+    }
 
     if (data.status === 'completed') {
       clearInterval(pollInterval);
-      loadLeads(activeScanId, data.stats);
+      stopElapsedTimer();
+      _activeScanData = data;
+      loadLeads(activeScanId, data.stats, data);
       resetScanBtn();
+      loadRecentScans();
     } else if (data.status === 'failed') {
       clearInterval(pollInterval);
+      stopElapsedTimer();
       showToast('Scan failed: ' + (data.progress_message || 'Unknown error'), 'error');
-      document.getElementById('scanProgress').style.display = 'none';
-      document.getElementById('resultsEmpty').style.display = 'flex';
+      showState('empty');
       resetScanBtn();
     }
   });
@@ -1247,44 +1616,298 @@ function resetScanBtn() {
   btn.textContent = states.length === 0 ? 'Select states to scan' : 'Run Scan';
 }
 
-function loadLeads(scanId, stats) {
+// ── Load leads into results view ──
+function loadLeads(scanId, stats, scanData) {
   fetch('/api/scans/' + scanId + '/leads?sort=score')
   .then(r => r.json())
   .then(data => {
-    const leads = data.leads || [];
-    document.getElementById('scanProgress').style.display = 'none';
+    currentLeads = data.leads || [];
+    currentFilter = 'all';
+    filteredLeads = currentLeads;
 
-    if (leads.length === 0) {
-      document.getElementById('resultsEmpty').style.display = 'flex';
-      document.getElementById('resultsTitle').textContent = 'No leads found';
+    if (currentLeads.length === 0) {
+      showState('empty');
       return;
     }
 
-    const hot = leads.filter(l => l.lead_type === 'hot').length;
-    const warm = leads.filter(l => l.lead_type === 'warm').length;
-    document.getElementById('hotCount').textContent = hot;
-    document.getElementById('warmCount').textContent = warm;
-    document.getElementById('resultsStats').style.display = 'flex';
-    document.getElementById('resultsTitle').textContent = leads.length + ' leads';
-
-    const list = document.getElementById('leadsList');
-    list.innerHTML = leads.map(lead => `
-      <div class="lead-row">
-        <div>
-          <div class="lead-city">${lead.municipality}, ${lead.state}</div>
-          <div class="lead-title">${lead.title}</div>
-          <div class="lead-source">${formatSource(lead.source_type)} · ${lead.date || ''}</div>
-        </div>
-        <div class="lead-score">${Math.round(lead.relevance_score)}</div>
-        <div><span class="tag tag-${lead.lead_type}">${lead.lead_type}</span></div>
-      </div>
-    `).join('');
-    list.style.display = 'block';
+    updateSummaryBar(stats || {}, scanData || {});
+    updateFilterCounts();
+    applyFilter(currentFilter);
+    showState('results');
   });
 }
 
+function updateSummaryBar(stats, scanData) {
+  const total = currentLeads.length;
+  const hot  = currentLeads.filter(l => l.lead_type === 'hot').length;
+  const warm = currentLeads.filter(l => l.lead_type === 'warm').length;
+  const cold = currentLeads.filter(l => l.lead_type === 'cold').length;
+  const docs = stats.docs_scraped || 0;
+
+  // Duration: if scanData has created_at + completed_at
+  let durStr = '';
+  if (scanData && scanData.created_at && scanData.completed_at) {
+    const secs = Math.round(
+      (new Date(scanData.completed_at) - new Date(scanData.created_at)) / 1000
+    );
+    durStr = ' · ' + formatDuration(secs);
+  }
+
+  const statesArr = (scanData && scanData.config && scanData.config.states) || [];
+  const statesStr = statesArr.length ? ' across ' + statesArr.join(', ') : '';
+
+  document.getElementById('resultsSummaryText').textContent =
+    `${total} lead${total !== 1 ? 's' : ''} found${statesStr}` +
+    (docs ? ` · ${docs.toLocaleString()} docs scanned` : '') +
+    durStr;
+}
+
+function updateFilterCounts() {
+  const all  = currentLeads.length;
+  const hot  = currentLeads.filter(l => l.lead_type === 'hot').length;
+  const warm = currentLeads.filter(l => l.lead_type === 'warm').length;
+  const cold = currentLeads.filter(l => l.lead_type === 'cold').length;
+  document.getElementById('countAll').textContent  = all;
+  document.getElementById('countHot').textContent  = hot;
+  document.getElementById('countWarm').textContent = warm;
+  document.getElementById('countCold').textContent = cold;
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter(filter);
+}
+
+function applyFilter(filter) {
+  filteredLeads = filter === 'all'
+    ? currentLeads
+    : currentLeads.filter(l => l.lead_type === filter);
+  sortAndRender();
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('toggleTable').classList.toggle('active', view === 'table');
+  document.getElementById('toggleCard').classList.toggle('active', view === 'card');
+  document.getElementById('leadsTableView').style.display = view === 'table' ? 'block' : 'none';
+  document.getElementById('leadsCardGrid').style.display  = view === 'card'  ? 'grid'  : 'none';
+  sortAndRender();
+}
+
+// ── Sort ──
+function sortTable(key) {
+  if (sortKey === key) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey = key;
+    sortDir = key === 'relevance_score' ? 'desc' : 'asc';
+  }
+  // Update header classes
+  document.querySelectorAll('.leads-table th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  const thEl = document.getElementById('th-' + key);
+  if (thEl) thEl.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+  sortAndRender();
+}
+
+function sortAndRender() {
+  const sorted = [...filteredLeads].sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (typeof av === 'string') av = av.toLowerCase();
+    if (typeof bv === 'string') bv = bv.toLowerCase();
+    if (av < bv) return sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  if (currentView === 'table') renderTable(sorted);
+  else renderCards(sorted);
+}
+
+// ── Render: table ──
+function renderTable(leads) {
+  const tbody = document.getElementById('leadsTableBody');
+  if (!tbody) return;
+  if (leads.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--warm-gray)">No leads match this filter.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = leads.map(lead => {
+    const scoreClass = 'score-' + lead.lead_type;
+    const pop = lead.population ? lead.population.toLocaleString() : '—';
+    const src = escHtml(formatSource(lead.source_type));
+    const action = escHtml((lead.recommended_action || '').replace(/^[A-Z ]+: /, ''));
+    const url = escHtml(lead.url || '');
+    return `<tr>
+      <td style="font-weight:600">${escHtml(lead.municipality)}</td>
+      <td>${escHtml(lead.state)}</td>
+      <td style="white-space:nowrap">${pop}</td>
+      <td class="${scoreClass}">${Math.round(lead.relevance_score)}</td>
+      <td><span class="tag tag-${escHtml(lead.lead_type)}">${escHtml(lead.lead_type)}</span></td>
+      <td><a href="${url}" target="_blank" rel="noopener">${src}</a></td>
+      <td class="col-action">${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Render: cards ──
+function renderCards(leads) {
+  const grid = document.getElementById('leadsCardGrid');
+  if (!grid) return;
+  if (leads.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--warm-gray)">No leads match this filter.</div>`;
+    return;
+  }
+  grid.innerHTML = leads.map(lead => {
+    const scoreClass = 'score-' + lead.lead_type;
+    const pop = lead.population ? (lead.population >= 1000
+      ? (lead.population / 1000).toFixed(1) + 'K' : lead.population) : '—';
+    const action = escHtml(lead.recommended_action || '');
+
+    // Signal matches
+    const smJSON = lead.signal_matches || {};
+    const smHtml = Object.entries(smJSON).slice(0, 4).map(([stype, sm]) => {
+      const kw = escHtml(sm.keyword || stype);
+      const ctx = escHtml((sm.context || '').slice(0, 180));
+      return `<div class="signal-match-item">
+        <span class="signal-match-kw">${kw}</span>
+        <span class="signal-match-ctx">${ctx}</span>
+      </div>`;
+    }).join('');
+
+    const noteVal = escHtml(lead.notes || '');
+    const savedId = 'saved-' + lead.id;
+
+    return `<div class="lead-card">
+      <div class="lead-card-header">
+        <div>
+          <div class="lead-card-city">${escHtml(lead.municipality)}, ${escHtml(lead.state)}</div>
+          <div class="lead-card-meta">Pop. ${pop} &middot; ${escHtml(formatSource(lead.source_type))}</div>
+        </div>
+        <div class="lead-card-badge-score">
+          <span class="tag tag-${escHtml(lead.lead_type)}">${escHtml(lead.lead_type)}</span>
+          <span class="lead-card-score ${scoreClass}">${Math.round(lead.relevance_score)}</span>
+        </div>
+      </div>
+      <div class="lead-card-body">
+        <div class="lead-card-title">
+          <a href="${escHtml(lead.url || '')}" target="_blank" rel="noopener">${escHtml(lead.title || 'View Document')}</a>
+        </div>
+        ${smHtml ? `<div class="signal-matches-list">${smHtml}</div>` : ''}
+        ${action ? `<div class="lead-card-action">${action}</div>` : ''}
+        <div>
+          <div class="notes-label">Notes <span class="notes-saved" id="${savedId}">Saved</span></div>
+          <textarea class="notes-field" rows="2"
+            onblur="saveNotes('${lead.id}', this, '${savedId}')"
+          >${noteVal}</textarea>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Notes ──
+function saveNotes(leadId, textarea, savedId) {
+  const notes = textarea.value;
+  fetch('/api/leads/' + leadId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes: notes })
+  })
+  .then(r => {
+    if (r.ok) {
+      // Update in memory
+      const lead = currentLeads.find(l => l.id === leadId);
+      if (lead) lead.notes = notes;
+      // Flash "Saved"
+      const el = document.getElementById(savedId);
+      if (el) {
+        el.classList.add('visible');
+        setTimeout(() => el.classList.remove('visible'), 1500);
+      }
+    }
+  })
+  .catch(() => {});
+}
+
+// ── Export ──
+function exportCSV() {
+  if (!currentLeads.length) return;
+  const headers = ['City','State','Population','Score','Type','Source','Title','URL','Action','Notes'];
+  const rows = filteredLeads.map(l => [
+    l.municipality, l.state, l.population || '',
+    Math.round(l.relevance_score), l.lead_type,
+    formatSource(l.source_type), l.title || '', l.url || '',
+    (l.recommended_action || '').replace(/"/g, '""'),
+    (l.notes || '').replace(/"/g, '""')
+  ]);
+  const csv = [headers, ...rows].map(r =>
+    r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+  downloadFile('municipal-intel-leads.csv', 'text/csv', csv);
+}
+
+function exportHTML() {
+  if (!currentLeads.length) return;
+  const rows = filteredLeads.map(l => `
+    <tr>
+      <td>${escHtml(l.municipality)}, ${escHtml(l.state)}</td>
+      <td>${l.population ? l.population.toLocaleString() : '—'}</td>
+      <td style="font-weight:700;color:${l.lead_type==='hot'?'#DC3545':l.lead_type==='warm'?'#D97706':'#3B82F6'}">${Math.round(l.relevance_score)}</td>
+      <td><b>${escHtml(l.lead_type.toUpperCase())}</b></td>
+      <td><a href="${escHtml(l.url||'')}">${escHtml(formatSource(l.source_type))}</a></td>
+      <td>${escHtml(l.recommended_action||'')}</td>
+      <td>${escHtml(l.notes||'')}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Municipal Intel — Lead Report</title>
+<style>
+  body{font-family:system-ui,sans-serif;padding:2rem;color:#1a1a1a}
+  h1{font-size:1.4rem;margin-bottom:0.5rem}
+  p{color:#666;font-size:0.9rem;margin-bottom:1.5rem}
+  table{width:100%;border-collapse:collapse;font-size:0.88rem}
+  th{text-align:left;padding:0.5rem 0.75rem;background:#f5f2ee;border-bottom:2px solid #ddd;text-transform:uppercase;font-size:0.72rem;letter-spacing:0.05em}
+  td{padding:0.5rem 0.75rem;border-bottom:1px solid #e8e4dd;vertical-align:top}
+  tr:hover td{background:#faf8f5}
+  a{color:#1e3bc0}
+</style></head><body>
+<h1>Municipal Intel — Lead Report</h1>
+<p>Generated ${new Date().toLocaleString()} &middot; ${filteredLeads.length} lead${filteredLeads.length!==1?'s':''}</p>
+<table><thead><tr>
+  <th>City / State</th><th>Pop</th><th>Score</th><th>Type</th><th>Source</th><th>Recommended Action</th><th>Notes</th>
+</tr></thead><tbody>${rows}</tbody></table>
+</body></html>`;
+  downloadFile('municipal-intel-report.html', 'text/html', html);
+}
+
+function downloadFile(filename, mime, content) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+// ── Helpers ──
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function formatSource(t) {
-  const map = { meeting_minutes:'Meeting Minutes', procurement:'Procurement', budget:'Budget', job_posting:'Job Posting', audit:'State Audit', agenda_packet:'Agenda Packet' };
+  const map = {
+    meeting_minutes: 'Meeting Minutes', procurement: 'Procurement',
+    budget: 'Budget', job_posting: 'Job Posting',
+    audit: 'State Audit', agenda_packet: 'Agenda Packet',
+    state_portal: 'State Portal'
+  };
   return map[t] || t;
 }
 
@@ -1376,7 +1999,7 @@ function loadRecentScans() {
   fetch('/api/scans')
     .then(r => r.json())
     .then(data => {
-      const scans = (data.scans || []).slice(0, 5);
+      const scans = (data.scans || []).slice(0, 8);
       if (scans.length === 0) {
         container.innerHTML = '<p class="recent-scans-empty">No scans yet.</p>';
         return;
@@ -1389,74 +2012,69 @@ function loadRecentScans() {
           ? stateList.join(', ')
           : stateList.length + ' states';
         const tier = config.population_tier || '';
-        const hot = stats.leads_hot || 0;
+        const hot  = stats.leads_hot  || 0;
         const warm = stats.leads_warm || 0;
         const cold = stats.leads_cold || 0;
+
+        // Duration
+        let durStr = '';
+        if (scan.created_at && scan.completed_at) {
+          const secs = Math.round(
+            (new Date(scan.completed_at) - new Date(scan.created_at)) / 1000
+          );
+          durStr = `<span class="recent-scan-tier">${formatDuration(secs)}</span>`;
+        }
 
         const resultsHtml = scan.status === 'completed'
           ? `<span class="recent-result hot">${hot} hot</span>
              <span class="recent-result warm">${warm} warm</span>
-             <span class="recent-result cold">${cold} cold</span>`
-          : `<span class="recent-scan-status">${scan.status}</span>`;
+             <span class="recent-result cold">${cold} cold</span>
+             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();loadScanById('${scan.id}')">View</button>`
+          : `<span class="recent-scan-status">${escHtml(scan.status)}</span>`;
 
         return `
           <div class="recent-scan-row" onclick="loadScanById('${scan.id}')">
             <div class="recent-scan-info">
               <span class="recent-scan-date">${formatDate(scan.created_at)}</span>
-              <span class="recent-scan-states">${statesDisplay || '—'}</span>
-              <span class="recent-scan-tier">${TIER_SHORT[tier] || tier}</span>
+              <span class="recent-scan-states">${escHtml(statesDisplay || '—')}</span>
+              <span class="recent-scan-tier">${escHtml(TIER_SHORT[tier] || tier)}</span>
+              ${durStr}
             </div>
             <div class="recent-scan-results">${resultsHtml}</div>
           </div>`;
       }).join('');
     })
     .catch(() => {
-      const container = document.getElementById('recentScans');
-      if (container) container.innerHTML = '<p class="recent-scans-empty">Could not load recent scans.</p>';
+      const c = document.getElementById('recentScans');
+      if (c) c.innerHTML = '<p class="recent-scans-empty">Could not load recent scans.</p>';
     });
 }
 
 function loadScanById(scanId) {
-  document.getElementById('resultsEmpty').style.display = 'none';
-  document.getElementById('leadsList').style.display = 'none';
-  document.getElementById('scanProgress').style.display = 'none';
-  document.getElementById('resultsStats').style.display = 'none';
-  document.getElementById('resultsTitle').textContent = 'Loading…';
+  showState('empty');  // show empty while loading
+  // Fetch scan metadata + leads together
+  Promise.all([
+    fetch('/api/scans/' + scanId).then(r => r.json()),
+    fetch('/api/scans/' + scanId + '/leads?sort=score').then(r => r.json())
+  ]).then(([scanData, leadsData]) => {
+    currentLeads = leadsData.leads || [];
+    currentFilter = 'all';
+    filteredLeads = currentLeads;
 
-  fetch('/api/scans/' + scanId + '/leads?sort=score')
-    .then(r => r.json())
-    .then(data => {
-      const leads = data.leads || [];
-      if (leads.length === 0) {
-        document.getElementById('resultsTitle').textContent = 'No leads found';
-        document.getElementById('resultsEmpty').style.display = 'flex';
-        return;
-      }
-      const hot = leads.filter(l => l.lead_type === 'hot').length;
-      const warm = leads.filter(l => l.lead_type === 'warm').length;
-      document.getElementById('hotCount').textContent = hot;
-      document.getElementById('warmCount').textContent = warm;
-      document.getElementById('resultsStats').style.display = 'flex';
-      document.getElementById('resultsTitle').textContent = leads.length + ' leads';
+    if (currentLeads.length === 0) {
+      showState('empty');
+      return;
+    }
 
-      const list = document.getElementById('leadsList');
-      list.innerHTML = leads.map(lead => `
-        <div class="lead-row">
-          <div>
-            <div class="lead-city">${lead.municipality}, ${lead.state}</div>
-            <div class="lead-title">${lead.title}</div>
-            <div class="lead-source">${formatSource(lead.source_type)} · ${lead.date || ''}</div>
-          </div>
-          <div class="lead-score">${Math.round(lead.relevance_score)}</div>
-          <div><span class="tag tag-${lead.lead_type}">${lead.lead_type}</span></div>
-        </div>
-      `).join('');
-      list.style.display = 'block';
-    })
-    .catch(() => {
-      document.getElementById('resultsTitle').textContent = 'Failed to load';
-      document.getElementById('resultsEmpty').style.display = 'flex';
-    });
+    updateSummaryBar(scanData.stats || {}, scanData);
+    updateFilterCounts();
+    applyFilter(currentFilter);
+    showState('results');
+  })
+  .catch(() => {
+    showToast('Failed to load scan results.', 'error');
+    showState('empty');
+  });
 }
 
 // ═══════════════════════════════
