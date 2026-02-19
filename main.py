@@ -646,6 +646,27 @@ async def scanner(request: Request, user: dict = Depends(require_role(["consulta
     })
 
 
+@app.get("/test-assessment")
+async def test_assessment(user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Quick test route to create assessment and redirect - bypasses JavaScript."""
+    import uuid as _uuid
+    from datetime import datetime
+
+    assessment_id = str(_uuid.uuid4())
+
+    db.execute(text("""
+        INSERT INTO "Assessment" (id, "userId", status, "createdAt", "updatedAt")
+        VALUES (:id, :user_id, 'draft', :now, :now)
+    """), {
+        "id": assessment_id,
+        "user_id": user["id"],
+        "now": datetime.utcnow()
+    })
+    db.commit()
+
+    return RedirectResponse(url=f"/assessment/{assessment_id}", status_code=303)
+
+
 @app.get("/admin/v2", response_class=HTMLResponse)
 async def admin_v2(request: Request, user: dict = Depends(require_role("admin"))):
     """
