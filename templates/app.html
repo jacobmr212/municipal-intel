@@ -2438,9 +2438,8 @@ async function startAssessment() {
     const data = await response.json();
 
     if (data.id) {
-      // For now, just show a toast. Later we'll redirect to assessment page
-      showToast('Assessment created! Section 1 coming soon...', 'success');
-      loadAssessments(); // Refresh the list
+      // Redirect to assessment page
+      window.location.href = `/assessment/${data.id}`;
     }
   } catch (err) {
     showToast('Failed to create assessment', 'error');

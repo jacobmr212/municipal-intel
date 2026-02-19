@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP Assessment - Section {{ section_number }}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy: #1B2A4A;
+      --blue: #2E5FA1;
+      --light-blue: #EBE9FE;
+      --warm-gray: #77716B;
+      --cream: #F5F3EF;
+      --border: #E5E2DC;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--cream);
+      color: #1A1816;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--warm-gray);
+    }
+
+    .conversation {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 2rem;
+      min-height: 400px;
+    }
+
+    .message {
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.assistant {
+      display: flex;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .message.user {
+      display: flex;
+      gap: 1rem;
+      align-items: start;
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .message.assistant .message-avatar {
+      background: linear-gradient(135deg, var(--blue), var(--navy));
+      color: white;
+    }
+
+    .message.user .message-avatar {
+      background: var(--cream);
+      color: var(--navy);
+      border: 2px solid var(--border);
+    }
+
+    .message-content {
+      flex: 1;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      max-width: 80%;
+    }
+
+    .message.assistant .message-content {
+      background: var(--light-blue);
+      color: var(--navy);
+    }
+
+    .message.user .message-content {
+      background: var(--navy);
+      color: white;
+    }
+
+    .input-component {
+      margin-top: 1.5rem;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--navy);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--navy);
+      border: 2px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .choice-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 500px;
+    }
+
+    .choice-btn {
+      padding: 1rem 1.5rem;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      text-align: left;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .choice-btn:hover {
+      border-color: var(--blue);
+      background: var(--light-blue);
+      transform: translateX(4px);
+    }
+
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.75rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--border);
+      z-index: 1000;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--navy));
+      transition: width 0.3s ease;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-btn:hover {
+      color: var(--navy);
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+  </div>
+
+  <div class="container">
+    <a href="/app" class="back-btn">
+      ← Back to Dashboard
+    </a>
+
+    <div class="header">
+      <h1>Section {{ section_number }}: {{ section_title }}</h1>
+      <p>{{ section_description }}</p>
+    </div>
+
+    <div class="conversation" id="conversation">
+      <!-- Messages will be added here dynamically -->
+    </div>
+  </div>
+
+  <script>
+    // Assessment and section data from server
+    const ASSESSMENT_ID = "{{ assessment_id }}";
+    const SECTION_NUMBER = "{{ section_number }}";
+    const USER = {
+      email: "{{ user.email }}",
+      role: "{{ user.role }}"
+    };
+
+    // Conversation state
+    let messages = [];
+    let answers = {};
+    let currentStep = 'welcome';
+
+    // Add a message to the conversation
+    function addMessage(role, content, component = null, componentData = null) {
+      const message = {
+        id: Date.now().toString(),
+        role: role, // 'assistant' or 'user'
+        content: content,
+        component: component,
+        componentData: componentData,
+        timestamp: new Date()
+      };
+
+      messages.push(message);
+      renderConversation();
+    }
+
+    // Render all messages
+    function renderConversation() {
+      const container = document.getElementById('conversation');
+      container.innerHTML = messages.map(msg => {
+        const avatar = msg.role === 'assistant' ? 'AI' : 'You';
+        let html = `
+          <div class="message ${msg.role}">
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">
+              ${msg.content}
+            </div>
+          </div>
+        `;
+
+        // Add interactive component if this is the last assistant message
+        if (msg.component && msg === messages[messages.length - 1]) {
+          html += renderComponent(msg.component, msg.componentData);
+        }
+
+        return html;
+      }).join('');
+
+      // Scroll to bottom
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Render interactive components
+    function renderComponent(type, data) {
+      if (type === 'choice-buttons') {
+        return `
+          <div class="input-component">
+            <div class="choice-buttons">
+              ${data.options.map(opt => `
+                <button class="choice-btn" onclick="handleChoice('${opt.value}', '${opt.label}')">
+                  ${opt.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (type === 'text-input') {
+        return `
+          <div class="input-component">
+            <input
+              type="${data.inputType || 'text'}"
+              placeholder="${data.placeholder || ''}"
+              id="textInput"
+              onkeypress="if(event.key==='Enter') handleTextInput()"
+            />
+            <button class="btn btn-primary" style="margin-top: 1rem;" onclick="handleTextInput()">
+              Continue
+            </button>
+          </div>
+        `;
+      }
+
+      if (type === 'select') {
+        return `
+          <div class="input-component">
+            <select id="selectInput" onchange="handleSelectChange(this.value)">
+              <option value="">-- Select --</option>
+              ${data.options.map(opt => `
+                <option value="${opt.value}">${opt.label}</option>
+              `).join('')}
+            </select>
+          </div>
+        `;
+      }
+
+      return '';
+    }
+
+    // Handle choice button click
+    function handleChoice(value, label) {
+      answers[currentStep] = value;
+      addMessage('user', label);
+
+      // This will be overridden by section-specific logic
+      if (window.handleUserInput) {
+        window.handleUserInput(currentStep, value);
+      }
+    }
+
+    // Handle text input
+    function handleTextInput() {
+      const input = document.getElementById('textInput');
+      if (!input || !input.value.trim()) return;
+
+      const value = input.value.trim();
+      answers[currentStep] = value;
+      addMessage('user', value);
+
+      if (window.handleUserInput) {
+        window.handleUserInput(currentStep, value);
+      }
+    }
+
+    // Handle select change
+    function handleSelectChange(value) {
+      if (!value) return;
+
+      const select = document.getElementById('selectInput');
+      const label = select.options[select.selectedIndex].text;
+
+      answers[currentStep] = value;
+      addMessage('user', label);
+
+      if (window.handleUserInput) {
+        window.handleUserInput(currentStep, value);
+      }
+    }
+
+    // Update progress bar
+    function updateProgress(percentage) {
+      document.getElementById('progressBar').style.width = percentage + '%';
+    }
+
+    // Save progress to server
+    async function saveProgress(status = 'in-progress') {
+      try {
+        await fetch(`/api/assessments/${ASSESSMENT_ID}/section`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section_number: SECTION_NUMBER,
+            answers: answers,
+            status: status
+          })
+        });
+      } catch (err) {
+        console.error('Failed to save progress:', err);
+      }
+    }
+
+    // Section-specific logic will be injected here
+    {{ section_script | safe }}
+  </script>
+</body>
+</html>

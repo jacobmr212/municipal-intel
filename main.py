@@ -1386,6 +1386,198 @@ async def get_admin_analytics(
 
 
 # ============================================================
+# ASSESSMENT PAGES
+# ============================================================
+
+@app.get("/assessment/{assessment_id}", response_class=HTMLResponse)
+async def assessment_dashboard(
+    assessment_id: str,
+    request: Request,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Assessment dashboard showing all sections."""
+    # TODO: Create assessment dashboard template
+    return RedirectResponse(url=f"/assessment/{assessment_id}/section/1", status_code=303)
+
+
+@app.get("/assessment/{assessment_id}/section/{section_number}", response_class=HTMLResponse)
+async def assessment_section(
+    assessment_id: str,
+    section_number: str,
+    request: Request,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Render a specific assessment section."""
+    # Verify assessment belongs to user
+    result = db.execute(text("""
+        SELECT id FROM "Assessment"
+        WHERE id = :id AND "userId" = :user_id
+    """), {"id": assessment_id, "user_id": user["id"]})
+
+    if not result.fetchone():
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    # Section metadata
+    sections_meta = {
+        "1": {
+            "title": "Organization Profile",
+            "description": "Tell us about your municipality and current systems",
+            "script": "section1_script.js"
+        },
+        "3a": {
+            "title": "Pay Code Inventory",
+            "description": "Document your current pay codes and structure",
+            "script": "section3a_script.js"
+        }
+    }
+
+    meta = sections_meta.get(section_number, {
+        "title": f"Section {section_number}",
+        "description": "Coming soon",
+        "script": ""
+    })
+
+    # Generate section-specific script inline
+    section_script = ""
+    if section_number == "1":
+        section_script = generate_section1_script()
+    elif section_number == "3a":
+        section_script = generate_section3a_script()
+
+    return templates.TemplateResponse("assessment.html", {
+        "request": request,
+        "user": user,
+        "assessment_id": assessment_id,
+        "section_number": section_number,
+        "section_title": meta["title"],
+        "section_description": meta["description"],
+        "section_script": section_script
+    })
+
+
+def generate_section1_script():
+    """Generate Section 1 conversational script."""
+    return """
+// Section 1: Organization Profile
+// Simplified version with core questions
+
+const STATES = [
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+];
+
+// Start the conversation
+setTimeout(() => {
+  addMessage('assistant', 'Welcome! Let\\'s start by learning about your organization.');
+  setTimeout(() => {
+    currentStep = 'state';
+    addMessage('assistant', 'Which state are you in?', 'select', {
+      options: STATES.map(s => ({ value: s, label: s }))
+    });
+  }, 800);
+}, 500);
+
+// Handle user input
+window.handleUserInput = function(step, value) {
+  if (step === 'state') {
+    setTimeout(() => {
+      addMessage('assistant', `Great! You're in ${value}.`);
+      setTimeout(() => {
+        currentStep = 'entity_type';
+        addMessage('assistant', 'What type of government entity are you?', 'choice-buttons', {
+          options: [
+            { value: 'city', label: 'City' },
+            { value: 'county', label: 'County' },
+            { value: 'town', label: 'Town' },
+            { value: 'village', label: 'Village' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'entity_type') {
+    setTimeout(() => {
+      addMessage('assistant', `Got it, you're a ${value}.`);
+      setTimeout(() => {
+        currentStep = 'population';
+        addMessage('assistant', 'What is your population?', 'text-input', {
+          inputType: 'number',
+          placeholder: 'e.g., 15000'
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'population') {
+    setTimeout(() => {
+      addMessage('assistant', `Population: ${parseInt(value).toLocaleString()}`);
+      setTimeout(() => {
+        currentStep = 'organization';
+        addMessage('assistant', 'What is the name of your organization?', 'text-input', {
+          inputType: 'text',
+          placeholder: 'e.g., City of Springfield'
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'organization') {
+    setTimeout(() => {
+      addMessage('assistant', `Thank you! This is a basic prototype of Section 1.`);
+      setTimeout(() => {
+        addMessage('assistant', 'In the full version, we\\'ll ask about your retirement system, fiscal year, departments, and more.');
+        setTimeout(() => {
+          // Save progress
+          saveProgress('completed');
+          updateProgress(100);
+          setTimeout(() => {
+            addMessage('assistant', 'Section 1 complete! Returning to dashboard...');
+            setTimeout(() => {
+              window.location.href = '/app';
+            }, 2000);
+          }, 800);
+        }, 1000);
+      }, 800);
+    }, 600);
+  }
+
+  // Update progress
+  const steps = ['state', 'entity_type', 'population', 'organization'];
+  const currentIndex = steps.indexOf(currentStep);
+  const progress = ((currentIndex + 1) / steps.length) * 100;
+  updateProgress(progress);
+
+  // Auto-save
+  saveProgress();
+};
+"""
+
+
+def generate_section3a_script():
+    """Generate Section 3A conversational script (placeholder)."""
+    return """
+// Section 3A: Pay Code Inventory
+// Placeholder - to be implemented
+
+setTimeout(() => {
+  addMessage('assistant', 'Section 3A: Pay Code Inventory');
+  setTimeout(() => {
+    addMessage('assistant', 'This section is coming soon. You\\'ll be able to document your pay code structure here.');
+    setTimeout(() => {
+      addMessage('assistant', 'Returning to dashboard...');
+      setTimeout(() => {
+        window.location.href = '/app';
+      }, 2000);
+    }, 1500);
+  }, 800);
+}, 500);
+"""
+
+
+# ============================================================
 # ASSESSMENT API ENDPOINTS
 # ============================================================
 
