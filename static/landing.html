@@ -115,7 +115,8 @@ body {
 /* ===== HEADER ===== */
 header { padding:24px 0; background:var(--cream); border-bottom:1px solid var(--sand-dark); position:fixed; top:0; left:0; right:0; z-index:100; backdrop-filter:blur(8px); background:rgba(253,252,250,0.95); }
 .header-content { display:flex; justify-content:space-between; align-items:center; }
-.logo { font-family:var(--serif); font-size:24px; color:var(--ink); text-decoration:none; font-weight:normal; }
+.logo { display: inline-block; text-decoration:none; line-height: 0; }
+.logo img { height: auto; display: block; }
 header nav { display:flex; gap:32px; }
 header nav a { color:var(--ink-light); text-decoration:none; font-size:15px; transition:color 0.2s; }
 header nav a:hover { color:var(--accent); }
@@ -331,7 +332,7 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
 <header>
   <div class="container">
     <div class="header-content">
-      <a href="/" class="logo">GovTech Diagnostic</a>
+      <a href="/" class="logo"><img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" style="height: 32px; width: auto;"></a>
       <nav>
         <a href="#how-it-works">How it works</a>
         <a href="/static/best-practices.html">Best Practices</a>

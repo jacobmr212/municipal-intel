@@ -11,7 +11,7 @@ STATIC_DIR = "static"
 os.makedirs(STATIC_DIR, exist_ok=True)
 
 def create_og_image():
-    """Create 1200x630 Open Graph image"""
+    """Create 1200x630 Open Graph image with actual logo"""
     print("Creating og-image.png...")
 
     # Create image with gradient-like blue background
@@ -22,52 +22,77 @@ def create_og_image():
     draw.ellipse([700, -200, 1400, 500], fill='#162DA8', outline=None)
     draw.ellipse([-100, 300, 500, 900], fill='#162DA8', outline=None)
 
-    # Try to use a nice font, fall back to default
+    # Load and composite the logo (use light version for dark background)
+    logo_path = f"{STATIC_DIR}/govtech-logo-light-2x.png"
     try:
-        title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 80)
-        subtitle_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 40)
-        small_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 28)
+        logo = Image.open(logo_path)
+        # Resize logo to appropriate size for og-image (width ~500px)
+        logo_width = 500
+        aspect_ratio = logo.height / logo.width
+        logo_height = int(logo_width * aspect_ratio)
+        logo = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
+
+        # Center the logo horizontally, position in upper-middle area
+        logo_x = (1200 - logo_width) // 2
+        logo_y = 140
+
+        # Composite logo (handle transparency if present)
+        if logo.mode == 'RGBA':
+            img.paste(logo, (logo_x, logo_y), logo)
+        else:
+            img.paste(logo, (logo_x, logo_y))
+
+        # Adjust y_offset for text below logo
+        y_offset = logo_y + logo_height + 40
+
+    except Exception as e:
+        print(f"Warning: Could not load logo ({e}), falling back to text")
+        # Fallback to original text-based design
+        y_offset = 180
+        try:
+            title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 80)
+        except:
+            title_font = ImageFont.load_default()
+
+        title = "GovTech Diagnostic"
+        title_bbox = draw.textbbox((0, 0), title, font=title_font)
+        title_width = title_bbox[2] - title_bbox[0]
+        draw.text(((1200 - title_width) / 2, y_offset), title, fill='white', font=title_font)
+        y_offset += 110
+
+    # Try to use a nice font for tagline, fall back to default
+    try:
+        subtitle_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 36)
+        small_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 26)
     except:
-        # Fallback to default font
-        title_font = ImageFont.load_default()
         subtitle_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
 
-    # Draw text
-    y_offset = 180
-
-    # Title
-    title = "GovTech Diagnostic"
-    title_bbox = draw.textbbox((0, 0), title, font=title_font)
-    title_width = title_bbox[2] - title_bbox[0]
-    draw.text(((1200 - title_width) / 2, y_offset), title, fill='white', font=title_font)
-
-    # Subtitle
-    y_offset += 110
+    # Tagline
     subtitle = "Free ERP Readiness Assessment"
     subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
     subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
     draw.text(((1200 - subtitle_width) / 2, y_offset), subtitle, fill='white', font=subtitle_font)
 
     # Second line
-    y_offset += 55
+    y_offset += 50
     subtitle2 = "for Municipalities"
     subtitle2_bbox = draw.textbbox((0, 0), subtitle2, font=subtitle_font)
     subtitle2_width = subtitle2_bbox[2] - subtitle2_bbox[0]
     draw.text(((1200 - subtitle2_width) / 2, y_offset), subtitle2, fill='white', font=subtitle_font)
 
     # Domain
-    y_offset += 85
+    y_offset += 70
     domain = "govtechdiagnostic.com"
     domain_bbox = draw.textbbox((0, 0), domain, font=small_font)
     domain_width = domain_bbox[2] - domain_bbox[0]
 
     # Draw rounded rectangle background for domain
-    padding = 20
+    padding = 18
     box_x = (1200 - domain_width) / 2 - padding
-    box_y = y_offset - 5
+    box_y = y_offset - 4
     box_width = domain_width + (padding * 2)
-    box_height = 50
+    box_height = 44
     draw.rounded_rectangle(
         [box_x, box_y, box_x + box_width, box_y + box_height],
         radius=10,

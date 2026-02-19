@@ -106,11 +106,14 @@ header {
 }
 
 .logo {
-  font-family: var(--serif);
-  font-size: 24px;
-  color: var(--ink);
+  display: inline-block;
   text-decoration: none;
-  font-weight: normal;
+  line-height: 0;
+}
+
+.logo img {
+  height: auto;
+  display: block;
 }
 
 header nav {
@@ -555,7 +558,7 @@ footer .container {
 <header>
   <div class="container">
     <div class="header-content">
-      <a href="/" class="logo">GovTech Diagnostic</a>
+      <a href="/" class="logo"><img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" style="height: 32px; width: auto;"></a>
       <nav>
         <a href="/">Home</a>
         <a href="/static/best-practices.html">Best Practices</a>
