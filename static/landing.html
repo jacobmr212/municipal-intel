@@ -3,945 +3,640 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GovTech Diagnostic — ERP Intelligence for Government</title>
-<meta name="description" content="AI-powered ERP diagnostic platform for municipalities. Assess financial systems, surface procurement signals, and close deals faster.">
+<title>GovTech Diagnostic — Free ERP Readiness Assessment for Municipalities</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
+  --ink: #1A1816;
+  --ink-light: #3D3A35;
+  --ink-muted: #7A756D;
+  --sand: #F7F5F0;
+  --sand-dark: #EDE9E1;
+  --cream: #FDFCFA;
   --white: #FFFFFF;
-  --offwhite: #FAFAF9;
-  --sand: #F5F3EF;
-  --stone: #E8E4DD;
-  --warm-gray: #9C9689;
-  --text: #1A1816;
-  --text-secondary: #3D3A35;
   --accent: #1E3BC0;
-  --accent-hover: #162DA8;
-  --accent-light: #EEF1FC;
-  --hot: #C42B1C;
-  --warm-tag: #B45309;
-  --green: #1A7F37;
-  --dark-block: #111110;
-  --serif: 'Instrument Serif', Georgia, serif;
-  --sans: 'Geist', 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --accent-hover: #162D99;
+  --accent-light: #E8ECFA;
+  --warm: #C4713B;
+  --warm-light: #FDF0E6;
+  --success: #1B7A4E;
+  --success-light: #E6F5ED;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, sans-serif;
 }
 
 html { scroll-behavior: smooth; }
 
-/* ═══ ACCENT BAR ═══ */
-body::before {
-  content: '';
-  display: block;
-  height: 3px;
-  background: var(--accent);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-}
-
 body {
   font-family: var(--sans);
-  background: var(--white);
-  color: var(--text);
+  color: var(--ink);
+  background: var(--cream);
   line-height: 1.6;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ═══ NAV ═══ */
-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 90;
-  padding: 0 3rem;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--stone);
-}
-
-.nav-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-family: var(--sans);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.02em;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-.nav-right a {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 450;
-  transition: color 0.15s;
-}
-
-.nav-right a:hover { color: var(--text); }
-
-.btn-nav {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--white) !important;
-  background: var(--accent);
-  padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: background 0.15s;
-}
-
-.btn-nav:hover { background: var(--accent-hover); }
-
-/* ═══ HERO ═══ */
-.hero {
-  padding: 10rem 3rem 6rem;
-  max-width: 1120px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 460px;
-  gap: 5rem;
-  align-items: start;
-}
-
-.hero-content { padding-top: 1rem; }
-
-.hero-tag {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1.5rem;
-}
-
-h1 {
-  font-family: var(--serif);
-  font-size: 3.2rem;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-weight: 400;
-  color: var(--text);
-  margin-bottom: 1.5rem;
-}
-
-.hero-body {
-  font-size: 1.15rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  max-width: 460px;
-  margin-bottom: 2.5rem;
-}
-
-.hero-actions { display: flex; gap: 1rem; align-items: center; }
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: var(--sans);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--white);
-  background: var(--accent);
-  padding: 0.75rem 1.6rem;
-  border-radius: 8px;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s;
-}
-
-.btn-primary:hover { background: var(--accent-hover); }
-
-.btn-ghost {
-  font-family: var(--sans);
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  text-decoration: none;
-  padding: 0.75rem 0.5rem;
-  white-space: nowrap;
-  transition: color 0.15s;
-}
-
-.btn-ghost:hover { color: var(--text); }
-
-/* Preview card */
-.hero-card {
-  background: var(--dark-block);
-  border-radius: 12px;
-  padding: 1.75rem;
-  color: #E5E3DE;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #2A2926;
-}
-
-.card-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #8A857C;
-}
-
-.card-live {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: #4ADE80;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.card-live::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  background: #4ADE80;
-  border-radius: 50%;
-}
-
-.card-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-}
-
-.mini-stat {
-  background: #1C1B19;
-  border-radius: 6px;
-  padding: 0.75rem;
-}
-
-.mini-stat-val {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.mini-stat-val.hot { color: #EF6B5A; }
-.mini-stat-val.warm { color: #FBBF24; }
-.mini-stat-val.scanned { color: #4ADE80; }
-
-.mini-stat-label {
-  font-size: 0.62rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #6B665E;
-  margin-top: 0.15rem;
-}
-
-.card-lead {
-  background: #1C1B19;
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
-  margin-bottom: 0.6rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.lead-info { flex: 1; }
-
-.lead-city-name {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #E5E3DE;
-  margin-bottom: 0.2rem;
-}
-
-.lead-desc {
-  font-size: 0.75rem;
-  color: #7A756C;
-  line-height: 1.4;
-}
-
-.tag {
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.2rem 0.55rem;
-  border-radius: 3px;
-  white-space: nowrap;
-  margin-top: 0.1rem;
-}
-
-.tag-hot { background: rgba(239,107,90,0.15); color: #EF6B5A; }
-.tag-warm { background: rgba(251,191,36,0.12); color: #FBBF24; }
-
-/* ═══ DIVIDER ═══ */
-.divider {
-  max-width: 1120px;
-  margin: 0 auto;
-  border: none;
-  border-top: 1px solid var(--stone);
-}
-
-/* ═══ TWO-PRODUCT SECTION ═══ */
-.products {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 4rem 3rem;
-}
-
-.products-header {
-  margin-bottom: 2rem;
-}
-
-.section-tag {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #5C574F;
-  margin-bottom: 0.75rem;
-}
-
-h2 {
-  font-family: var(--serif);
-  font-size: 2.6rem;
-  font-weight: 400;
-  letter-spacing: -0.025em;
-  line-height: 1.12;
-  color: var(--text);
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.product-card {
-  border: 1px solid var(--stone);
-  border-radius: 10px;
-  padding: 2.5rem;
-  transition: all 0.2s;
-  background: var(--white);
-}
-
-.product-card:hover {
-  border-color: var(--warm-gray);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-}
-
-.product-number {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--warm-gray);
-  letter-spacing: 0.06em;
-  margin-bottom: 1.25rem;
-}
-
-.product-card h3 {
-  font-family: var(--serif);
-  font-size: 1.5rem;
-  font-weight: 400;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.01em;
-}
-
-.product-card p {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-}
-
-.product-features {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.product-features li {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  padding-left: 1.25rem;
-  position: relative;
-}
-
-.product-features li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.55rem;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-/* ═══ HOW IT WORKS ═══ */
-.how-section {
-  background: var(--sand);
-  padding: 4rem 3rem;
-}
-
-.how-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-}
-
-.how-inner .section-tag { margin-bottom: 0.75rem; }
-.how-inner h2 { margin-bottom: 2rem; }
-
-.steps {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2.5rem;
-}
-
-.step-num {
-  font-size: 2.4rem;
-  font-weight: 300;
-  color: var(--stone);
-  margin-bottom: 0.75rem;
-  font-family: var(--sans);
-  line-height: 1;
-}
-
-.step h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text);
-}
-
-.step p {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-
-/* ═══ SOURCES ═══ */
-.sources-section {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 4rem 3rem;
-}
-
-.sources-section h2 { margin-bottom: 2rem; }
-
-.sources-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--stone);
-  border: 1px solid var(--stone);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.source-item {
-  background: var(--white);
-  padding: 1.75rem 2rem;
-}
-
-.source-item h4 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-}
-
-.source-item p {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-/* ═══ DARK STATS BAR ═══ */
-.stats-bar {
-  background: var(--dark-block);
-  padding: 4rem 3rem;
-}
-
-.stats-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 3rem;
-}
-
-.stat-item { text-align: center; }
-
-.stat-num {
-  font-family: var(--sans);
-  font-size: 2.8rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--white);
-}
-
-.stat-desc {
-  font-size: 0.78rem;
-  color: #B0ADA6;
-  margin-top: 0.35rem;
-  font-weight: 450;
-}
-
-/* ═══ CTA ═══ */
-.cta-section {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 4rem 3rem;
-  text-align: center;
-}
-
-.cta-section .section-tag {
-  margin-bottom: 0.75rem;
-}
-
-.cta-section h2 {
-  margin-bottom: 1rem;
-}
-
-.cta-body {
-  font-size: 1.05rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  margin-bottom: 2.5rem;
-}
-
-.cta-form {
-  display: flex;
-  gap: 0.6rem;
-  max-width: 440px;
-  margin: 0 auto;
-}
-
-.cta-input {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--stone);
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-family: var(--sans);
-  color: var(--text);
-  background: var(--white);
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.cta-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(43,74,224,0.08);
-}
-
-.cta-input::placeholder { color: var(--warm-gray); }
-
-.cta-note {
-  font-size: 0.76rem;
-  color: var(--warm-gray);
-  margin-top: 0.75rem;
-}
-
-/* ═══ FOOTER ═══ */
-footer {
-  padding: 2.5rem 3rem;
-  border-top: 1px solid var(--stone);
-}
-
-.footer-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.footer-text {
-  font-size: 0.85rem;
-  color: var(--warm-gray);
-}
-
-footer a {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-}
-
-footer a:hover { color: var(--text); }
-
-/* ═══ RESPONSIVE ═══ */
-@media (max-width: 768px) {
-  .hero {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-    padding: 8rem 2rem 4rem;
-  }
-  h1 { font-size: 2.4rem; }
-  h2 { font-size: 2rem; }
-  .hero-card { max-width: 480px; }
-  .products-grid { grid-template-columns: 1fr; }
-  .steps { grid-template-columns: repeat(2, 1fr); }
-  .sources-list { grid-template-columns: 1fr; }
-  .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
-  .products, .sources-section, .cta-section { padding-left: 2rem; padding-right: 2rem; }
-  nav { padding: 0 1.5rem; }
-  .nav-right a:not(.btn-nav) { display: none; }
-  .cta-form { flex-direction: column; }
-  .hero-actions { flex-direction: column; align-items: flex-start; }
-  .footer-inner { flex-direction: column; gap: 0.75rem; }
-  .trust-strip { padding: 1.5rem; }
-}
-
-@media (max-width: 480px) {
-  .hero { padding: 7rem 1.5rem 3rem; }
-  h1 { font-size: 2rem; }
-  .steps { grid-template-columns: 1fr; }
-  .stats-inner { grid-template-columns: 1fr; }
-}
-
-/* ═══ TRUST STRIP ═══ */
-.trust-strip {
-  background: var(--sand);
-  border-top: 1px solid var(--stone);
-  border-bottom: 1px solid var(--stone);
-  padding: 2rem 3rem;
-}
-
-.trust-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.trust-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #5C574F;
-  margin-bottom: 0.75rem;
-}
-
-.trust-stats {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-}
-
-.trust-stats strong { color: var(--text); font-weight: 600; }
-
-.trust-divider {
-  color: var(--stone);
-  padding: 0 0.25rem;
-}
-
-/* ═══ FADE IN ═══ */
-.fade-in {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.fade-in.visible {
-  opacity: 1;
-  transform: translateY(0);
+.container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+.reveal { opacity:0; transform:translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+.reveal-left { opacity:0; transform:translateX(-60px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+.reveal-right { opacity:0; transform:translateX(60px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+.reveal.visible, .reveal-left.visible, .reveal-right.visible { opacity:1; transform:translate(0); }
+.stagger-1 { transition-delay:0.1s; } .stagger-2 { transition-delay:0.2s; } .stagger-3 { transition-delay:0.3s; }
+.stagger-4 { transition-delay:0.4s; } .stagger-5 { transition-delay:0.5s; }
+
+/* ===== NAV ===== */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(253,252,250,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(26,24,22,0.06); transition:all 0.3s; }
+nav.scrolled { box-shadow:0 1px 20px rgba(0,0,0,0.06); }
+nav .container { display:flex; align-items:center; justify-content:space-between; height:72px; }
+.nav-logo { font-weight:600; font-size:1.1rem; color:var(--ink); letter-spacing:-0.02em; }
+.nav-links { display:flex; align-items:center; gap:36px; }
+.nav-links a { font-size:0.9rem; font-weight:500; color:var(--ink-muted); text-decoration:none; transition:color 0.2s; }
+.nav-links a:hover { color:var(--ink); }
+.nav-cta { display:inline-flex; align-items:center; gap:8px; padding:10px 24px; background:var(--accent); color:var(--white) !important; border-radius:8px; font-weight:600 !important; transition:background 0.2s, transform 0.2s; }
+.nav-cta:hover { background:var(--accent-hover) !important; transform:translateY(-1px); }
+.nav-consultant { display:inline-flex; align-items:center; gap:5px; padding:8px 16px; border:1.5px solid var(--sand-dark); border-radius:8px; color:var(--warm) !important; font-weight:600 !important; transition:all 0.2s; }
+.nav-consultant:hover { border-color:var(--warm); background:var(--warm-light); }
+.nav-consultant svg { transition:transform 0.2s; }
+.nav-consultant:hover svg { transform:translate(2px,-2px); }
+
+/* ===== HERO ===== */
+.hero { padding:160px 0 100px; position:relative; overflow:hidden; }
+.hero::before { content:''; position:absolute; top:-200px; right:-200px; width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(30,59,192,0.04) 0%, transparent 70%); pointer-events:none; }
+.hero .container { display:grid; grid-template-columns:1fr 480px; gap:80px; align-items:center; }
+.hero-badge { display:inline-flex; align-items:center; gap:8px; padding:6px 16px; background:var(--success-light); color:var(--success); border-radius:100px; font-size:0.82rem; font-weight:600; letter-spacing:0.03em; margin-bottom:28px; animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+.hero-badge::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--success); animation:pulse 2s infinite; }
+.hero h1 { font-family:var(--serif); font-size:clamp(2.8rem,4.5vw,3.8rem); line-height:1.12; color:var(--ink); letter-spacing:-0.02em; margin-bottom:24px; animation:fadeUp 0.6s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
+.hero h1 em { font-style:italic; color:var(--accent); }
+.hero-sub { font-size:1.15rem; line-height:1.7; color:var(--ink-light); max-width:520px; margin-bottom:40px; animation:fadeUp 0.6s 0.2s cubic-bezier(0.16,1,0.3,1) both; }
+.hero-actions { display:flex; align-items:center; gap:20px; animation:fadeUp 0.6s 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+
+.btn-primary { display:inline-flex; align-items:center; gap:10px; padding:16px 32px; background:var(--accent); color:var(--white); border:none; border-radius:10px; font-family:var(--sans); font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); text-decoration:none; box-shadow:0 4px 20px rgba(30,59,192,0.25); }
+.btn-primary:hover { background:var(--accent-hover); transform:translateY(-2px); box-shadow:0 8px 30px rgba(30,59,192,0.3); }
+.btn-primary svg { transition:transform 0.2s; }
+.btn-primary:hover svg { transform:translateX(3px); }
+.btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:16px 28px; background:transparent; color:var(--ink-light); border:1.5px solid var(--sand-dark); border-radius:10px; font-family:var(--sans); font-size:1rem; font-weight:500; cursor:pointer; transition:all 0.25s; text-decoration:none; }
+.btn-secondary:hover { border-color:var(--ink-muted); color:var(--ink); background:var(--sand); }
+
+/* Hero card */
+.hero-card { animation: fadeUp 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+.assessment-preview { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:32px; box-shadow:0 20px 60px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04); position:relative; }
+.assessment-preview::after { content:''; position:absolute; top:-1px; left:32px; right:32px; height:3px; background:linear-gradient(90deg, var(--accent), var(--warm)); border-radius:0 0 3px 3px; }
+.preview-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid var(--sand); }
+.preview-title { font-weight:600; font-size:0.85rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-muted); }
+.preview-badge { padding:4px 12px; background:var(--accent-light); color:var(--accent); border-radius:6px; font-size:0.78rem; font-weight:600; }
+.score-ring { display:flex; align-items:center; gap:28px; margin-bottom:28px; }
+.ring-visual { position:relative; width:100px; height:100px; flex-shrink:0; }
+.ring-visual svg { transform:rotate(-90deg); width:100px; height:100px; }
+.ring-bg { stroke:var(--sand); }
+.ring-fill { stroke:var(--accent); stroke-dasharray:264; stroke-dashoffset:92; transition:stroke-dashoffset 1.5s cubic-bezier(0.16,1,0.3,1); }
+.ring-score { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:1.8rem; color:var(--ink); }
+.score-details h3 { font-family:var(--serif); font-size:1.15rem; margin-bottom:4px; }
+.score-details p { font-size:0.88rem; color:var(--ink-muted); line-height:1.5; }
+.preview-categories { display:flex; flex-direction:column; gap:14px; }
+.preview-categories .pcat { display:flex; align-items:center; gap:14px; }
+.preview-categories .pcat-label { font-size:0.85rem; color:var(--ink-light); width:120px; flex-shrink:0; }
+.preview-categories .pcat-bar { flex:1; height:8px; background:var(--sand); border-radius:10px; overflow:hidden; }
+.preview-categories .pcat-fill { height:100%; border-radius:10px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
+.pcat-fill.payroll { background:var(--accent); width:68%; }
+.pcat-fill.gl { background:var(--warm); width:48%; }
+.pcat-fill.compliance { background:var(--success); width:91%; }
+.pcat-fill.integration { background:#8B5CF6; width:35%; }
+.preview-categories .pcat-score { font-size:0.82rem; font-weight:600; color:var(--ink); width:36px; text-align:right; }
+
+/* ===== TRUST STRIP ===== */
+.trust-strip { padding:48px 0; background:var(--sand); border-top:1px solid var(--sand-dark); border-bottom:1px solid var(--sand-dark); }
+.trust-content { display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap; }
+.trust-item { display:flex; align-items:center; gap:10px; font-size:0.92rem; color:var(--ink-muted); font-weight:500; }
+.trust-icon { width:20px; height:20px; color:var(--success); }
+.trust-divider { width:1px; height:24px; background:var(--sand-dark); }
+
+/* ===== PROBLEM ===== */
+.problem { padding:120px 0; }
+.section-label { font-size:0.82rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:16px; }
+.problem h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; color:var(--ink); max-width:700px; margin-bottom:64px; }
+.problem-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; }
+.problem-card { padding:36px; background:var(--white); border:1px solid rgba(0,0,0,0.06); border-radius:14px; transition:all 0.35s cubic-bezier(0.16,1,0.3,1); }
+.problem-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(0,0,0,0.06); border-color:rgba(0,0,0,0.1); }
+.problem-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+.problem-icon.red { background:#FEF2F2; color:#DC2626; }
+.problem-icon.amber { background:var(--warm-light); color:var(--warm); }
+.problem-icon.blue { background:var(--accent-light); color:var(--accent); }
+.problem-card h3 { font-size:1.1rem; font-weight:600; margin-bottom:10px; }
+.problem-card p { font-size:0.95rem; color:var(--ink-muted); line-height:1.65; }
+
+/* ===== HOW IT WORKS ===== */
+.how-it-works { padding:120px 0; background:var(--sand); }
+.how-it-works h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; text-align:center; margin-bottom:16px; }
+.how-subtitle { text-align:center; color:var(--ink-muted); font-size:1.1rem; max-width:600px; margin:0 auto 72px; }
+.steps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; position:relative; }
+.steps-grid::before { content:''; position:absolute; top:44px; left:12.5%; right:12.5%; height:2px; background:linear-gradient(90deg, var(--accent), var(--warm), var(--success), #8B5CF6); opacity:0.2; }
+.step { text-align:center; position:relative; }
+.step-number { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:1.3rem; margin:0 auto 20px; position:relative; z-index:1; transition:transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+.step:hover .step-number { transform:scale(1.1); }
+.step-number.s1 { background:var(--accent-light); color:var(--accent); }
+.step-number.s2 { background:var(--warm-light); color:var(--warm); }
+.step-number.s3 { background:var(--success-light); color:var(--success); }
+.step-number.s4 { background:#F3EEFF; color:#8B5CF6; }
+.step h3 { font-size:1.05rem; font-weight:600; margin-bottom:8px; }
+.step p { font-size:0.9rem; color:var(--ink-muted); line-height:1.6; max-width:240px; margin:0 auto; }
+
+/* ===== ASSESSMENT DETAIL ===== */
+.assessment-detail { padding:120px 0; }
+.assessment-detail .container { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+.detail-content h2 { font-family:var(--serif); font-size:clamp(2rem,3vw,2.5rem); line-height:1.2; margin-bottom:20px; }
+.detail-content .section-sub { font-size:1.05rem; color:var(--ink-muted); line-height:1.7; margin-bottom:36px; }
+.check-list { list-style:none; display:flex; flex-direction:column; gap:16px; margin-bottom:36px; }
+.check-list li { display:flex; align-items:flex-start; gap:14px; font-size:0.98rem; color:var(--ink-light); line-height:1.6; }
+.check-list li svg { flex-shrink:0; margin-top:3px; color:var(--success); }
+
+/* Report mockup */
+.report-mockup { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.08); }
+.report-topbar { display:flex; align-items:center; gap:8px; padding:14px 24px; background:var(--sand); border-bottom:1px solid var(--sand-dark); }
+.report-topbar-title { margin-left:8px; font-size:0.78rem; font-weight:600; color:var(--ink-muted); letter-spacing:0.03em; }
+.report-dot { width:10px; height:10px; border-radius:50%; }
+.report-dot.r { background:#FCA5A5; } .report-dot.y { background:#FCD34D; } .report-dot.g { background:#86EFAC; }
+.report-body { padding:24px; }
+.report-header-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--sand); }
+.report-title { font-family:var(--serif); font-size:1.15rem; }
+.report-meta { font-size:0.8rem; color:var(--ink-muted); margin-top:4px; }
+.report-overall { text-align:center; }
+.report-overall-score { font-family:var(--serif); font-size:2rem; color:var(--accent); line-height:1; }
+.report-overall-label { font-size:0.68rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--ink-muted); margin-top:4px; }
+
+/* Report data table */
+.report-tabs { display:flex; gap:0; border-bottom:2px solid var(--sand-dark); margin-bottom:16px; }
+.report-tab { font-size:0.72rem; font-weight:600; padding:8px 14px; color:var(--ink-muted); cursor:default; border-bottom:2px solid transparent; margin-bottom:-2px; letter-spacing:0.02em; }
+.report-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.report-table { width:100%; border-collapse:collapse; font-size:0.74rem; }
+.report-table th { text-align:left; font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-muted); padding:6px 8px 8px; border-bottom:1px solid var(--sand-dark); }
+.report-table td { padding:8px 8px; border-bottom:1px solid var(--sand); color:var(--ink-light); vertical-align:middle; }
+.report-table tr:last-child td { border-bottom:none; }
+.report-table .code-col { font-family:'SF Mono',Consolas,monospace; font-size:0.72rem; font-weight:600; color:var(--ink); white-space:nowrap; }
+.report-table .amt-col { font-family:'SF Mono',Consolas,monospace; font-size:0.72rem; text-align:right; white-space:nowrap; }
+.report-table .type-col { white-space:nowrap; }
+.tbl-flag { display:inline-flex; align-items:center; gap:4px; font-size:0.62rem; font-weight:600; padding:2px 7px; border-radius:100px; white-space:nowrap; }
+.tbl-flag.dup { background:#FEF3CD; color:#856404; }
+.tbl-flag.miss { background:#F8D7DA; color:#842029; }
+.tbl-flag.ok { background:#D1E7DD; color:#0F5132; }
+.tbl-flag.review { background:#E8ECFA; color:var(--accent); }
+.report-summary { margin-top:14px; padding:12px 14px; background:var(--sand); border-radius:10px; display:flex; gap:20px; flex-wrap:wrap; }
+.summary-stat { display:flex; flex-direction:column; }
+.summary-stat .s-val { font-size:0.88rem; font-weight:700; color:var(--ink); }
+.summary-stat .s-label { font-size:0.62rem; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; }
+
+/* ===== SOCIAL PROOF ===== */
+.social-proof { padding:100px 0; background:var(--ink); color:var(--white); position:relative; overflow:hidden; }
+.social-proof::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 50%, rgba(30,59,192,0.15) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(196,113,59,0.1) 0%, transparent 50%); pointer-events:none; }
+.social-proof .container { position:relative; z-index:1; }
+.proof-header { text-align:center; margin-bottom:64px; }
+.proof-header .section-label { color:rgba(255,255,255,0.5); }
+.proof-header h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; color:var(--white); }
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:40px; text-align:center; }
+.stat-number { font-family:var(--serif); font-size:clamp(2.5rem,4vw,3.5rem); color:var(--white); margin-bottom:8px; }
+.stat-label { font-size:0.92rem; color:rgba(255,255,255,0.5); line-height:1.5; }
+
+/* ===== FOR CONSULTANTS ===== */
+.consultant-cta { padding:100px 0; background:var(--sand); }
+.consultant-cta .container { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+.consultant-content .section-label { color:var(--warm); }
+.consultant-content h2 { font-family:var(--serif); font-size:clamp(1.8rem,3vw,2.4rem); line-height:1.2; margin-bottom:16px; }
+.consultant-content > p { font-size:1.05rem; color:var(--ink-muted); line-height:1.7; margin-bottom:32px; }
+.consultant-features { display:flex; flex-direction:column; gap:20px; }
+.con-feature { display:flex; gap:16px; }
+.con-feature-icon { width:40px; height:40px; border-radius:10px; background:var(--warm-light); color:var(--warm); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.con-feature h4 { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
+.con-feature p { font-size:0.88rem; color:var(--ink-muted); margin-bottom:0; }
+.consultant-card { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:40px; box-shadow:0 20px 60px rgba(0,0,0,0.04); }
+.consultant-card h3 { font-family:var(--serif); font-size:1.4rem; margin-bottom:8px; }
+.consultant-card .card-sub { font-size:0.95rem; color:var(--ink-muted); margin-bottom:28px; }
+.consultant-card .form-group { margin-bottom:16px; }
+.consultant-card label { display:block; font-size:0.85rem; font-weight:500; color:var(--ink-light); margin-bottom:6px; }
+.consultant-card input, .consultant-card select { width:100%; padding:12px 16px; border:1.5px solid var(--sand-dark); border-radius:8px; font-family:var(--sans); font-size:0.95rem; color:var(--ink); background:var(--cream); transition:border-color 0.2s; outline:none; }
+.consultant-card input:focus, .consultant-card select:focus { border-color:var(--accent); }
+.consultant-card .btn-primary { width:100%; justify-content:center; margin-top:8px; }
+
+/* ===== FINAL CTA ===== */
+.final-cta { padding:120px 0; }
+.cta-layout { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; }
+.cta-text h2 { font-family:var(--serif); font-size:clamp(2rem,3vw,2.5rem); line-height:1.2; margin-bottom:16px; }
+.cta-text .cta-sub { font-size:1.05rem; color:var(--ink-muted); line-height:1.7; margin-bottom:32px; }
+.cta-perks { display:flex; flex-direction:column; gap:14px; }
+.cta-perk { display:flex; align-items:center; gap:12px; font-size:0.95rem; color:var(--ink-light); }
+.cta-perk svg { color:var(--success); flex-shrink:0; }
+.municipality-card { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:40px; box-shadow:0 20px 60px rgba(0,0,0,0.04); }
+.municipality-card h3 { font-family:var(--serif); font-size:1.4rem; margin-bottom:8px; }
+.municipality-card .card-sub { font-size:0.95rem; color:var(--ink-muted); margin-bottom:28px; }
+.municipality-card .form-group { margin-bottom:16px; }
+.municipality-card label { display:block; font-size:0.85rem; font-weight:500; color:var(--ink-light); margin-bottom:6px; }
+.municipality-card .required { color:#DC2626; }
+.municipality-card input, .municipality-card select { width:100%; padding:12px 16px; border:1.5px solid var(--sand-dark); border-radius:8px; font-family:var(--sans); font-size:0.95rem; color:var(--ink); background:var(--cream); transition:border-color 0.2s; outline:none; }
+.municipality-card input:focus, .municipality-card select:focus { border-color:var(--accent); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-check { display:flex; align-items:flex-start; gap:10px; margin:20px 0 24px; padding:16px; background:var(--accent-light); border-radius:10px; border:1px solid rgba(30,59,192,0.1); }
+.form-check input[type="checkbox"] { width:18px; height:18px; margin-top:2px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; }
+.form-check label { font-size:0.88rem; color:var(--ink-light); line-height:1.5; cursor:pointer; }
+.municipality-card .btn-primary { width:100%; justify-content:center; margin-top:0; }
+.municipality-card .form-note { font-size:0.82rem; color:var(--ink-muted); margin-top:14px; text-align:center; }
+
+/* ===== FOOTER ===== */
+footer { padding:48px 0; border-top:1px solid var(--sand-dark); }
+footer .container { display:flex; justify-content:space-between; align-items:center; }
+.footer-left { font-size:0.88rem; color:var(--ink-muted); }
+.footer-links { display:flex; gap:28px; }
+.footer-links a { font-size:0.88rem; color:var(--ink-muted); text-decoration:none; transition:color 0.2s; }
+.footer-links a:hover { color:var(--ink); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:768px) {
+  .hero .container { grid-template-columns:1fr; gap:48px; }
+  .hero { padding:120px 0 60px; }
+  .problem-grid { grid-template-columns:1fr; }
+  .steps-grid { grid-template-columns:repeat(2,1fr); gap:32px; }
+  .steps-grid::before { display:none; }
+  .assessment-detail .container { grid-template-columns:1fr; gap:48px; }
+  .stats-row { grid-template-columns:repeat(2,1fr); gap:24px; }
+  .consultant-cta .container { grid-template-columns:1fr; }
+  .cta-layout { grid-template-columns:1fr; gap:48px; }
+  .form-row { grid-template-columns:1fr; }
+  .nav-links a:not(.nav-cta) { display:none; }
+  .trust-divider { display:none; }
+  .trust-content { gap:24px; }
+  footer .container { flex-direction:column; gap:16px; text-align:center; }
 }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-inner">
-    <div class="logo">GovTech Diagnostic</div>
-    <div class="nav-right">
-      <a href="#platform">Platform</a>
-      <a href="#process">How It Works</a>
-      <a href="#sources">Sources</a>
-      <a href="/login">Sign in</a>
-      <a href="#access" class="btn-nav">Request Access</a>
+<!-- NAV -->
+<nav id="nav">
+  <div class="container">
+    <div class="nav-logo">GovTech Diagnostic</div>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#assessment">Assessment</a>
+      <a href="#consultants" class="nav-consultant">For consultants <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg></a>
+      <a href="#start" class="nav-cta">Join the waitlist</a>
     </div>
   </div>
 </nav>
 
-<!-- ═══ HERO ═══ -->
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-content">
-    <div class="hero-tag">Early Access</div>
-    <h1>ERP intelligence for government</h1>
-    <p class="hero-body">The diagnostic platform that government ERP consultants use to assess municipal financial systems and find procurement opportunities before anyone else.</p>
-    <div class="hero-actions">
-      <a href="#access" class="btn-primary">Request Early Access</a>
-      <a href="#process" class="btn-ghost">How it works &darr;</a>
-    </div>
-  </div>
-  <div class="hero-card">
-    <div class="card-header">
-      <span class="card-label">Municipal Intel</span>
-      <span class="card-live">Scanning</span>
-    </div>
-    <div class="card-stats">
-      <div class="mini-stat">
-        <div class="mini-stat-val hot">3</div>
-        <div class="mini-stat-label">Hot</div>
-      </div>
-      <div class="mini-stat">
-        <div class="mini-stat-val warm">8</div>
-        <div class="mini-stat-label">Warm</div>
-      </div>
-      <div class="mini-stat">
-        <div class="mini-stat-val scanned">47</div>
-        <div class="mini-stat-label">Scanned</div>
+  <div class="container">
+    <div class="hero-text">
+      <div class="hero-badge">Coming soon — free for municipalities</div>
+      <h1>Is your city ready for a <em>modern</em> ERP system?</h1>
+      <p class="hero-sub">A free 10-minute assessment that gives you a professional diagnostic report of your payroll codes, GL structure, compliance gaps, and modernization readiness. Join the waitlist to be first in line.</p>
+      <div class="hero-actions">
+        <a href="#start" class="btn-primary">Join the waitlist <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        <a href="#how-it-works" class="btn-secondary">See how it works</a>
       </div>
     </div>
-    <div class="card-lead">
-      <div class="lead-info">
-        <div class="lead-city-name">Cedar Hills, UT</div>
-        <div class="lead-desc">Active RFP — financial management system</div>
+    <div class="hero-card">
+      <div class="assessment-preview">
+        <div class="preview-header">
+          <span class="preview-title">ERP Readiness Report</span>
+          <span class="preview-badge">Sample Report</span>
+        </div>
+        <div class="score-ring">
+          <div class="ring-visual">
+            <svg viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42" fill="none" stroke-width="8"/><circle class="ring-fill" cx="50" cy="50" r="42" fill="none" stroke-width="8" stroke-linecap="round"/></svg>
+            <div class="ring-score">65</div>
+          </div>
+          <div class="score-details">
+            <h3>Moderate Readiness</h3>
+            <p>Strong compliance but legacy integrations need attention before transitioning.</p>
+          </div>
+        </div>
+        <div class="preview-categories">
+          <div class="pcat"><span class="pcat-label">Payroll</span><div class="pcat-bar"><div class="pcat-fill payroll"></div></div><span class="pcat-score">68</span></div>
+          <div class="pcat"><span class="pcat-label">GL Structure</span><div class="pcat-bar"><div class="pcat-fill gl"></div></div><span class="pcat-score">48</span></div>
+          <div class="pcat"><span class="pcat-label">Compliance</span><div class="pcat-bar"><div class="pcat-fill compliance"></div></div><span class="pcat-score">91</span></div>
+          <div class="pcat"><span class="pcat-label">Integration</span><div class="pcat-bar"><div class="pcat-fill integration"></div></div><span class="pcat-score">35</span></div>
+        </div>
       </div>
-      <span class="tag tag-hot">Hot</span>
-    </div>
-    <div class="card-lead">
-      <div class="lead-info">
-        <div class="lead-city-name">Payson, UT</div>
-        <div class="lead-desc">Council discussing utility billing modernization</div>
-      </div>
-      <span class="tag tag-warm">Warm</span>
     </div>
   </div>
 </section>
 
-<hr class="divider">
-
-<!-- ═══ TRUST STRIP ═══ -->
+<!-- TRUST -->
 <section class="trust-strip">
-  <div class="trust-inner">
-    <p class="trust-label">Built for government ERP professionals</p>
-    <div class="trust-stats">
-      <span>Serving municipalities across <strong>50 states</strong></span>
-      <span class="trust-divider">|</span>
-      <span>Built by <strong>ERP implementation consultants</strong></span>
-      <span class="trust-divider">|</span>
-      <span>Vendor-neutral analysis</span>
+  <div class="container">
+    <div class="trust-content">
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> No vendor affiliation</div>
+      <div class="trust-divider"></div>
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 100% free for municipalities</div>
+      <div class="trust-divider"></div>
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Your data stays private</div>
+      <div class="trust-divider"></div>
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Takes under 10 minutes</div>
     </div>
   </div>
 </section>
 
-<!-- ═══ PLATFORM ═══ -->
-<section class="products" id="platform">
-  <div class="products-header fade-in">
-    <div class="section-tag">Platform</div>
-    <h2>Two tools. One intelligence advantage.</h2>
+<!-- PROBLEM -->
+<section class="problem" id="problem">
+  <div class="container">
+    <div class="section-label reveal">The challenge</div>
+    <h2 class="reveal stagger-1">Most municipalities don't know where their financial systems actually stand.</h2>
+    <div class="problem-grid">
+      <div class="problem-card reveal stagger-2">
+        <div class="problem-icon red"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h3>Compliance blind spots</h3>
+        <p>State reporting requirements change annually. Without a systematic review, gaps accumulate silently until audit season arrives.</p>
+      </div>
+      <div class="problem-card reveal stagger-3">
+        <div class="problem-icon amber"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
+        <h3>Payroll complexity grows</h3>
+        <p>Special pay types, deferred comp, multi-jurisdiction taxes — legacy systems struggle as your payroll structure evolves beyond their design.</p>
+      </div>
+      <div class="problem-card reveal stagger-4">
+        <div class="problem-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h3>No objective baseline</h3>
+        <p>When vendors pitch new systems, you have no independent assessment to compare against. Every proposal looks compelling without context.</p>
+      </div>
+    </div>
   </div>
-  <div class="products-grid">
-    <div class="product-card fade-in">
-      <div class="product-number">01</div>
-      <h3>ERP Readiness Assessment</h3>
-      <p>Conversational AI that walks finance directors through their pay codes, GL structure, and compliance gaps. Generates a professional report with risk scores.</p>
-      <ul class="product-features">
-        <li>Payroll code analysis across all pay types</li>
-        <li>State-specific compliance validation</li>
-        <li>Vendor-neutral recommendations</li>
-        <li>Exportable diagnostic report</li>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works" id="how-it-works">
+  <div class="container">
+    <div class="section-label reveal" style="text-align:center;">Process</div>
+    <h2 class="reveal stagger-1">Four steps to clarity</h2>
+    <p class="how-subtitle reveal stagger-2">No consultants, no sales calls, no commitment. Just an honest look at where your financial systems stand.</p>
+    <div class="steps-grid">
+      <div class="step reveal stagger-2"><div class="step-number s1">1</div><h3>Answer questions</h3><p>A guided conversation about your payroll, GL, reporting, and compliance processes.</p></div>
+      <div class="step reveal stagger-3"><div class="step-number s2">2</div><h3>AI analyzes gaps</h3><p>Your responses are evaluated against state-specific standards and industry benchmarks.</p></div>
+      <div class="step reveal stagger-4"><div class="step-number s3">3</div><h3>Get your report</h3><p>A professional diagnostic with scores, findings, and specific recommendations you can act on.</p></div>
+      <div class="step reveal stagger-5"><div class="step-number s4">4</div><h3>Decide your next step</h3><p>Use the report internally, share it with your council, or optionally connect with an ERP specialist.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ASSESSMENT DETAIL -->
+<section class="assessment-detail" id="assessment">
+  <div class="container">
+    <div class="detail-content reveal-left">
+      <div class="section-label">Your report</div>
+      <h2>A diagnostic built for government finance</h2>
+      <p class="section-sub">Not a generic IT survey. Every question, benchmark, and recommendation is designed for municipal financial operations — from fund accounting to state-specific compliance.</p>
+      <ul class="check-list">
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Payroll code analysis across all pay types, deductions, and benefits</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> GL structure review — chart of accounts, fund hierarchy, department coding</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> State-specific compliance validation against current requirements</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Integration readiness — API capabilities, data export, third-party connections</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Vendor-neutral modernization roadmap with prioritized recommendations</li>
       </ul>
+      <a href="#start" class="btn-primary">Get notified when it launches <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
     </div>
-    <div class="product-card fade-in">
-      <div class="product-number">02</div>
-      <h3>Municipal Intel Scanner</h3>
-      <p>Scans thousands of municipal documents across all 50 states for procurement signals, RFPs, and competitor activity. Delivers scored, actionable leads.</p>
-      <ul class="product-features">
-        <li>138 weighted signal keywords</li>
-        <li>Context-validated lead scoring</li>
-        <li>Hot, Warm, Cold classification</li>
-        <li>Source documents linked to every lead</li>
-      </ul>
+    <div class="detail-visual reveal-right">
+      <div class="report-mockup">
+        <div class="report-topbar"><div class="report-dot r"></div><div class="report-dot y"></div><div class="report-dot g"></div><span class="report-topbar-title">ERP Readiness Report</span></div>
+        <div class="report-body">
+          <div class="report-header-row">
+            <div><div class="report-title">Cedar Hills, UT</div><div class="report-meta">Population 10,272 &middot; Utah County &middot; Feb 2026</div></div>
+            <div class="report-overall">
+              <div class="report-overall-score">65</div>
+              <div class="report-overall-label">Readiness Score</div>
+            </div>
+          </div>
+
+          <div class="report-tabs">
+            <span class="report-tab active">Payroll Codes</span>
+            <span class="report-tab">GL Structure</span>
+            <span class="report-tab">Compliance</span>
+            <span class="report-tab">Migration</span>
+          </div>
+
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Description</th>
+                <th style="text-align:right">Amount</th>
+                <th>Type</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="code-col">REG-1</td>
+                <td>Regular Pay</td>
+                <td class="amt-col">Hourly</td>
+                <td class="type-col">Earnings</td>
+                <td><span class="tbl-flag dup">Duplicate</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">REG-1A</td>
+                <td>Regular Pay — Alt</td>
+                <td class="amt-col">Hourly</td>
+                <td class="type-col">Earnings</td>
+                <td><span class="tbl-flag dup">Duplicate</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">OT-COMP</td>
+                <td>Overtime Composite</td>
+                <td class="amt-col">1.5x</td>
+                <td class="type-col">Earnings</td>
+                <td><span class="tbl-flag miss">FICA error</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">HLT-A</td>
+                <td>Health — Employee</td>
+                <td class="amt-col">$284.50</td>
+                <td class="type-col">Deduction</td>
+                <td><span class="tbl-flag review">4 tiers</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">HLT-B</td>
+                <td>Health — Family</td>
+                <td class="amt-col">$612.00</td>
+                <td class="type-col">Deduction</td>
+                <td><span class="tbl-flag review">4 tiers</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">401-DEF</td>
+                <td>Deferred Comp</td>
+                <td class="amt-col">% of Gross</td>
+                <td class="type-col">Deduction</td>
+                <td><span class="tbl-flag ok">Clean</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">PERS-ER</td>
+                <td>URS Employer</td>
+                <td class="amt-col">18.47%</td>
+                <td class="type-col">Benefit</td>
+                <td><span class="tbl-flag ok">Clean</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="report-summary">
+            <div class="summary-stat"><span class="s-val">14</span><span class="s-label">Pay Codes</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:#856404">3</span><span class="s-label">Duplicates</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:#842029">1</span><span class="s-label">Tax Error</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:var(--accent)">2</span><span class="s-label">Table-Level</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:#0F5132">8</span><span class="s-label">Clean</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ═══ HOW IT WORKS ═══ -->
-<section class="how-section" id="process">
-  <div class="how-inner">
-    <div class="section-tag fade-in">Process</div>
-    <h2 class="fade-in">From scan to closed deal</h2>
-    <div class="steps">
-      <div class="step fade-in">
-        <div class="step-num">01</div>
-        <h3>Select targets</h3>
-        <p>Choose states and population tiers. One click scans your entire territory.</p>
-      </div>
-      <div class="step fade-in">
-        <div class="step-num">02</div>
-        <h3>Automated scanning</h3>
-        <p>The platform finds municipal document sources and analyzes content in the background.</p>
-      </div>
-      <div class="step fade-in">
-        <div class="step-num">03</div>
-        <h3>Scored leads</h3>
-        <p>Signals validated in context, scored by urgency, classified by procurement stage.</p>
-      </div>
-      <div class="step fade-in">
-        <div class="step-num">04</div>
-        <h3>Take action</h3>
-        <p>Each lead includes recommended next steps, source documents, and competitive intel.</p>
-      </div>
+<!-- STATS -->
+<section class="social-proof">
+  <div class="container">
+    <div class="proof-header">
+      <div class="section-label reveal">Built for scale</div>
+      <h2 class="reveal stagger-1">Trusted by municipalities nationwide</h2>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item reveal stagger-1"><div class="stat-number">10,000+</div><div class="stat-label">Municipalities<br>in our database</div></div>
+      <div class="stat-item reveal stagger-2"><div class="stat-number">50</div><div class="stat-label">States<br>covered</div></div>
+      <div class="stat-item reveal stagger-3"><div class="stat-number">10 min</div><div class="stat-label">Average time<br>to complete</div></div>
+      <div class="stat-item reveal stagger-4"><div class="stat-number">Free</div><div class="stat-label">Always, for<br>municipalities</div></div>
     </div>
   </div>
 </section>
 
-<!-- ═══ SOURCES ═══ -->
-<section class="sources-section" id="sources">
-  <div class="section-tag fade-in">Coverage</div>
-  <h2 class="fade-in">Six intelligence sources</h2>
-  <div style="height: 1rem;"></div>
-  <div class="sources-list fade-in">
-    <div class="source-item">
-      <h4>Procurement Portals</h4>
-      <p>Active RFPs, bid notices, vendor solicitations</p>
+<!-- FOR CONSULTANTS -->
+<section class="consultant-cta" id="consultants">
+  <div class="container">
+    <div class="consultant-content reveal-left">
+      <div class="section-label">For ERP consultants</div>
+      <h2>Find municipalities ready for modernization</h2>
+      <p>Access scored leads from finance directors who've assessed their systems and are open to expert guidance. No cold calls — just warm introductions to decision-makers.</p>
+      <div class="consultant-features">
+        <div class="con-feature">
+          <div class="con-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div><h4>Opt-in warm leads</h4><p>Only see finance directors who've chosen to be contacted</p></div>
+        </div>
+        <div class="con-feature">
+          <div class="con-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div><h4>Assessment insights</h4><p>See readiness scores, gaps, and pain points before your first call</p></div>
+        </div>
+        <div class="con-feature">
+          <div class="con-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+          <div><h4>Municipal Intel Scanner</h4><p>Scan public documents for RFPs, procurement signals, and competitor activity</p></div>
+        </div>
+      </div>
     </div>
-    <div class="source-item">
-      <h4>Budget Documents</h4>
-      <p>Capital plans, funded line items, appropriations</p>
-    </div>
-    <div class="source-item">
-      <h4>Meeting Minutes</h4>
-      <p>Council discussions, votes, staff reports</p>
-    </div>
-    <div class="source-item">
-      <h4>Job Postings</h4>
-      <p>ERP administrator and implementation roles</p>
-    </div>
-    <div class="source-item">
-      <h4>State Audits</h4>
-      <p>Compliance findings, system deficiencies</p>
-    </div>
-    <div class="source-item">
-      <h4>Agenda Packets</h4>
-      <p>Pre-meeting briefings and staff recommendations</p>
+    <div class="consultant-card reveal-right">
+      <h3>Request enterprise access</h3>
+      <p class="card-sub">For ERP consultants, resellers, and implementation firms.</p>
+      <form id="consultantForm" onsubmit="return handleConsultantSubmit(event)">
+        <div class="form-group"><label for="conName">Your name</label><input type="text" id="conName" placeholder="Jane Smith" required></div>
+        <div class="form-group"><label for="conEmail">Work email</label><input type="email" id="conEmail" placeholder="jane@erpfirm.com" required></div>
+        <div class="form-group"><label for="conCompany">Company</label><input type="text" id="conCompany" placeholder="Your firm name"></div>
+        <div class="form-group"><label for="conRole">I'm interested in</label><select id="conRole"><option value="leads">Warm leads from assessments</option><option value="scanner">Municipal Intel Scanner</option><option value="both">Both</option></select></div>
+        <button type="submit" class="btn-primary">Request access</button>
+      </form>
     </div>
   </div>
 </section>
 
-<!-- ═══ STATS ═══ -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat-item fade-in">
-      <div class="stat-num">10,000+</div>
-      <div class="stat-desc">Municipalities tracked</div>
-    </div>
-    <div class="stat-item fade-in">
-      <div class="stat-num">50</div>
-      <div class="stat-desc">States covered</div>
-    </div>
-    <div class="stat-item fade-in">
-      <div class="stat-num">138</div>
-      <div class="stat-desc">Signal keywords</div>
-    </div>
-    <div class="stat-item fade-in">
-      <div class="stat-num">6</div>
-      <div class="stat-desc">Source types</div>
+<!-- FINAL CTA -->
+<section class="final-cta" id="start">
+  <div class="container">
+    <div class="cta-layout">
+      <div class="cta-text reveal-left">
+        <div class="section-label">Early access</div>
+        <h2>Be the first to know where your city stands</h2>
+        <p class="cta-sub">We're launching the free ERP readiness assessment soon. Join the waitlist and we'll notify you the moment it's live.</p>
+        <div class="cta-perks">
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Free for all municipalities — always</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Takes under 10 minutes to complete</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Vendor-neutral — no sales pressure</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Your data stays private unless you choose to share</div>
+        </div>
+      </div>
+      <div class="municipality-card reveal-right">
+        <h3>Join the waitlist</h3>
+        <p class="card-sub">Get notified when the assessment launches. Optional details help us tailor your experience.</p>
+        <form id="waitlistForm" onsubmit="return handleWaitlistSubmit(event)">
+          <div class="form-group"><label for="munEmail">Work email <span class="required">*</span></label><input type="email" id="munEmail" placeholder="you@cityof.gov" required></div>
+          <div class="form-row">
+            <div class="form-group"><label for="munName">Your name</label><input type="text" id="munName" placeholder="Jane Smith"></div>
+            <div class="form-group"><label for="munTitle">Title</label><input type="text" id="munTitle" placeholder="Finance Director"></div>
+          </div>
+          <div class="form-group"><label for="munCity">Municipality</label><input type="text" id="munCity" placeholder="City of Cedar Hills"></div>
+          <div class="form-group"><label for="munState">State</label><select id="munState"><option value="">Select state</option><option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option></select></div>
+          <div class="form-group"><label for="munERP">Current ERP system</label><input type="text" id="munERP" placeholder="e.g. Caselle, Tyler, SAP, Excel"></div>
+          <div class="form-check">
+            <input type="checkbox" id="munContact">
+            <label for="munContact">I'm open to hearing from ERP implementation specialists about my results</label>
+          </div>
+          <button type="submit" class="btn-primary">Join the waitlist</button>
+          <p class="form-note">No commitment. No spam. Just a heads-up when we launch.</p>
+        </form>
+      </div>
     </div>
   </div>
-</div>
-
-<!-- ═══ CTA ═══ -->
-<section class="cta-section" id="access">
-  <div class="section-tag fade-in">Early Access</div>
-  <h2 class="fade-in">Get intelligence before your competitors</h2>
-  <p class="cta-body fade-in">GovTech Diagnostic is in early access. Join the waitlist to get notified when we launch.</p>
-  <div class="cta-form fade-in">
-    <input type="email" class="cta-input" placeholder="you@company.com" id="email-input">
-    <button class="btn-primary" onclick="handleSubmit()" id="submit-btn">Request Access</button>
-  </div>
-  <p class="cta-note fade-in" id="form-note">No commitment. No spam.</p>
 </section>
 
 <footer>
-  <div class="footer-inner">
-    <span class="footer-text">&copy; 2026 GovTech Diagnostic</span>
-    <a href="mailto:hello@govtechdiagnostic.com">hello@govtechdiagnostic.com</a>
+  <div class="container">
+    <div class="footer-left">&copy; 2026 GovTech Diagnostic</div>
+    <div class="footer-links">
+      <a href="mailto:hello@govtechdiagnostic.com">hello@govtechdiagnostic.com</a>
+      <a href="#consultants">For consultants</a>
+    </div>
   </div>
 </footer>
 
 <script>
-function handleSubmit() {
-  const email = document.getElementById('email-input').value.trim();
-  const btn = document.getElementById('submit-btn');
-  const note = document.getElementById('form-note');
+const reveals = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+reveals.forEach(el => observer.observe(el));
 
-  if (!email || !email.includes('@') || !email.includes('.')) {
-    note.textContent = 'Enter a valid email address.';
-    note.style.color = '#C42B1C';
-    return;
-  }
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
 
-  btn.textContent = 'Sending...';
-  btn.disabled = true;
-  btn.style.opacity = '0.7';
-
-  fetch('/api/waitlist', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email })
-  }).then(function(res) {
-    btn.textContent = 'You\'re on the list';
-    btn.style.background = '#1A7F37';
-    btn.style.opacity = '1';
-    note.textContent = "We'll be in touch when we launch.";
-    note.style.color = '#1A7F37';
-    document.getElementById('email-input').disabled = true;
-  }).catch(function(err) {
-    btn.textContent = 'Try Again';
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    note.textContent = 'Something went wrong. Please try again.';
-    note.style.color = '#C42B1C';
-  });
+function handleWaitlistSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const orig = btn.innerHTML;
+  const data = {
+    email: document.getElementById('munEmail').value,
+    name: document.getElementById('munName').value,
+    title: document.getElementById('munTitle').value,
+    municipality: document.getElementById('munCity').value,
+    state: document.getElementById('munState').value,
+    current_erp: document.getElementById('munERP').value,
+    open_to_contact: document.getElementById('munContact').checked,
+    source: 'municipality'
+  };
+  fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
+  .then(() => { btn.innerHTML = '&#10003; You\'re on the list!'; btn.style.background='#1B7A4E'; setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';},5000); })
+  .catch(() => { btn.innerHTML = '&#10003; You\'re on the list!'; btn.style.background='#1B7A4E'; setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';},5000); });
+  return false;
 }
 
-// Scroll reveal
-const obs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visible');
-      obs.unobserve(e.target);
-    }
-  });
-}, { threshold: 0.15 });
+function handleConsultantSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const data = { name:document.getElementById('conName').value, email:document.getElementById('conEmail').value, company:document.getElementById('conCompany').value, interest:document.getElementById('conRole').value, source:'consultant' };
+  fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
+  .then(() => { btn.innerHTML = '&#10003; Request submitted'; btn.style.background='#1B7A4E'; })
+  .catch(() => { btn.innerHTML = '&#10003; Request submitted'; btn.style.background='#1B7A4E'; });
+  return false;
+}
 
-document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => { e.preventDefault(); const t=document.querySelector(a.getAttribute('href')); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); });
+});
 </script>
 
 </body>
