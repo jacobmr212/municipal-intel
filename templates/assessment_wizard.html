@@ -520,7 +520,9 @@
     function initWizard() {
       loadProgress();
       if (questions.length > 0) {
-        showQuestion(0);
+        // Resume from saved position, or start at question 0
+        const startIndex = currentQuestionIndex || 0;
+        showQuestion(startIndex);
       }
     }
 
