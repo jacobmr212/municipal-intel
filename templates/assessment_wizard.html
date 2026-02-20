@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP Assessment - Section {{ section_number }}</title>
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/static/govtech-logo-dark.svg">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy: #1B2A4A;
+      --blue: #2E5FA1;
+      --light-blue: #EBE9FE;
+      --warm-gray: #77716B;
+      --cream: #F5F3EF;
+      --border: #E5E2DC;
+      --green: #22C55E;
+      --yellow: #EAB308;
+      --red: #EF4444;
+      --amber: #F59E0B;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--cream);
+      color: #1A1816;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Fixed Header */
+    .wizard-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      padding: 1rem 1.5rem 0.5rem;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .back-link {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .back-link:hover {
+      color: var(--navy);
+    }
+
+    .section-title {
+      font-size: 1rem;
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    .question-counter {
+      font-size: 0.9rem;
+      color: var(--warm-gray);
+      font-weight: 500;
+    }
+
+    .progress-bar-container {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--navy));
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: width;
+    }
+
+    /* Main Content Area */
+    .wizard-main {
+      padding-top: 100px; /* Header height */
+      padding-bottom: 100px; /* Footer height */
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .question-container {
+      max-width: 640px;
+      width: 100%;
+      padding: 0 1.5rem;
+      position: relative;
+    }
+
+    .question-card {
+      position: absolute;
+      width: 100%;
+      left: 0;
+      padding: 0 1.5rem;
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform, opacity;
+    }
+
+    .question-card.active {
+      position: relative;
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .question-card.exit-left {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    .ai-context {
+      font-size: 0.875rem;
+      color: var(--warm-gray);
+      margin-bottom: 1rem;
+      font-weight: 400;
+    }
+
+    .question-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
+      color: var(--navy);
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Input Elements */
+    .input-wrapper {
+      margin-bottom: 1rem;
+    }
+
+    /* Single-select cards */
+    .choice-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .choice-card {
+      padding: 1rem 1.25rem;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--navy);
+      text-align: left;
+    }
+
+    .choice-card:hover {
+      border-color: var(--blue);
+      background: var(--light-blue);
+    }
+
+    .choice-card.selected {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: white;
+    }
+
+    /* Text input */
+    .text-input, .number-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: var(--navy);
+      transition: border-color 0.15s ease;
+    }
+
+    .text-input:focus, .number-input:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    .text-input::placeholder, .number-input::placeholder {
+      color: var(--warm-gray);
+    }
+
+    /* Dropdown */
+    .select-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: var(--navy);
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .select-input:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    /* Multi-select */
+    .multi-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .multi-select-card {
+      padding: 0.875rem 1rem;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--navy);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .multi-select-card:hover {
+      border-color: var(--blue);
+      background: var(--light-blue);
+    }
+
+    .multi-select-card.selected {
+      border-color: var(--blue);
+      background: var(--light-blue);
+    }
+
+    .multi-select-card input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .selection-count {
+      font-size: 0.875rem;
+      color: var(--warm-gray);
+      margin-top: 0.5rem;
+    }
+
+    /* Help expander */
+    .help-section {
+      margin-top: 1rem;
+    }
+
+    .help-toggle {
+      color: var(--blue);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0;
+    }
+
+    .help-toggle:hover {
+      color: var(--navy);
+    }
+
+    .help-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+      color: var(--warm-gray);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .help-content.expanded {
+      max-height: 200px;
+      margin-top: 0.5rem;
+    }
+
+    /* Flags/Alerts */
+    .flag-alert {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: all 0.2s ease;
+    }
+
+    .flag-alert.show {
+      max-height: 200px;
+      opacity: 1;
+    }
+
+    .flag-alert.critical {
+      background: rgba(239, 68, 68, 0.1);
+      border-left-color: var(--red);
+      color: #991B1B;
+    }
+
+    .flag-alert.moderate {
+      background: rgba(245, 158, 11, 0.1);
+      border-left-color: var(--amber);
+      color: #92400E;
+    }
+
+    .flag-alert.info {
+      background: rgba(46, 95, 161, 0.1);
+      border-left-color: var(--blue);
+      color: #1E3A8A;
+    }
+
+    /* Fixed Footer */
+    .wizard-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      z-index: 100;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-back {
+      background: white;
+      color: var(--navy);
+      border: 2px solid var(--border);
+    }
+
+    .btn-back:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .btn-back:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-continue {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-continue:hover:not(:disabled) {
+      background: var(--navy);
+      transform: translateY(-1px);
+    }
+
+    .btn-continue:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Save indicator */
+    .save-indicator {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: var(--green);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+      z-index: 200;
+    }
+
+    .save-indicator.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .wizard-header {
+        padding: 0.75rem 1rem 0.5rem;
+      }
+
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .question-counter {
+        font-size: 0.8rem;
+      }
+
+      .question-text {
+        font-size: 1.5rem;
+      }
+
+      .multi-select-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .wizard-footer {
+        padding: 0.875rem 1rem;
+      }
+
+      .btn {
+        padding: 0.875rem 1.25rem;
+        min-height: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Fixed Header -->
+  <div class="wizard-header">
+    <div class="header-content">
+      <a href="/assessment/{{ assessment_id }}" class="back-link">
+        ← Back to Dashboard
+      </a>
+      <div class="section-title">Section {{ section_number }}: {{ section_title }}</div>
+      <div class="question-counter">
+        Question <span id="currentQuestionNum">1</span> of <span id="totalQuestions">22</span>
+      </div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="wizard-main">
+    <div class="question-container" id="questionContainer">
+      <!-- Questions will be injected here -->
+    </div>
+  </div>
+
+  <!-- Fixed Footer -->
+  <div class="wizard-footer">
+    <div class="footer-content">
+      <button class="btn btn-back" id="backBtn" onclick="goBack()" disabled>
+        ← Back
+      </button>
+      <button class="btn btn-continue" id="continueBtn" onclick="goNext()" disabled>
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- Save Indicator -->
+  <div class="save-indicator" id="saveIndicator">
+    Progress saved
+  </div>
+
+  <script>
+    // Assessment data from server
+    const ASSESSMENT_ID = "{{ assessment_id }}";
+    const SECTION_NUMBER = "{{ section_number }}";
+    const ANONYMOUS = {% if anonymous %}true{% else %}false{% endif %};
+
+    // Wizard state
+    let currentQuestionIndex = 0;
+    let answers = {};
+    let questionHistory = []; // Stack for back navigation
+    let questions = []; // Will be populated by section-specific script
+
+    // Initialize wizard
+    function initWizard() {
+      loadProgress();
+      if (questions.length > 0) {
+        showQuestion(0);
+      }
+    }
+
+    // Show a specific question
+    function showQuestion(index, direction = 'forward') {
+      if (index < 0 || index >= questions.length) return;
+
+      const container = document.getElementById('questionContainer');
+      const question = questions[index];
+
+      // Remove old questions
+      const oldCards = container.querySelectorAll('.question-card');
+      oldCards.forEach(card => {
+        if (direction === 'forward') {
+          card.classList.add('exit-left');
+        }
+        setTimeout(() => card.remove(), 200);
+      });
+
+      // Create new question card
+      const card = document.createElement('div');
+      card.className = 'question-card';
+      card.innerHTML = renderQuestion(question);
+      container.appendChild(card);
+
+      // Trigger transition
+      setTimeout(() => {
+        card.classList.add('active');
+      }, 10);
+
+      // Update UI
+      currentQuestionIndex = index;
+      updateProgress();
+      updateNavigation();
+
+      // Auto-focus inputs
+      setTimeout(() => {
+        const input = card.querySelector('input[type="text"], input[type="number"], select');
+        if (input) input.focus();
+      }, 250);
+    }
+
+    // Render a question
+    function renderQuestion(q) {
+      let html = '';
+
+      // AI context line (optional)
+      if (q.aiContext) {
+        html += `<div class="ai-context">${q.aiContext}</div>`;
+      }
+
+      // Question text
+      html += `<h2 class="question-text">${q.text}</h2>`;
+
+      // Input element
+      html += '<div class="input-wrapper">';
+
+      if (q.type === 'single-select') {
+        html += '<div class="choice-cards">';
+        q.options.forEach(opt => {
+          const selected = answers[q.id] === opt.value ? 'selected' : '';
+          html += `<div class="choice-card ${selected}" onclick="selectChoice('${q.id}', '${opt.value}', ${q.autoAdvance || false})">${opt.label}</div>`;
+        });
+        html += '</div>';
+      }
+      else if (q.type === 'text') {
+        const value = answers[q.id] || '';
+        html += `<input type="text" class="text-input" id="input-${q.id}" value="${value}" placeholder="${q.placeholder || ''}" oninput="handleTextInput('${q.id}')" onkeypress="if(event.key==='Enter') goNext()">`;
+      }
+      else if (q.type === 'number') {
+        const value = answers[q.id] || '';
+        html += `<input type="number" class="number-input" id="input-${q.id}" value="${value}" placeholder="${q.placeholder || ''}" oninput="handleNumberInput('${q.id}')" onkeypress="if(event.key==='Enter') goNext()">`;
+      }
+      else if (q.type === 'dropdown') {
+        const value = answers[q.id] || '';
+        html += `<select class="select-input" id="input-${q.id}" onchange="handleSelect('${q.id}')">`;
+        html += '<option value="">-- Select --</option>';
+        q.options.forEach(opt => {
+          const selected = value === opt.value ? 'selected' : '';
+          html += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
+        });
+        html += '</select>';
+      }
+      else if (q.type === 'multi-select') {
+        const selectedValues = answers[q.id] || [];
+        html += '<div class="multi-select-grid">';
+        q.options.forEach(opt => {
+          const checked = selectedValues.includes(opt.value) ? 'checked' : '';
+          const selectedClass = selectedValues.includes(opt.value) ? 'selected' : '';
+          html += `
+            <div class="multi-select-card ${selectedClass}" onclick="toggleMultiSelect('${q.id}', '${opt.value}')">
+              <input type="checkbox" ${checked} onclick="event.stopPropagation()">
+              <span>${opt.label}</span>
+            </div>
+          `;
+        });
+        html += '</div>';
+        html += `<div class="selection-count">${selectedValues.length} selected</div>`;
+      }
+
+      html += '</div>';
+
+      // Help section (optional)
+      if (q.help) {
+        html += `
+          <div class="help-section">
+            <button class="help-toggle" onclick="toggleHelp(event)">
+              ℹ️ ${q.helpLabel || 'Why we ask this'}
+            </button>
+            <div class="help-content">${q.help}</div>
+          </div>
+        `;
+      }
+
+      // Flag/alert (will be shown dynamically)
+      html += `<div class="flag-alert" id="flag-${q.id}"></div>`;
+
+      return html;
+    }
+
+    // Handle single-select choice
+    function selectChoice(questionId, value, autoAdvance) {
+      answers[questionId] = value;
+
+      // Update UI
+      const cards = document.querySelectorAll('.choice-card');
+      cards.forEach(card => card.classList.remove('selected'));
+      event.target.classList.add('selected');
+
+      // Check for flags
+      checkForFlags(questionId, value);
+
+      // Enable continue button
+      document.getElementById('continueBtn').disabled = false;
+
+      // Auto-advance if configured
+      if (autoAdvance && !hasFlag(questionId)) {
+        setTimeout(() => goNext(), 300);
+      }
+
+      saveProgress();
+    }
+
+    // Handle text input
+    function handleTextInput(questionId) {
+      const input = document.getElementById(`input-${questionId}`);
+      answers[questionId] = input.value.trim();
+      document.getElementById('continueBtn').disabled = !input.value.trim();
+      saveProgress();
+    }
+
+    // Handle number input
+    function handleNumberInput(questionId) {
+      const input = document.getElementById(`input-${questionId}`);
+      answers[questionId] = input.value;
+      document.getElementById('continueBtn').disabled = !input.value;
+      saveProgress();
+    }
+
+    // Handle dropdown
+    function handleSelect(questionId) {
+      const select = document.getElementById(`input-${questionId}`);
+      answers[questionId] = select.value;
+      document.getElementById('continueBtn').disabled = !select.value;
+      checkForFlags(questionId, select.value);
+      saveProgress();
+    }
+
+    // Handle multi-select toggle
+    function toggleMultiSelect(questionId, value) {
+      if (!answers[questionId]) answers[questionId] = [];
+
+      const index = answers[questionId].indexOf(value);
+      if (index > -1) {
+        answers[questionId].splice(index, 1);
+      } else {
+        answers[questionId].push(value);
+      }
+
+      // Re-render the current question to update checkboxes
+      showQuestion(currentQuestionIndex, 'stay');
+
+      document.getElementById('continueBtn').disabled = answers[questionId].length === 0;
+      saveProgress();
+    }
+
+    // Toggle help section
+    function toggleHelp(event) {
+      event.preventDefault();
+      const content = event.target.nextElementSibling;
+      content.classList.toggle('expanded');
+    }
+
+    // Check for flags/alerts
+    function checkForFlags(questionId, value) {
+      const question = questions.find(q => q.id === questionId);
+      if (!question || !question.flags) return;
+
+      const flag = question.flags.find(f => f.condition(value, answers));
+      const flagEl = document.getElementById(`flag-${questionId}`);
+
+      if (flag) {
+        flagEl.className = `flag-alert ${flag.severity} show`;
+        flagEl.textContent = `${flag.icon} ${flag.message}`;
+        // Disable auto-advance when flag is shown
+        return true;
+      } else {
+        flagEl.className = 'flag-alert';
+        flagEl.textContent = '';
+        return false;
+      }
+    }
+
+    function hasFlag(questionId) {
+      const flagEl = document.getElementById(`flag-${questionId}`);
+      return flagEl && flagEl.classList.contains('show');
+    }
+
+    // Navigation
+    function goNext() {
+      const currentQuestion = questions[currentQuestionIndex];
+
+      // Validate answer exists
+      if (!answers[currentQuestion.id] && currentQuestion.required !== false) {
+        return;
+      }
+
+      // Add to history
+      questionHistory.push(currentQuestionIndex);
+
+      // Determine next question (handles conditional logic)
+      let nextIndex = currentQuestionIndex + 1;
+
+      // Apply skip logic if defined
+      if (currentQuestion.nextQuestion) {
+        nextIndex = currentQuestion.nextQuestion(answers[currentQuestion.id], answers);
+      }
+
+      // Check if we're done
+      if (nextIndex >= questions.length) {
+        completSection();
+        return;
+      }
+
+      showQuestion(nextIndex, 'forward');
+    }
+
+    function goBack() {
+      if (questionHistory.length === 0) return;
+
+      const prevIndex = questionHistory.pop();
+      showQuestion(prevIndex, 'backward');
+    }
+
+    // Update progress bar and counter
+    function updateProgress() {
+      const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+      document.getElementById('progressBar').style.width = progress + '%';
+      document.getElementById('currentQuestionNum').textContent = currentQuestionIndex + 1;
+      document.getElementById('totalQuestions').textContent = questions.length;
+    }
+
+    // Update navigation buttons
+    function updateNavigation() {
+      const backBtn = document.getElementById('backBtn');
+      const continueBtn = document.getElementById('continueBtn');
+
+      backBtn.disabled = questionHistory.length === 0;
+
+      const currentQuestion = questions[currentQuestionIndex];
+      const hasAnswer = answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== '' && answers[currentQuestion.id] !== null;
+      continueBtn.disabled = !hasAnswer && currentQuestion.required !== false;
+    }
+
+    // Save progress
+    async function saveProgress() {
+      if (ANONYMOUS) {
+        // Save to localStorage
+        try {
+          const data = {
+            answers,
+            currentQuestionIndex,
+            questionHistory,
+            lastSaved: new Date().toISOString()
+          };
+          localStorage.setItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`, JSON.stringify(data));
+          showSaveIndicator();
+        } catch (err) {
+          console.error('Failed to save to localStorage:', err);
+        }
+      } else {
+        // Save to server
+        try {
+          await fetch(`/api/assessments/${ASSESSMENT_ID}/section`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              section_number: SECTION_NUMBER,
+              answers,
+              status: 'in-progress'
+            })
+          });
+          showSaveIndicator();
+        } catch (err) {
+          console.error('Failed to save to server:', err);
+        }
+      }
+    }
+
+    // Load progress
+    function loadProgress() {
+      if (!ANONYMOUS) return;
+
+      try {
+        const saved = localStorage.getItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`);
+        if (saved) {
+          const data = JSON.parse(saved);
+          answers = data.answers || {};
+          currentQuestionIndex = data.currentQuestionIndex || 0;
+          questionHistory = data.questionHistory || [];
+        }
+      } catch (err) {
+        console.error('Failed to load progress:', err);
+      }
+    }
+
+    // Show save indicator
+    function showSaveIndicator() {
+      const indicator = document.getElementById('saveIndicator');
+      indicator.classList.add('show');
+      setTimeout(() => {
+        indicator.classList.remove('show');
+      }, 1500);
+    }
+
+    // Complete section
+    function completeSection() {
+      // Mark as complete and redirect
+      if (ANONYMOUS) {
+        const data = {
+          answers,
+          status: 'completed',
+          completedAt: new Date().toISOString()
+        };
+        localStorage.setItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`, JSON.stringify(data));
+      }
+
+      window.location.href = `/assessment/${ASSESSMENT_ID}`;
+    }
+
+    // Section-specific question definitions will be injected here
+    {{ section_script | safe }}
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initWizard);
+  </script>
+</body>
+</html>
