@@ -404,13 +404,6 @@
 
     // Add a message to the conversation
     async function addMessage(role, content, component = null, componentData = null) {
-      // If it's an assistant message, show typing indicator first
-      if (role === 'assistant') {
-        showTypingIndicator();
-        await new Promise(resolve => setTimeout(resolve, 600)); // Brief typing delay
-        await hideTypingIndicator(); // Wait for fade-out to complete
-      }
-
       const message = {
         id: Date.now().toString(),
         role: role, // 'assistant' or 'user'
@@ -421,6 +414,12 @@
       };
 
       messages.push(message);
+
+      // Brief delay before showing assistant messages (feels natural)
+      if (role === 'assistant') {
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+
       renderConversation();
 
       // Auto-focus on input fields after rendering
@@ -530,9 +529,6 @@
       answers[currentStep] = value;
       addMessage('user', label);
 
-      // Brief pause before AI responds
-      await new Promise(resolve => setTimeout(resolve, 200));
-
       // This will be overridden by section-specific logic
       if (window.handleUserInput) {
         window.handleUserInput(currentStep, value);
@@ -548,9 +544,6 @@
       answers[currentStep] = value;
       addMessage('user', value);
 
-      // Brief pause before AI responds
-      await new Promise(resolve => setTimeout(resolve, 200));
-
       if (window.handleUserInput) {
         window.handleUserInput(currentStep, value);
       }
@@ -565,9 +558,6 @@
 
       answers[currentStep] = value;
       addMessage('user', label);
-
-      // Brief pause before AI responds
-      await new Promise(resolve => setTimeout(resolve, 200));
 
       if (window.handleUserInput) {
         window.handleUserInput(currentStep, value);
