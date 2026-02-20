@@ -255,6 +255,47 @@
       background: var(--blue);
       color: white;
     }
+
+    .typing-indicator {
+      display: flex;
+      gap: 1rem;
+      align-items: start;
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .typing-indicator .message-content {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 1.25rem;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--navy);
+      animation: typingBounce 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+      }
+      30% {
+        transform: translateY(-10px);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -313,8 +354,50 @@
       }
     }
 
+    // Show typing indicator
+    function showTypingIndicator() {
+      const container = document.getElementById('conversation');
+      const indicator = document.createElement('div');
+      indicator.id = 'typingIndicator';
+      indicator.className = 'typing-indicator';
+      indicator.innerHTML = `
+        <div class="message-avatar" style="background: linear-gradient(135deg, var(--blue), var(--navy)); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;">AI</div>
+        <div class="message-content" style="background: var(--light-blue); border-radius: 12px;">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `;
+      container.appendChild(indicator);
+      smoothScrollToBottom();
+    }
+
+    // Hide typing indicator
+    function hideTypingIndicator() {
+      const indicator = document.getElementById('typingIndicator');
+      if (indicator) {
+        indicator.remove();
+      }
+    }
+
+    // Smooth scroll to bottom
+    function smoothScrollToBottom() {
+      const container = document.getElementById('conversation');
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+
     // Add a message to the conversation
-    function addMessage(role, content, component = null, componentData = null) {
+    async function addMessage(role, content, component = null, componentData = null) {
+      // If it's an assistant message, show typing indicator first
+      if (role === 'assistant') {
+        showTypingIndicator();
+        await new Promise(resolve => setTimeout(resolve, 800)); // 800ms delay
+        hideTypingIndicator();
+      }
+
       const message = {
         id: Date.now().toString(),
         role: role, // 'assistant' or 'user'
@@ -326,6 +409,12 @@
 
       messages.push(message);
       renderConversation();
+
+      // Auto-focus on input fields after rendering
+      setTimeout(() => {
+        const textInput = document.getElementById('textInput');
+        if (textInput) textInput.focus();
+      }, 100);
     }
 
     // Render all messages
@@ -350,8 +439,8 @@
         return html;
       }).join('');
 
-      // Scroll to bottom
-      container.scrollTop = container.scrollHeight;
+      // Smooth scroll to bottom
+      smoothScrollToBottom();
     }
 
     // Render interactive components
@@ -424,9 +513,12 @@
     }
 
     // Handle choice button click
-    function handleChoice(value, label) {
+    async function handleChoice(value, label) {
       answers[currentStep] = value;
       addMessage('user', label);
+
+      // Small delay before AI responds
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       // This will be overridden by section-specific logic
       if (window.handleUserInput) {
@@ -435,7 +527,7 @@
     }
 
     // Handle text input
-    function handleTextInput() {
+    async function handleTextInput() {
       const input = document.getElementById('textInput');
       if (!input || !input.value.trim()) return;
 
@@ -443,13 +535,16 @@
       answers[currentStep] = value;
       addMessage('user', value);
 
+      // Small delay before AI responds
+      await new Promise(resolve => setTimeout(resolve, 400));
+
       if (window.handleUserInput) {
         window.handleUserInput(currentStep, value);
       }
     }
 
     // Handle select change
-    function handleSelectChange(value) {
+    async function handleSelectChange(value) {
       if (!value) return;
 
       const select = document.getElementById('selectInput');
@@ -457,6 +552,9 @@
 
       answers[currentStep] = value;
       addMessage('user', label);
+
+      // Small delay before AI responds
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       if (window.handleUserInput) {
         window.handleUserInput(currentStep, value);
