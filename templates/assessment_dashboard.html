@@ -403,5 +403,96 @@
       {% endfor %}
     </div>
   </div>
+
+  {% if anonymous %}
+  <script>
+    // Anonymous mode: Update section statuses from localStorage
+    const ASSESSMENT_ID = "{{ assessment_id }}";
+    const ANONYMOUS = true;
+
+    // Load section statuses from localStorage
+    function loadAnonymousProgress() {
+      const sections = ['1', '2', '3a'];
+      let completedCount = 0;
+
+      sections.forEach((sectionNum, index) => {
+        const storageKey = `assessment_${ASSESSMENT_ID}_section_${sectionNum}`;
+        const savedData = localStorage.getItem(storageKey);
+
+        if (savedData) {
+          try {
+            const data = JSON.parse(savedData);
+            const sectionCard = document.querySelectorAll('.section-card')[index];
+            const statusBadge = sectionCard.querySelector('.section-status');
+            const button = sectionCard.querySelector('.btn');
+
+            if (data.status === 'completed') {
+              completedCount++;
+              statusBadge.textContent = '✓ Complete';
+              statusBadge.className = 'section-status completed';
+
+              if (button) {
+                button.textContent = 'Review';
+                button.className = 'btn btn-secondary';
+              }
+
+              // Unlock next section
+              const nextCard = document.querySelectorAll('.section-card')[index + 1];
+              if (nextCard && nextCard.classList.contains('locked')) {
+                nextCard.classList.remove('locked');
+                const nextButton = nextCard.querySelector('.btn');
+                if (nextButton) {
+                  nextButton.disabled = false;
+                  nextButton.querySelector('.lock-icon').remove();
+                  nextButton.textContent = 'Start';
+                  nextButton.className = 'btn btn-primary';
+                }
+              }
+            } else if (data.status === 'in-progress' && Object.keys(data.answers || {}).length > 0) {
+              statusBadge.textContent = '⋯ In Progress';
+              statusBadge.className = 'section-status in-progress';
+
+              if (button) {
+                button.textContent = 'Continue';
+                button.className = 'btn btn-primary';
+              }
+            }
+          } catch (err) {
+            console.error(`Failed to load progress for section ${sectionNum}:`, err);
+          }
+        }
+      });
+
+      // Update overall progress
+      const totalSections = sections.length;
+      const overallProgress = Math.round((completedCount / totalSections) * 100);
+      const progressBar = document.getElementById('overallProgress');
+      const progressStats = document.querySelector('.progress-stats');
+
+      if (progressBar) {
+        progressBar.style.width = overallProgress + '%';
+        progressBar.textContent = overallProgress > 0 ? overallProgress + '%' : '';
+      }
+
+      if (progressStats) {
+        progressStats.innerHTML = `
+          <span><strong>${completedCount}</strong> of ${totalSections} sections completed</span>
+          <span>•</span>
+          <span>Estimated time remaining: <strong>${(totalSections - completedCount) * 10} minutes</strong></span>
+        `;
+      }
+
+      // If all sections complete, show completion message or redirect to results
+      if (completedCount === totalSections) {
+        console.log('All sections completed! Redirect to results page...');
+        // TODO: Redirect to results page when implemented
+        // window.location.href = `/assessment/${ASSESSMENT_ID}/results`;
+      }
+    }
+
+    // Load progress when page loads
+    document.addEventListener('DOMContentLoaded', loadAnonymousProgress);
+  </script>
+  {% endif %}
 </body>
 </html>
