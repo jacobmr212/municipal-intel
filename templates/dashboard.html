@@ -64,10 +64,9 @@ nav {
 }
 
 .nav-logo {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 .nav-links {
@@ -205,7 +204,9 @@ nav {
 
 <nav>
   <div class="nav-inner">
-    <div class="nav-logo">GovTech Diagnostic</div>
+    <a href="/dashboard" class="nav-logo">
+      <img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" height="36">
+    </a>
     <div class="nav-links">
       <a href="/dashboard" class="active">Dashboard</a>
       <a href="#assessment">My Assessment</a>

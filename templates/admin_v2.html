@@ -62,17 +62,15 @@ body {
   border-bottom: 1px solid var(--sidebar-border);
 }
 
-.sidebar-logo h1 {
-  font-family: var(--serif);
-  font-size: 1.25rem;
-  color: var(--sidebar-active);
-  margin: 0;
+.sidebar-logo img {
+  display: block;
+  filter: brightness(0) invert(1);
 }
 
 .sidebar-logo p {
   font-size: 0.75rem;
   color: var(--sidebar-text);
-  margin-top: 0.25rem;
+  margin: 0;
   opacity: 0.7;
 }
 
@@ -719,7 +717,7 @@ input[type="checkbox"] {
 <!-- Sidebar -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <h1>Municipal Intel</h1>
+    <img src="/static/govtech-logo-light.svg" alt="GovTech Diagnostic" style="height: 42px; width: auto; margin-bottom: 8px;">
     <p>Admin Dashboard</p>
   </div>
 

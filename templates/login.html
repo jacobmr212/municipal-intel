@@ -56,13 +56,12 @@ body {
 }
 
 .login-logo {
-  font-family: var(--sans);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--warm-gray);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-align: center;
   margin-bottom: 2rem;
+}
+
+.login-logo img {
+  display: inline-block;
 }
 
 .login-card h1 {
@@ -202,7 +201,9 @@ body {
 
   <!-- Default state: email entry form -->
   <div class="state-default">
-    <div class="login-logo">GovTech Diagnostic</div>
+    <div class="login-logo">
+      <img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" height="48">
+    </div>
     <h1>Sign in</h1>
     <p class="login-subtitle">Enter your email and we'll send you a secure login link. No password required.</p>
 

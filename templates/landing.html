@@ -57,7 +57,7 @@ body {
 nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(253,252,250,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(26,24,22,0.06); transition:all 0.3s; }
 nav.scrolled { box-shadow:0 1px 20px rgba(0,0,0,0.06); }
 nav .container { display:flex; align-items:center; justify-content:space-between; height:72px; }
-.nav-logo { font-weight:600; font-size:1.1rem; color:var(--ink); letter-spacing:-0.02em; text-decoration:none; }
+.nav-logo { display:flex; align-items:center; text-decoration:none; }
 .nav-links { display:flex; align-items:center; gap:36px; }
 .nav-links a { font-size:0.9rem; font-weight:500; color:var(--ink-muted); text-decoration:none; transition:color 0.2s; }
 .nav-links a:hover { color:var(--ink); }
@@ -275,7 +275,7 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
 @media (max-width:768px) {
   /* Nav */
   nav .container { height:64px; padding:0 20px; }
-  .nav-logo { font-size:1rem; }
+  .nav-logo img { height:32px; }
   .nav-links { gap:0; }
   .nav-links a { display:none; }
   .menu-toggle { display:flex; }
@@ -352,7 +352,9 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
 <!-- NAV -->
 <nav id="nav">
   <div class="container">
-    <div class="nav-logo">GovTech Diagnostic</div>
+    <a href="/" class="nav-logo">
+      <img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" height="40">
+    </a>
     <div class="nav-links">
       <a href="#how-it-works">How it works</a>
       <a href="#assessment">Assessment</a>
