@@ -2302,8 +2302,8 @@ window.handleUserInput = function(step, value) {{
         currentQuestionNumber = 4;
         currentStep = 'q4_population';
         addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the approximate population you serve?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
-          inputType: 'number',
-          placeholder: 'e.g., 15000, or "Skip"'
+          inputType: 'text',
+          placeholder: 'e.g., 15000, or type "Skip"'
         }});
       }}, 500);
     }}, 400);
@@ -2496,8 +2496,8 @@ window.handleUserInput = function(step, value) {{
         currentQuestionNumber = 12;
         currentStep = 'q12_annual_budget';
         addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your annual operating budget (approximate)?\\n\\n(Optional - but helps us provide more accurate recommendations. Type "Skip" to bypass.)\\n\\nJust the number, e.g., 25000000 for $25M`, 'text-input', {{
-          inputType: 'number',
-          placeholder: 'e.g., 25000000 or "Skip"'
+          inputType: 'text',
+          placeholder: 'e.g., 25000000 or type "Skip"'
         }});
       }}, 600);
     }}, 400);
