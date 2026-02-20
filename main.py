@@ -806,6 +806,220 @@ async def get_feed(
     }
 
 
+# =============================================================================
+# WATCHLIST ENDPOINTS
+# =============================================================================
+
+@app.get("/api/watchlist")
+async def get_watchlist(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's watchlist with full municipality details.
+
+    Returns list of watchlist items with municipality data.
+    """
+    watchlist_items = (
+        db.query(Watchlist)
+        .filter(Watchlist.user_id == user["user_id"])
+        .order_by(Watchlist.created_at.desc())
+        .all()
+    )
+
+    results = []
+    for item in watchlist_items:
+        muni = item.municipality
+        results.append({
+            "id": item.id,
+            "municipality_id": item.municipality_id,
+            "municipality": muni.name if muni else "Unknown",
+            "state": muni.state if muni else "??",
+            "population": muni.population if muni else 0,
+            "notes": item.notes,
+            "created_at": item.created_at.isoformat()
+        })
+
+    return {"watchlist": results}
+
+
+@app.post("/api/watchlist")
+async def add_to_watchlist(
+    municipality_id: int,
+    notes: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Add a municipality to user's watchlist.
+
+    Request body: {"municipality_id": 123, "notes": "optional"}
+    """
+    # Check if municipality exists
+    muni = db.query(Municipality).filter(Municipality.id == municipality_id).first()
+    if not muni:
+        raise HTTPException(status_code=404, detail="Municipality not found")
+
+    # Check if already on watchlist
+    existing = (
+        db.query(Watchlist)
+        .filter(
+            Watchlist.user_id == user["user_id"],
+            Watchlist.municipality_id == municipality_id
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="Municipality already on watchlist")
+
+    # Add to watchlist
+    watchlist_item = Watchlist(
+        user_id=user["user_id"],
+        municipality_id=municipality_id,
+        notes=notes
+    )
+    db.add(watchlist_item)
+    db.commit()
+    db.refresh(watchlist_item)
+
+    return {
+        "id": watchlist_item.id,
+        "municipality": muni.name,
+        "state": muni.state,
+        "message": "Added to watchlist"
+    }
+
+
+@app.delete("/api/watchlist/{watchlist_id}")
+async def remove_from_watchlist(
+    watchlist_id: str,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Remove a municipality from user's watchlist.
+    """
+    watchlist_item = (
+        db.query(Watchlist)
+        .filter(
+            Watchlist.id == watchlist_id,
+            Watchlist.user_id == user["user_id"]
+        )
+        .first()
+    )
+
+    if not watchlist_item:
+        raise HTTPException(status_code=404, detail="Watchlist item not found")
+
+    db.delete(watchlist_item)
+    db.commit()
+
+    return {"message": "Removed from watchlist"}
+
+
+# =============================================================================
+# TERRITORY ENDPOINTS
+# =============================================================================
+
+@app.get("/api/territory")
+async def get_territories(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's territory assignments.
+
+    Returns list of states assigned to the user.
+    """
+    territories = (
+        db.query(Territory)
+        .filter(Territory.user_id == user["user_id"])
+        .order_by(Territory.state.asc())
+        .all()
+    )
+
+    results = []
+    for territory in territories:
+        results.append({
+            "id": territory.id,
+            "state": territory.state,
+            "created_at": territory.created_at.isoformat()
+        })
+
+    return {"territories": results}
+
+
+@app.post("/api/territory")
+async def add_territory(
+    state: str,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Add a state to user's territory.
+
+    Request body: {"state": "CA"}
+    """
+    # Validate state code
+    state = state.upper().strip()
+    if len(state) != 2:
+        raise HTTPException(status_code=400, detail="Invalid state code (must be 2 letters)")
+
+    # Check if already assigned
+    existing = (
+        db.query(Territory)
+        .filter(
+            Territory.user_id == user["user_id"],
+            Territory.state == state
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="State already in territory")
+
+    # Add territory
+    territory = Territory(
+        user_id=user["user_id"],
+        state=state
+    )
+    db.add(territory)
+    db.commit()
+    db.refresh(territory)
+
+    return {
+        "id": territory.id,
+        "state": territory.state,
+        "message": "State added to territory"
+    }
+
+
+@app.delete("/api/territory/{territory_id}")
+async def remove_territory(
+    territory_id: str,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Remove a state from user's territory.
+    """
+    territory = (
+        db.query(Territory)
+        .filter(
+            Territory.id == territory_id,
+            Territory.user_id == user["user_id"]
+        )
+        .first()
+    )
+
+    if not territory:
+        raise HTTPException(status_code=404, detail="Territory not found")
+
+    db.delete(territory)
+    db.commit()
+
+    return {"message": "State removed from territory"}
+
+
 @app.post("/api/scans")
 async def create_scan(
     config: ScanConfig,

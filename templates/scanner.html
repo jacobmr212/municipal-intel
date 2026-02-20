@@ -11,6 +11,12 @@
             50% { border-color: rgb(147, 197, 253); }
         }
         .scanning { animation: pulse-border 2s ease-in-out infinite; }
+        .tab-button {
+            @apply px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent transition-colors;
+        }
+        .tab-button.active {
+            @apply text-blue-600 border-blue-600;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -33,193 +39,335 @@
     </nav>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Coverage Stats -->
-        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-blue-900">Nationwide Coverage</h2>
-                    <p class="text-sm text-blue-700" id="coverage-stats">Loading coverage data...</p>
-                </div>
-                <button onclick="refreshCoverage()" class="px-3 py-1 text-sm text-blue-700 hover:text-blue-900">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                </button>
+        <!-- Tab Navigation -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button onclick="switchTab('feed')" id="tab-feed" class="tab-button active">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Feed
+                    </button>
+                    <button onclick="switchTab('scanner')" id="tab-scanner" class="tab-button">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        Scanner
+                    </button>
+                    <button onclick="switchTab('watchlist')" id="tab-watchlist" class="tab-button">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                        Watchlist
+                    </button>
+                    <button onclick="switchTab('territories')" id="tab-territories" class="tab-button">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                        Territories
+                    </button>
+                </nav>
             </div>
         </div>
 
-        <!-- Scan Configuration -->
-        <div class="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Configure Scan</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- State Selector -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        States
-                        <span class="text-xs text-gray-500 ml-1">(multi-select)</span>
-                    </label>
-                    <select id="state-select" multiple
-                            class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 h-48">
-                        <!-- Populated via JavaScript -->
-                    </select>
-                    <p class="mt-1 text-xs text-gray-500">
-                        <span id="state-count">0</span> states selected
-                    </p>
+        <!-- Feed Tab Content -->
+        <div id="content-feed" class="tab-content">
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Recent Leads</h2>
+                    <button onclick="loadFeed()" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800">
+                        <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
                 </div>
 
-                <!-- Population Tier -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Population Tier</label>
-                    <div class="space-y-2">
-                        <label class="flex items-center">
-                            <input type="checkbox" value="micro" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Micro (&lt; 2.5K)</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" value="small" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
-                            <span class="ml-2 text-sm text-gray-700">Small (2.5K – 10K)</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" value="small-mid" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Small-Mid (10K – 25K)</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" value="mid" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Mid (25K – 50K)</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" value="large" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Large (50K+)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Source Types -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Source Types</label>
-                    <div class="space-y-2">
-                        <label class="flex items-center">
-                            <input type="checkbox" value="meeting_minutes" class="source-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
-                            <span class="ml-2 text-sm text-gray-700">Meeting Minutes</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" value="procurement" class="source-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
-                            <span class="ml-2 text-sm text-gray-700">Procurement Portals</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" value="state_portal" class="source-checkbox rounded text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">State Portals</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="mt-6 flex items-center justify-between">
-                <div>
-                    <button onclick="selectAllStates()" class="text-sm text-blue-600 hover:text-blue-800 mr-4">Select All States</button>
-                    <button onclick="clearSelection()" class="text-sm text-gray-600 hover:text-gray-800">Clear All</button>
-                </div>
-                <button id="start-scan-btn" onclick="startScan()"
-                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors">
-                    Start Scan
-                </button>
-            </div>
-        </div>
-
-        <!-- Scan Progress (Hidden initially) -->
-        <div id="scan-progress" class="hidden bg-white shadow rounded-lg p-6 mb-6 border-2 scanning">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Scan in Progress</h3>
-                <button onclick="stopPolling()" class="text-sm text-gray-600 hover:text-gray-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="mb-4">
-                <div class="flex items-center justify-between text-sm text-gray-600 mb-1">
-                    <span id="progress-phase">Initializing...</span>
-                    <span id="progress-pct">0%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <p class="text-sm text-gray-600" id="progress-message">Starting scan...</p>
-
-            <!-- Quick Stats -->
-            <div class="mt-4 grid grid-cols-4 gap-4 text-center">
-                <div>
-                    <div class="text-2xl font-bold text-gray-900" id="stat-sources">0</div>
-                    <div class="text-xs text-gray-500">Sources</div>
-                </div>
-                <div>
-                    <div class="text-2xl font-bold text-gray-900" id="stat-docs">0</div>
-                    <div class="text-xs text-gray-500">Docs</div>
-                </div>
-                <div>
-                    <div class="text-2xl font-bold text-blue-600" id="stat-hot">0</div>
-                    <div class="text-xs text-gray-500">HOT</div>
-                </div>
-                <div>
-                    <div class="text-2xl font-bold text-orange-600" id="stat-warm">0</div>
-                    <div class="text-xs text-gray-500">WARM</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Results Table -->
-        <div id="results-section" class="hidden bg-white shadow rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Scan Results</h3>
-                <div class="flex items-center space-x-2">
-                    <select id="lead-filter" onchange="filterResults()"
-                            class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="all">All Leads</option>
+                <!-- Feed Filters -->
+                <div class="mb-4 flex items-center space-x-4">
+                    <select id="feed-type-filter" onchange="loadFeed()" class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="all">All Types</option>
                         <option value="hot">HOT Only</option>
                         <option value="warm">WARM Only</option>
-                        <option value="cold">COLD Only</option>
                     </select>
-                    <button onclick="exportResults()" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800">
-                        Export CSV
+                    <select id="feed-days-filter" onchange="loadFeed()" class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
+
+                <!-- Feed Results -->
+                <div id="feed-results" class="space-y-3">
+                    <p class="text-sm text-gray-500">Loading feed...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scanner Tab Content -->
+        <div id="content-scanner" class="tab-content hidden">
+            <!-- Coverage Stats -->
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-blue-900">Nationwide Coverage</h2>
+                        <p class="text-sm text-blue-700" id="coverage-stats">Loading coverage data...</p>
+                    </div>
+                    <button onclick="refreshCoverage()" class="px-3 py-1 text-sm text-blue-700 hover:text-blue-900">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Municipality</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signals</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-tbody" class="bg-white divide-y divide-gray-200">
-                        <!-- Populated via JavaScript -->
-                    </tbody>
-                </table>
+            <!-- Scan Configuration -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Configure Scan</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- State Selector -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            States
+                            <span class="text-xs text-gray-500 ml-1">(multi-select)</span>
+                        </label>
+                        <select id="state-select" multiple
+                                class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 h-48">
+                            <!-- Populated via JavaScript -->
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">
+                            <span id="state-count">0</span> states selected
+                        </p>
+                    </div>
+
+                    <!-- Population Tier -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Population Tier</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" value="micro" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Micro (&lt; 2.5K)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="small" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
+                                <span class="ml-2 text-sm text-gray-700">Small (2.5K – 10K)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="small-mid" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Small-Mid (10K – 25K)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="mid" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Mid (25K – 50K)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="large" class="tier-checkbox rounded text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Large (50K+)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Source Types -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Source Types</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" value="meeting_minutes" class="source-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
+                                <span class="ml-2 text-sm text-gray-700">Meeting Minutes</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="procurement" class="source-checkbox rounded text-blue-600 focus:ring-blue-500" checked>
+                                <span class="ml-2 text-sm text-gray-700">Procurement Portals</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" value="state_portal" class="source-checkbox rounded text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">State Portals</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 flex items-center justify-between">
+                    <div>
+                        <button onclick="selectAllStates()" class="text-sm text-blue-600 hover:text-blue-800 mr-4">Select All States</button>
+                        <button onclick="clearSelection()" class="text-sm text-gray-600 hover:text-gray-800">Clear All</button>
+                    </div>
+                    <button id="start-scan-btn" onclick="startScan()"
+                            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors">
+                        Start Scan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scan Progress (Hidden initially) -->
+            <div id="scan-progress" class="hidden bg-white shadow rounded-lg p-6 mb-6 border-2 scanning">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Scan in Progress</h3>
+                    <button onclick="stopPolling()" class="text-sm text-gray-600 hover:text-gray-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span id="progress-phase">Initializing...</span>
+                        <span id="progress-pct">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-600" id="progress-message">Starting scan...</p>
+
+                <!-- Quick Stats -->
+                <div class="mt-4 grid grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900" id="stat-sources">0</div>
+                        <div class="text-xs text-gray-500">Sources</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900" id="stat-docs">0</div>
+                        <div class="text-xs text-gray-500">Docs</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-600" id="stat-hot">0</div>
+                        <div class="text-xs text-gray-500">HOT</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-orange-600" id="stat-warm">0</div>
+                        <div class="text-xs text-gray-500">WARM</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div id="results-section" class="hidden bg-white shadow rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Scan Results</h3>
+                    <div class="flex items-center space-x-2">
+                        <select id="lead-filter" onchange="filterResults()"
+                                class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="all">All Leads</option>
+                            <option value="hot">HOT Only</option>
+                            <option value="warm">WARM Only</option>
+                            <option value="cold">COLD Only</option>
+                        </select>
+                        <button onclick="exportResults()" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800">
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Municipality</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signals</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-tbody" class="bg-white divide-y divide-gray-200">
+                            <!-- Populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Watchlist Tab Content -->
+        <div id="content-watchlist" class="tab-content hidden">
+            <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">My Watchlist</h2>
+                    <button onclick="loadWatchlist()" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800">
+                        <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+
+                <div id="watchlist-results" class="space-y-3">
+                    <p class="text-sm text-gray-500">Loading watchlist...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Territories Tab Content -->
+        <div id="content-territories" class="tab-content hidden">
+            <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">My Territories</h2>
+                    <button onclick="showAddTerritoryForm()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg">
+                        + Add State
+                    </button>
+                </div>
+
+                <!-- Add Territory Form (hidden initially) -->
+                <div id="add-territory-form" class="hidden mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Add State to Territory</h3>
+                    <div class="flex items-center space-x-3">
+                        <select id="new-territory-state" class="flex-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select a state...</option>
+                            <!-- Populated via JavaScript -->
+                        </select>
+                        <button onclick="addTerritory()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg">
+                            Add
+                        </button>
+                        <button onclick="hideAddTerritoryForm()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-semibold rounded-lg">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <div id="territories-results" class="space-y-2">
+                    <p class="text-sm text-gray-500">Loading territories...</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Global state
+        let currentTab = 'feed';
         let currentScanId = null;
         let pollInterval = null;
         let allLeads = [];
+        let allStates = [];
+
+        // Tab switching
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            // Update content visibility
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+
+            // Load data for the tab
+            if (tab === 'feed') loadFeed();
+            if (tab === 'watchlist') loadWatchlist();
+            if (tab === 'territories') loadTerritories();
+        }
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             loadStates();
-            refreshCoverage();
+            loadFeed(); // Load feed by default
             updateStateCount();
 
             // Auto-refresh coverage every 30 seconds
@@ -229,13 +377,281 @@
             document.getElementById('state-select').addEventListener('change', updateStateCount);
         });
 
+        // =============================================================================
+        // FEED TAB FUNCTIONS
+        // =============================================================================
+
+        async function loadFeed() {
+            const typeFilter = document.getElementById('feed-type-filter').value;
+            const daysFilter = document.getElementById('feed-days-filter').value;
+
+            try {
+                const response = await fetch(`/api/feed?days=${daysFilter}&lead_type=${typeFilter}`);
+                const data = await response.json();
+
+                const container = document.getElementById('feed-results');
+                container.innerHTML = '';
+
+                if (data.leads.length === 0) {
+                    container.innerHTML = '<p class="text-sm text-gray-500">No leads found in the selected time period.</p>';
+                    return;
+                }
+
+                data.leads.forEach(lead => {
+                    const leadCard = createLeadCard(lead);
+                    container.appendChild(leadCard);
+                });
+            } catch (error) {
+                console.error('Failed to load feed:', error);
+                document.getElementById('feed-results').innerHTML = '<p class="text-sm text-red-600">Failed to load feed. Please try again.</p>';
+            }
+        }
+
+        function createLeadCard(lead) {
+            const card = document.createElement('div');
+            card.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50';
+
+            const typeColor = lead.lead_type === 'hot' ? 'text-blue-800 bg-blue-100'
+                : lead.lead_type === 'warm' ? 'text-orange-800 bg-orange-100'
+                : 'text-gray-800 bg-gray-100';
+
+            const signals = Object.keys(lead.signal_matches || {}).slice(0, 3).join(', ');
+            const date = new Date(lead.created_at).toLocaleDateString();
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${typeColor}">
+                                ${lead.lead_type.toUpperCase()}
+                            </span>
+                            <span class="text-xs text-gray-500">${date}</span>
+                            ${lead.customer_status === 'existing_customer' ?
+                                '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">EXISTING CUSTOMER</span>' :
+                                '<span class="px-2 py-1 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">NEW OPPORTUNITY</span>'}
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-900 mb-1">
+                            ${lead.municipality}, ${lead.state}
+                        </h3>
+                        <p class="text-sm text-gray-700 mb-2">${lead.title}</p>
+                        <p class="text-xs text-gray-500">Signals: ${signals}</p>
+                    </div>
+                    <div class="ml-4 flex items-center space-x-2">
+                        <span class="text-sm font-semibold text-gray-900">${Math.round(lead.relevance_score)}</span>
+                        <a href="${lead.url}" target="_blank" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded">
+                            View
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // =============================================================================
+        // WATCHLIST TAB FUNCTIONS
+        // =============================================================================
+
+        async function loadWatchlist() {
+            try {
+                const response = await fetch('/api/watchlist');
+                const data = await response.json();
+
+                const container = document.getElementById('watchlist-results');
+                container.innerHTML = '';
+
+                if (data.watchlist.length === 0) {
+                    container.innerHTML = '<p class="text-sm text-gray-500">No municipalities on your watchlist yet.</p>';
+                    return;
+                }
+
+                data.watchlist.forEach(item => {
+                    const card = createWatchlistCard(item);
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Failed to load watchlist:', error);
+                document.getElementById('watchlist-results').innerHTML = '<p class="text-sm text-red-600">Failed to load watchlist. Please try again.</p>';
+            }
+        }
+
+        function createWatchlistCard(item) {
+            const card = document.createElement('div');
+            card.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50';
+
+            const addedDate = new Date(item.created_at).toLocaleDateString();
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-1">
+                            ${item.municipality}, ${item.state}
+                        </h3>
+                        <p class="text-xs text-gray-500 mb-2">Population: ${item.population.toLocaleString()}</p>
+                        ${item.notes ? `<p class="text-sm text-gray-700">${item.notes}</p>` : ''}
+                        <p class="text-xs text-gray-400 mt-2">Added: ${addedDate}</p>
+                    </div>
+                    <button onclick="removeFromWatchlist('${item.id}')" class="ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded">
+                        Remove
+                    </button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        async function removeFromWatchlist(watchlistId) {
+            if (!confirm('Remove this municipality from your watchlist?')) return;
+
+            try {
+                const response = await fetch(`/api/watchlist/${watchlistId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadWatchlist(); // Reload the list
+                } else {
+                    alert('Failed to remove from watchlist');
+                }
+            } catch (error) {
+                console.error('Failed to remove from watchlist:', error);
+                alert('Failed to remove from watchlist');
+            }
+        }
+
+        // =============================================================================
+        // TERRITORIES TAB FUNCTIONS
+        // =============================================================================
+
+        async function loadTerritories() {
+            try {
+                const response = await fetch('/api/territory');
+                const data = await response.json();
+
+                const container = document.getElementById('territories-results');
+                container.innerHTML = '';
+
+                if (data.territories.length === 0) {
+                    container.innerHTML = '<p class="text-sm text-gray-500">No territories assigned yet. Click "+ Add State" to get started.</p>';
+                    return;
+                }
+
+                // Group by state and sort
+                const territories = data.territories.sort((a, b) => a.state.localeCompare(b.state));
+
+                territories.forEach(territory => {
+                    const item = createTerritoryItem(territory);
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Failed to load territories:', error);
+                document.getElementById('territories-results').innerHTML = '<p class="text-sm text-red-600">Failed to load territories. Please try again.</p>';
+            }
+        }
+
+        function createTerritoryItem(territory) {
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50';
+
+            const stateName = allStates.find(s => s.abbr === territory.state)?.name || territory.state;
+            const addedDate = new Date(territory.created_at).toLocaleDateString();
+
+            item.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <span class="px-3 py-1 text-sm font-semibold text-gray-900 bg-gray-100 rounded">${territory.state}</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">${stateName}</p>
+                        <p class="text-xs text-gray-500">Added: ${addedDate}</p>
+                    </div>
+                </div>
+                <button onclick="removeTerritory('${territory.id}')" class="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded">
+                    Remove
+                </button>
+            `;
+
+            return item;
+        }
+
+        function showAddTerritoryForm() {
+            // Populate state selector if not already done
+            const select = document.getElementById('new-territory-state');
+            if (select.options.length === 1) {
+                allStates.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.abbr;
+                    option.textContent = `${state.name} (${state.abbr})`;
+                    select.appendChild(option);
+                });
+            }
+
+            document.getElementById('add-territory-form').classList.remove('hidden');
+        }
+
+        function hideAddTerritoryForm() {
+            document.getElementById('add-territory-form').classList.add('hidden');
+            document.getElementById('new-territory-state').value = '';
+        }
+
+        async function addTerritory() {
+            const stateCode = document.getElementById('new-territory-state').value;
+
+            if (!stateCode) {
+                alert('Please select a state');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/territory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: stateCode })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    hideAddTerritoryForm();
+                    loadTerritories(); // Reload the list
+                } else {
+                    alert(data.detail || 'Failed to add territory');
+                }
+            } catch (error) {
+                console.error('Failed to add territory:', error);
+                alert('Failed to add territory');
+            }
+        }
+
+        async function removeTerritory(territoryId) {
+            if (!confirm('Remove this state from your territory?')) return;
+
+            try {
+                const response = await fetch(`/api/territory/${territoryId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadTerritories(); // Reload the list
+                } else {
+                    alert('Failed to remove territory');
+                }
+            } catch (error) {
+                console.error('Failed to remove territory:', error);
+                alert('Failed to remove territory');
+            }
+        }
+
+        // =============================================================================
+        // SCANNER TAB FUNCTIONS
+        // =============================================================================
+
         async function loadStates() {
             try {
                 const response = await fetch('/api/states');
                 const data = await response.json();
-                const select = document.getElementById('state-select');
+                allStates = data.states;
 
-                data.states.forEach(state => {
+                const select = document.getElementById('state-select');
+                allStates.forEach(state => {
                     const option = document.createElement('option');
                     option.value = state.abbr;
                     option.textContent = `${state.name} (${state.source_count} sources)`;
