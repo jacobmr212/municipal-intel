@@ -2007,13 +2007,13 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1: Organization Profile - Complete (22 questions)."""
+    """Generate Section 1: Organization Profile - Complete (21 questions)."""
     return f"""
-// Section 1: Organization Profile - Complete (Q1-Q22)
+// Section 1: Organization Profile - Complete (Q1-Q21)
 // Group 1: Identity & Scale (Q1-Q4)
-// Group 2: Operational Footprint (Q5-Q12)
-// Group 3: Current Systems (Q13-Q17)
-// Group 4: Change Readiness (Q18-Q22)
+// Group 2: Operational Footprint (Q5-Q11)
+// Group 3: Current Systems (Q12-Q16)
+// Group 4: Change Readiness (Q17-Q21)
 
 const STATES_FULL = [
   {{ value: 'AL', label: 'Alabama' }},
@@ -2199,26 +2199,13 @@ questions = [
     id: 'q8_services',
     type: 'multi-select',
     text: 'Which services does your organization provide?',
-    aiContext: 'Service mix drives system requirements.',
+    aiContext: 'Service mix drives system requirements and operational complexity.',
     options: SERVICES,
-    help: 'Select all services your organization provides directly (not contracted out). This helps us understand billing, permitting, and operational needs.',
+    help: 'Select all services your organization provides directly (not contracted out). This helps us understand billing, permitting, and operational needs. Utility services (water, wastewater, electric, gas, stormwater) indicate you likely need utility billing capabilities.',
     required: true
   }},
   {{
-    id: 'q9_has_utilities',
-    type: 'single-select',
-    text: 'Does your organization operate any public utilities?',
-    aiContext: 'Utility billing adds significant complexity.',
-    options: [
-      {{ value: 'yes', label: 'Yes' }},
-      {{ value: 'no', label: 'No' }}
-    ],
-    autoAdvance: false,
-    help: 'Public utilities include water, wastewater, electric, gas, or stormwater services with customer billing.',
-    required: true
-  }},
-  {{
-    id: 'q10_fiscal_year_end',
+    id: 'q9_fiscal_year_end',
     type: 'dropdown',
     text: 'What is your fiscal year end month?',
     aiContext: 'Fiscal year timing affects reporting cycles.',
@@ -2227,7 +2214,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q11_total_revenue',
+    id: 'q10_total_revenue',
     type: 'number',
     text: 'What is your organization\\'s approximate annual revenue?',
     aiContext: 'Revenue scale helps us size the right solution.',
@@ -2236,7 +2223,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q12_annual_budget',
+    id: 'q11_annual_budget',
     type: 'number',
     text: 'What is your organization\\'s approximate annual budget?',
     aiContext: 'Budget size helps us understand your financial operations scale.',
@@ -2245,7 +2232,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q13_current_erp',
+    id: 'q12_current_erp',
     type: 'text',
     text: 'What ERP or accounting system do you currently use?',
     aiContext: 'Understanding your current system helps us identify migration challenges.',
@@ -2254,7 +2241,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q14_current_payroll',
+    id: 'q13_current_payroll',
     type: 'text',
     text: 'What payroll system do you currently use?',
     aiContext: 'Payroll integration is a key requirement for most municipalities.',
@@ -2263,7 +2250,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q15_system_count',
+    id: 'q14_system_count',
     type: 'single-select',
     text: 'Approximately how many different software systems does your organization use?',
     aiContext: 'System sprawl is a common municipal challenge.',
@@ -2279,7 +2266,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q16_integration_issues',
+    id: 'q15_integration_issues',
     type: 'single-select',
     text: 'How well do your current systems integrate with each other?',
     aiContext: 'Integration gaps create manual work and data inconsistencies.',
@@ -2294,7 +2281,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q17_biggest_pain_point',
+    id: 'q16_biggest_pain_point',
     type: 'text',
     text: 'What is your biggest system-related pain point right now?',
     aiContext: 'This helps us prioritize recommendations.',
@@ -2303,7 +2290,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q18_timeline',
+    id: 'q17_timeline',
     type: 'single-select',
     text: 'What is your timeline for making a change?',
     aiContext: 'Timeline affects solution options and implementation approach.',
@@ -2319,7 +2306,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q19_budget_status',
+    id: 'q18_budget_status',
     type: 'single-select',
     text: 'Do you have budget allocated or approved for new software?',
     aiContext: 'Budget readiness is a key factor in implementation planning.',
@@ -2334,7 +2321,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q20_internal_champion',
+    id: 'q19_internal_champion',
     type: 'single-select',
     text: 'Do you have an internal champion or project lead identified?',
     aiContext: 'Successful implementations need internal leadership.',
@@ -2348,7 +2335,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q21_change_drivers',
+    id: 'q20_change_drivers',
     type: 'multi-select',
     text: 'What is driving your interest in new software? (Select all that apply)',
     aiContext: 'Understanding motivations helps us focus on what matters most.',
@@ -2367,7 +2354,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q22_implementation_concerns',
+    id: 'q21_implementation_concerns',
     type: 'multi-select',
     text: 'What concerns do you have about implementing new software? (Select all that apply)',
     aiContext: 'Identifying concerns early helps us address them proactively.',
