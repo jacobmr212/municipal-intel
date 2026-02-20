@@ -865,8 +865,8 @@
     }
 
     // Complete section
-    function completeSection() {
-      // Mark as complete and redirect
+    async function completeSection() {
+      // Save completion to server or localStorage
       if (ANONYMOUS) {
         const data = {
           answers,
@@ -874,6 +874,21 @@
           completedAt: new Date().toISOString()
         };
         localStorage.setItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`, JSON.stringify(data));
+      } else {
+        // Save to server
+        try {
+          await fetch(`/api/assessments/${ASSESSMENT_ID}/section`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              section_number: SECTION_NUMBER,
+              answers,
+              status: 'completed'
+            })
+          });
+        } catch (err) {
+          console.error('Failed to save section completion:', err);
+        }
       }
 
       window.location.href = `/assessment/${ASSESSMENT_ID}`;
