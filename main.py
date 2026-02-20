@@ -1,5 +1,5 @@
 """
-Municipal Intel - FastAPI Application
+Municipal Intel - FastAPI Application v2.1
 
 FastAPI backend for municipal government ERP lead intelligence platform.
 Replaces Streamlit with persistent database, background task processing, and responsive UI.
