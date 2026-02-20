@@ -2130,6 +2130,9 @@ const MONTHS = [
 let currentQuestionNumber = 1;
 const totalQuestions = 22; // Will be 22 when fully implemented
 
+// Track selected services for Q8
+let selectedServices = [];
+
 // Helper: Get population tier
 function getPopulationTier(pop) {{
   const p = parseInt(pop);
@@ -2150,6 +2153,42 @@ function getEmployeeTier(count) {{
   if (c < 500) return 'Large staff';
   return 'Very large staff';
 }}
+
+// Handle service selection (multi-select for Q8)
+window.handleCategoryToggle = function(service) {{
+  if (selectedServices.includes(service)) {{
+    selectedServices = selectedServices.filter(s => s !== service);
+  }} else {{
+    selectedServices.push(service);
+  }}
+
+  // Update UI
+  const button = document.querySelector(`.category-btn[data-category="${{service}}"]`);
+  if (button) {{
+    if (selectedServices.includes(service)) {{
+      button.classList.add('selected');
+    }} else {{
+      button.classList.remove('selected');
+    }}
+  }}
+}};
+
+window.handleCategoryConfirm = function() {{
+  answers['services'] = selectedServices;
+
+  const serviceLabels = selectedServices.map(s =>
+    SERVICES.find(svc => svc.value === s)?.label || s
+  ).join(', ');
+
+  if (selectedServices.length === 0) {{
+    addMessage('user', 'No services selected');
+  }} else {{
+    addMessage('user', `Services: ${{serviceLabels}}`);
+  }}
+
+  // Proceed to next question
+  window.handleUserInput('q8_services', selectedServices);
+}};
 
 // Start the conversation - CONSOLIDATED MESSAGE (no more multiple bubbles!)
 setTimeout(() => {{
@@ -2345,8 +2384,8 @@ window.handleUserInput = function(step, value) {{
       setTimeout(() => {{
         currentQuestionNumber = 8;
         currentStep = 'q8_services';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Which services does your organization provide directly?\\n\\nSelect all that apply:`, 'multi-choice', {{
-          options: SERVICES
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Which services does your organization provide directly?\\n\\nSelect all that apply:`, 'multi-select-start', {{
+          categories: SERVICES
         }});
       }}, 600);
     }}, 400);
