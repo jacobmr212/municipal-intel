@@ -705,7 +705,10 @@
       // Re-render the current question to update checkboxes
       showQuestion(currentQuestionIndex, 'stay');
 
-      document.getElementById('continueBtn').disabled = answers[questionId].length === 0;
+      // Enable Continue button based on whether question is required
+      const question = questions.find(q => q.id === questionId);
+      const isRequired = question && question.required !== false;
+      document.getElementById('continueBtn').disabled = isRequired && answers[questionId].length === 0;
       saveProgress();
     }
 
@@ -793,7 +796,10 @@
       backBtn.disabled = questionHistory.length === 0;
 
       const currentQuestion = questions[currentQuestionIndex];
-      const hasAnswer = answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== '' && answers[currentQuestion.id] !== null;
+      const answer = answers[currentQuestion.id];
+      // Check if answer exists - for arrays (multi-select), check length > 0
+      const hasAnswer = answer !== undefined && answer !== '' && answer !== null &&
+                        (!Array.isArray(answer) || answer.length > 0);
       continueBtn.disabled = !hasAnswer && currentQuestion.required !== false;
     }
 
