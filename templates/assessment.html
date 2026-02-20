@@ -278,15 +278,37 @@
     // Assessment and section data from server
     const ASSESSMENT_ID = "{{ assessment_id }}";
     const SECTION_NUMBER = "{{ section_number }}";
-    const USER = {
-      email: "{{ user.email }}",
-      role: "{{ user.role }}"
+    const ANONYMOUS = {% if anonymous %}true{% else %}false{% endif %};
+    const USER = ANONYMOUS ? null : {
+      email: "{{ user.email if user else '' }}",
+      role: "{{ user.role if user else '' }}"
     };
+
+    // localStorage key for anonymous data
+    const STORAGE_KEY = `assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`;
 
     // Conversation state
     let messages = [];
     let answers = {};
     let currentStep = 'welcome';
+
+    // Load saved progress from localStorage (anonymous mode only)
+    function loadProgress() {
+      if (!ANONYMOUS) return;
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          answers = data.answers || {};
+          messages = data.messages || [];
+          currentStep = data.currentStep || 'welcome';
+          console.log('Loaded progress from localStorage:', data);
+        }
+      } catch (err) {
+        console.error('Failed to load progress from localStorage:', err);
+      }
+    }
 
     // Add a message to the conversation
     function addMessage(role, content, component = null, componentData = null) {
@@ -443,20 +465,38 @@
       document.getElementById('progressBar').style.width = percentage + '%';
     }
 
-    // Save progress to server
+    // Save progress (localStorage for anonymous, server for authenticated)
     async function saveProgress(status = 'in-progress') {
-      try {
-        await fetch(`/api/assessments/${ASSESSMENT_ID}/section`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            section_number: SECTION_NUMBER,
+      if (ANONYMOUS) {
+        // Save to localStorage for anonymous users
+        try {
+          const data = {
             answers: answers,
-            status: status
-          })
-        });
-      } catch (err) {
-        console.error('Failed to save progress:', err);
+            messages: messages,
+            currentStep: currentStep,
+            status: status,
+            lastSaved: new Date().toISOString()
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          console.log('Saved to localStorage:', STORAGE_KEY);
+        } catch (err) {
+          console.error('Failed to save to localStorage:', err);
+        }
+      } else {
+        // Save to server for authenticated users
+        try {
+          await fetch(`/api/assessments/${ASSESSMENT_ID}/section`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              section_number: SECTION_NUMBER,
+              answers: answers,
+              status: status
+            })
+          });
+        } catch (err) {
+          console.error('Failed to save progress to server:', err);
+        }
       }
     }
 

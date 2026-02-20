@@ -254,13 +254,81 @@
     .back-btn:hover {
       color: var(--navy);
     }
+
+    .anonymous-banner {
+      background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    }
+
+    .anonymous-banner-content {
+      flex: 1;
+    }
+
+    .anonymous-banner h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .anonymous-banner p {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      margin: 0;
+    }
+
+    .anonymous-banner .btn {
+      background: white;
+      color: #667EEA;
+      white-space: nowrap;
+      margin-left: 1rem;
+    }
+
+    .anonymous-banner .btn:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .anonymous-banner {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .anonymous-banner .btn {
+        margin-left: 0;
+        margin-top: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    {% if anonymous %}
+    <a href="/" class="back-btn">
+      ← Back to Home
+    </a>
+    {% else %}
     <a href="/app" class="back-btn">
       ← Back to Dashboard
     </a>
+    {% endif %}
+
+    {% if anonymous %}
+    <div class="anonymous-banner">
+      <div class="anonymous-banner-content">
+        <h3>Anonymous Mode</h3>
+        <p>Your answers are saved locally. Create a free account at the end to get AI-powered insights and save your results permanently.</p>
+      </div>
+      <a href="/#waitlist" class="btn">Create Account Later</a>
+    </div>
+    {% endif %}
 
     <div class="header">
       <h1>ERP Assessment</h1>

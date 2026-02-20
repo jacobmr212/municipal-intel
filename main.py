@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 import json
 import os
+import uuid as _uuid
 
 from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User, Watchlist, Territory
 from src.discovery import SourceDiscovery
@@ -1849,23 +1850,90 @@ async def assessment_dashboard(
     })
 
 
+@app.get("/assessment/start", response_class=HTMLResponse)
+async def start_anonymous_assessment(
+    request: Request,
+    user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Start anonymous assessment - no authentication required.
+    Generates a temporary session ID and returns assessment dashboard in anonymous mode.
+    Data will be stored in localStorage until user creates account.
+    """
+    # If user is already logged in, redirect to normal assessment creation
+    if user:
+        return RedirectResponse(url="/app", status_code=302)
+
+    # Generate anonymous session ID
+    anon_id = f"anon-{str(_uuid.uuid4())}"
+
+    # Build sections list (same as authenticated flow but no database check)
+    sections = [
+        {
+            "number": "1",
+            "title": "Organization Profile",
+            "description": "Tell us about your municipality and current systems",
+            "status": "not-started",
+            "locked": False,
+            "estimated_minutes": 10
+        },
+        {
+            "number": "2",
+            "title": "General Ledger & Chart of Accounts",
+            "description": "Assess your GL structure and identify optimization opportunities",
+            "status": "not-started",
+            "locked": True,  # Will unlock after section 1
+            "requires": "1",
+            "estimated_minutes": 7
+        },
+        {
+            "number": "3a",
+            "title": "Pay Code Inventory",
+            "description": "Document your current pay codes and structure",
+            "status": "not-started",
+            "locked": True,  # Will unlock after section 1
+            "requires": "1",
+            "estimated_minutes": 15
+        }
+    ]
+
+    return templates.TemplateResponse("assessment_dashboard.html", {
+        "request": request,
+        "user": None,  # No user for anonymous
+        "assessment_id": anon_id,
+        "sections": sections,
+        "overall_progress": 0,
+        "completed_count": 0,
+        "total_sections": len(sections),
+        "estimated_time": sum(s["estimated_minutes"] for s in sections),
+        "anonymous": True  # Flag for template to handle localStorage
+    })
+
+
 @app.get("/assessment/{assessment_id}/section/{section_number}", response_class=HTMLResponse)
 async def assessment_section(
     assessment_id: str,
     section_number: str,
     request: Request,
-    user: dict = Depends(get_current_user),
+    user: Optional[dict] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
-    """Render a specific assessment section."""
-    # Verify assessment belongs to user
-    result = db.execute(text("""
-        SELECT id FROM "Assessment"
-        WHERE id = :id AND "userId" = :user_id
-    """), {"id": assessment_id, "user_id": user["user_id"]})
+    """Render a specific assessment section - supports both authenticated and anonymous users."""
+    # Check if this is an anonymous assessment
+    is_anonymous = assessment_id.startswith("anon-")
 
-    if not result.fetchone():
-        raise HTTPException(status_code=404, detail="Assessment not found")
+    if not is_anonymous:
+        # Authenticated assessment - verify user owns it
+        if not user:
+            raise HTTPException(status_code=401, detail="Authentication required")
+
+        result = db.execute(text("""
+            SELECT id FROM "Assessment"
+            WHERE id = :id AND "userId" = :user_id
+        """), {"id": assessment_id, "user_id": user["user_id"]})
+
+        if not result.fetchone():
+            raise HTTPException(status_code=404, detail="Assessment not found")
 
     # Section metadata
     sections_meta = {
@@ -1908,7 +1976,8 @@ async def assessment_section(
         "section_number": section_number,
         "section_title": meta["title"],
         "section_description": meta["description"],
-        "section_script": section_script
+        "section_script": section_script,
+        "anonymous": is_anonymous  # Flag for localStorage handling
     })
 
 
