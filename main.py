@@ -2049,7 +2049,7 @@ let unionGroups = [];
 
 // Start the conversation
 setTimeout(() => {{
-  addMessage('assistant', 'Welcome to Section 1! 👋');
+  addMessage('assistant', 'Welcome to Section 1!');
   setTimeout(() => {{
     addMessage('assistant', 'This section helps us understand your organization\\'s basic information. It takes about 5-10 minutes.');
     setTimeout(() => {{
@@ -2112,7 +2112,7 @@ window.handleUserInput = function(step, value) {{
       setTimeout(() => {{
         addMessage('assistant', 'Next, I need to know about your employee retirement system.');
         setTimeout(() => {{
-          addMessage('assistant', '💡 This is the pension or retirement plan your employees contribute to (like PERS, IMRF, CalPERS, etc.). Check with your HR or Finance department if you\\'re not sure.');
+          addMessage('assistant', 'This is the pension or retirement plan your employees contribute to (like PERS, IMRF, CalPERS, etc.). Check with your HR or Finance department if you\\'re not sure.');
           setTimeout(() => {{
             currentStep = 'retirement_system';
             const selectedState = answers['state'];
@@ -2132,7 +2132,7 @@ window.handleUserInput = function(step, value) {{
       setTimeout(() => {{
         addMessage('assistant', 'Now let\\'s talk about your fiscal year.');
         setTimeout(() => {{
-          addMessage('assistant', '💡 Your fiscal year is your organization\\'s 12-month accounting period. Many municipalities start July 1st, but some use October 1st or January 1st. Check your budget documents if you\\'re unsure.');
+          addMessage('assistant', 'Your fiscal year is your organization\\'s 12-month accounting period. Many municipalities start July 1st, but some use October 1st or January 1st. Check your budget documents if you\\'re unsure.');
           setTimeout(() => {{
             currentStep = 'fiscal_year_month';
             addMessage('assistant', 'What month does your fiscal year start?', 'select', {{
@@ -2202,7 +2202,7 @@ window.handleUserInput = function(step, value) {{
       setTimeout(() => {{
         addMessage('assistant', 'No unions — got it.');
         setTimeout(() => {{
-          addMessage('assistant', '💡 Tax jurisdictions are areas where you collect or distribute taxes (like sales tax districts, special taxing districts, TIF zones, etc.). If you only have your main city/county, enter 1. If you\\'re not sure, just enter your best estimate.');
+          addMessage('assistant', 'Tax jurisdictions are areas where you collect or distribute taxes (like sales tax districts, special taxing districts, TIF zones, etc.). If you only have your main city/county, enter 1. If you\\'re not sure, just enter your best estimate.');
           setTimeout(() => {{
             currentStep = 'tax_jurisdictions';
             addMessage('assistant', 'How many tax jurisdictions does your organization operate in?', 'text-input', {{
@@ -2224,7 +2224,7 @@ window.handleUserInput = function(step, value) {{
           addMessage('assistant', `Union groups: ${{unionGroups.join(', ')}}`);
         }}
         setTimeout(() => {{
-          addMessage('assistant', '💡 Tax jurisdictions are areas where you collect or distribute taxes (like sales tax districts, special taxing districts, TIF zones, etc.). If you only have your main city/county, enter 1. If you\\'re not sure, just enter your best estimate.');
+          addMessage('assistant', 'Tax jurisdictions are areas where you collect or distribute taxes (like sales tax districts, special taxing districts, TIF zones, etc.). If you only have your main city/county, enter 1. If you\\'re not sure, just enter your best estimate.');
           setTimeout(() => {{
             currentStep = 'tax_jurisdictions';
             addMessage('assistant', 'How many tax jurisdictions does your organization operate in?', 'text-input', {{
@@ -2254,7 +2254,7 @@ window.handleUserInput = function(step, value) {{
       setTimeout(() => {{
         addMessage('assistant', 'Almost done! Just a couple more questions.');
         setTimeout(() => {{
-          addMessage('assistant', '💡 Your ERP (Enterprise Resource Planning) system is the software you use for accounting, budgeting, payroll, and other financial operations. Common examples are Tyler Munis, Incode, SAP, Oracle, or even Excel/QuickBooks for smaller organizations.');
+          addMessage('assistant', 'Your ERP (Enterprise Resource Planning) system is the software you use for accounting, budgeting, payroll, and other financial operations. Common examples are Tyler Munis, Incode, SAP, Oracle, or even Excel/QuickBooks for smaller organizations.');
           setTimeout(() => {{
             currentStep = 'current_erp';
             addMessage('assistant', 'What system are you currently using for your financial operations?', 'text-input', {{
@@ -2282,7 +2282,7 @@ window.handleUserInput = function(step, value) {{
     setTimeout(() => {{
       addMessage('assistant', `${{parseInt(value).toLocaleString()}} employees — perfect.`);
       setTimeout(() => {{
-        addMessage('assistant', '🎉 That\\'s all the questions for Section 1! Great job!');
+        addMessage('assistant', 'That\\'s all the questions for Section 1! Great job!');
         setTimeout(() => {{
           addMessage('assistant', 'Let me save your responses...');
           setTimeout(() => {{
@@ -2290,7 +2290,7 @@ window.handleUserInput = function(step, value) {{
             saveProgress('completed');
             updateProgress(100);
             setTimeout(() => {{
-              addMessage('assistant', '✓ Section 1 complete! Taking you back to the dashboard where you can continue with Section 2.');
+              addMessage('assistant', 'Section 1 complete! Taking you back to the dashboard where you can continue with Section 2.');
               setTimeout(() => {{
                 window.location.href = '/app';
               }}, 2500);
@@ -2332,11 +2332,11 @@ def generate_section2_script():
 
 // Start the conversation
 setTimeout(() => {
-  addMessage('assistant', 'Welcome to Section 2! 👋');
+  addMessage('assistant', 'Welcome to Section 2!');
   setTimeout(() => {
     addMessage('assistant', 'This section is about your General Ledger and Chart of Accounts.');
     setTimeout(() => {
-      addMessage('assistant', '💡 Don\\'t worry if these terms sound technical! Your Chart of Accounts (COA) is simply the list of all budget categories your organization uses to track money (like "Police Salaries" or "Park Maintenance"). Your General Ledger (GL) is the master record of all transactions.');
+      addMessage('assistant', 'Don\\'t worry if these terms sound technical! Your Chart of Accounts (COA) is simply the list of all budget categories your organization uses to track money (like "Police Salaries" or "Park Maintenance"). Your General Ledger (GL) is the master record of all transactions.');
       setTimeout(() => {
         addMessage('assistant', 'We\\'ll ask some questions to see if your accounting structure could be simplified or improved. This takes about 5-7 minutes.');
         setTimeout(() => {
@@ -2378,7 +2378,7 @@ window.handleUserInput = function(step, value) {
       setTimeout(() => {
         addMessage('assistant', 'Next question: When did someone last sit down and review your entire list of account codes to clean up old/unused ones?');
         setTimeout(() => {
-          addMessage('assistant', '💡 This would be a comprehensive review — not just adding a new account here and there, but actually going through the whole list to remove outdated codes or consolidate duplicates.');
+          addMessage('assistant', 'This would be a comprehensive review — not just adding a new account here and there, but actually going through the whole list to remove outdated codes or consolidate duplicates.');
           setTimeout(() => {
             currentStep = 'last_review';
             addMessage('assistant', 'When was this last done?', 'select', {
@@ -2411,7 +2411,7 @@ window.handleUserInput = function(step, value) {
       setTimeout(() => {
         addMessage('assistant', 'Here\\'s an important one: Think about all your account codes. Roughly what percentage had ZERO activity last year?');
         setTimeout(() => {
-          addMessage('assistant', '💡 "Inactive accounts" are budget codes that had no money go in or out during your last fiscal year. Having too many inactive accounts is a red flag that your chart could use cleanup. If you\\'re not sure, that\\'s okay — just make your best guess or select "Not sure".');
+          addMessage('assistant', '"Inactive accounts" are budget codes that had no money go in or out during your last fiscal year. Having too many inactive accounts is a red flag that your chart could use cleanup. If you\\'re not sure, that\\'s okay — just make your best guess or select "Not sure".');
           setTimeout(() => {
             currentStep = 'inactive_percentage';
             addMessage('assistant', 'What percentage of your accounts were completely inactive?', 'select', {
@@ -2442,7 +2442,7 @@ window.handleUserInput = function(step, value) {
       }
 
       setTimeout(() => {
-        addMessage('assistant', '💡 Funds are separate "buckets" of money with their own accounting. Common examples: General Fund, Water/Sewer Fund, Parks Fund, Capital Improvement Fund, etc. Most municipalities have several funds to keep certain money separate.');
+        addMessage('assistant', 'Funds are separate "buckets" of money with their own accounting. Common examples: General Fund, Water/Sewer Fund, Parks Fund, Capital Improvement Fund, etc. Most municipalities have several funds to keep certain money separate.');
         setTimeout(() => {
           currentStep = 'fund_count';
           addMessage('assistant', 'How many different funds does your municipality operate?', 'select', {
@@ -2471,7 +2471,7 @@ window.handleUserInput = function(step, value) {
       setTimeout(() => {
         addMessage('assistant', 'Almost done! Last question is about your month-end close process.');
         setTimeout(() => {
-          addMessage('assistant', '💡 "Month-end close" is when your finance team reconciles accounts, posts adjusting entries, and closes the books for the previous month. A long close process often means complicated account structures or too many manual steps.');
+          addMessage('assistant', '"Month-end close" is when your finance team reconciles accounts, posts adjusting entries, and closes the books for the previous month. A long close process often means complicated account structures or too many manual steps.');
           setTimeout(() => {
             currentStep = 'month_close';
             addMessage('assistant', 'How many business days does it typically take to close the books each month?', 'select', {
@@ -2660,11 +2660,11 @@ let currentPayCode = {};
 
 // Start the conversation
 setTimeout(() => {
-  addMessage('assistant', 'Welcome to Section 3A! 👋');
+  addMessage('assistant', 'Welcome to Section 3A!');
   setTimeout(() => {
     addMessage('assistant', 'This section is about pay codes — the different types of pay your employees can receive.');
     setTimeout(() => {
-      addMessage('assistant', '💡 Pay codes are categories in your payroll system like "Regular Pay", "Overtime", "Vacation Pay", etc. Each type of pay might have its own rules for how it\\'s calculated and whether it counts toward retirement.');
+      addMessage('assistant', 'Pay codes are categories in your payroll system like "Regular Pay", "Overtime", "Vacation Pay", etc. Each type of pay might have its own rules for how it\\'s calculated and whether it counts toward retirement.');
       setTimeout(() => {
         addMessage('assistant', 'We\\'ll walk through the types of pay you use and gather some details about each one. This helps identify ways to simplify your payroll setup.');
         setTimeout(() => {
@@ -2744,7 +2744,7 @@ window.handleUserInput = function(step, value) {
     setTimeout(() => {
       addMessage('assistant', `"${value}" — got it.`);
       setTimeout(() => {
-        addMessage('assistant', '💡 Each pay code is connected to a GL (General Ledger) account — that\\'s the budget code where the expense gets recorded. It might look like "5100" or "01-100-5100" depending on your system.');
+        addMessage('assistant', 'Each pay code is connected to a GL (General Ledger) account — that\\'s the budget code where the expense gets recorded. It might look like "5100" or "01-100-5100" depending on your system.');
         setTimeout(() => {
           currentStep = 'gl_account';
           addMessage('assistant', 'What account code is this pay type mapped to?', 'text-input', {
@@ -2774,7 +2774,7 @@ window.handleUserInput = function(step, value) {
     addMessage('user', label);
 
     setTimeout(() => {
-      addMessage('assistant', '💡 "Pensionable" means this type of pay counts when calculating retirement benefits. For example, regular salary is usually pensionable, but car allowances often aren\\'t. Check with HR if you\\'re not sure!');
+      addMessage('assistant', '"Pensionable" means this type of pay counts when calculating retirement benefits. For example, regular salary is usually pensionable, but car allowances often aren\\'t. Check with HR if you\\'re not sure!');
       setTimeout(() => {
         addMessage('assistant', 'Does this pay type count toward retirement benefits?', 'choice-buttons', {
           options: [
@@ -2793,7 +2793,7 @@ window.handleUserInput = function(step, value) {
     addMessage('user', value.charAt(0).toUpperCase() + value.slice(1));
 
     setTimeout(() => {
-      addMessage('assistant', '💡 FLSA is the Fair Labor Standards Act — federal law that governs overtime pay. Some types of pay (like shift differentials) must be included when calculating overtime rates, while others don\\'t. This is an HR/payroll question, so "Not sure" is totally fine!');
+      addMessage('assistant', 'FLSA is the Fair Labor Standards Act — federal law that governs overtime pay. Some types of pay (like shift differentials) must be included when calculating overtime rates, while others don\\'t. This is an HR/payroll question, so "Not sure" is totally fine!');
       setTimeout(() => {
         addMessage('assistant', 'Does this pay type get included when calculating overtime?', 'choice-buttons', {
           options: [
