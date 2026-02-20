@@ -6,6 +6,10 @@ __pycache__/
 venv/
 env/
 
+# Deprecated files
+app.py.deprecated
+*.deprecated
+
 # Reports (generated)
 reports/
 

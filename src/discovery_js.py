@@ -85,10 +85,12 @@ class JSSourceDiscovery:
 
             indicator_count = sum(1 for ind in meeting_indicators if ind in html_lower)
 
-            await page.close()
-
             if indicator_count < 2:
+                await page.close()
                 return None
+
+            # Get final URL BEFORE closing page
+            final_url = page.url
 
             # Identify platform from rendered content
             source_type = "html"
@@ -103,8 +105,8 @@ class JSSourceDiscovery:
             elif "opengov" in html_lower:
                 source_type = "opengov"
 
-            # Get final URL after redirects
-            final_url = page.url
+            # Close page after getting all needed data
+            await page.close()
 
             logger.info(f"  ✓ JS-rendered page validated: {final_url[:70]} ({source_type})")
             return (final_url, source_type)

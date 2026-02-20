@@ -308,13 +308,19 @@ class EnrichmentEngine:
 
         return stats
 
-    def enrich_state(self, state_abbr: str, progress_callback: Optional[Callable] = None) -> dict:
+    def enrich_state(self, state_abbr: str, progress_callback: Optional[Callable] = None,
+                     force_reenrich: bool = False) -> dict:
         """
         Enrich all municipalities in a state.
         Returns dict with summary stats.
 
         Uses a per-municipality session to avoid SSL connection drops on long-running
         enrichments (Neon PostgreSQL drops idle connections after ~5 minutes).
+
+        Args:
+            state_abbr: Two-letter state abbreviation
+            progress_callback: Optional callback function for progress updates
+            force_reenrich: If True, re-discover sources even for cities that already have sources
         """
         # Load municipality IDs with a short-lived connection, then close it.
         db = SessionLocal()
@@ -354,10 +360,12 @@ class EnrichmentEngine:
                 if progress_callback:
                     progress_callback(i, total, f"Enriching: {municipality.name}, {state_abbr}")
 
-                # Skip if already verified and has sources
-                if municipality.domain_status == "verified" and db.query(MunicipalSource).filter_by(
+                # Skip if already verified and has sources (unless force_reenrich is True)
+                has_sources = db.query(MunicipalSource).filter_by(
                     municipality_id=municipality.id
-                ).count() > 0:
+                ).count() > 0
+
+                if municipality.domain_status == "verified" and has_sources and not force_reenrich:
                     stats["already_verified"] += 1
                     logger.info(f"[{i + 1}/{total}] {municipality.name}: Already enriched — skipping")
                     continue

@@ -187,7 +187,7 @@ python scripts/enrich_caselle_territory.py
 
 ## Scan Pipeline
 
-**File**: `app.py` → `run_scan()`
+**File**: `main.py` → `run_scan()`
 
 ### Phase 1: Load Sources from Database (NEW)
 
@@ -359,7 +359,8 @@ municipal-intel/
 │   ├── municipalities.json         # Original 6,752 cities
 │   ├── municipal_intel.db          # SQLite database (NEW)
 │   └── us_cities_census.csv        # Full Census data (download)
-├── app.py                  # Main Streamlit UI
+├── main.py                 # FastAPI application
+├── templates/              # Jinja2 HTML templates
 └── README.md              # User documentation
 ```
 
@@ -494,16 +495,16 @@ For each mode:
 
 ### Access
 
-Navigate to the **Admin** page via the Streamlit sidebar. The admin page automatically appears when the app runs (no separate deployment needed).
+Navigate to the **Admin** page at `/admin` (requires admin role). The admin functionality is built into the FastAPI application.
 
 ### Usage Example
 
 ```bash
-# Start app (admin page auto-available)
-streamlit run app.py
+# Start app (admin page auto-available at /admin)
+uvicorn main:app --reload
 
-# Navigate to Admin in sidebar
-# Tab 3: Select state (e.g., "ID - 20 unverified of 35")
+# Navigate to /admin
+# Select state for enrichment
 # Click "Start Enrichment"
 # Wait for completion, view stats
 ```

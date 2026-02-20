@@ -272,26 +272,9 @@ class SourceDiscovery:
                     logger.info(f"  ✓ Found on third-party platform: {found_url}")
                     return discovered
 
-        # Third: Try the domain root as a fallback
-        if not discovered:
-            logger.info(f"  Trying domain root fallback for {name}...")
-            for base_url in base_urls:
-                result = self._check_url(base_url)
-                if result:
-                    found_url, source_type = result
-                    discovered.append(DiscoveredSource(
-                        municipality=name,
-                        state=state,
-                        url=found_url,
-                        source_type=source_type,
-                        confidence=0.3,
-                        population=population,
-                    ))
-                    logger.info(f"  ~ Found (low confidence): {found_url}")
-                    break
-
-        # Fourth: Try JS rendering fallback for larger cities (pop >= 10K)
+        # Third: Try JS rendering fallback for larger cities (pop >= 10K)
         # Tech-forward cities often have JavaScript-heavy sites that fail with static requests
+        # This runs BEFORE domain root fallback to ensure JS gets tested before settling for homepage
         if not discovered and population >= 10000:
             logger.info(f"  Trying JavaScript rendering fallback for {name} (pop {population:,})...")
 
@@ -335,6 +318,25 @@ class SourceDiscovery:
                 logger.warning("  Playwright not available - skipping JS rendering fallback")
             except Exception as e:
                 logger.warning(f"  JS rendering fallback failed: {str(e)[:60]}")
+
+        # Fourth: Try the domain root as a last resort fallback
+        # Only runs if JS rendering also found nothing (for pop >= 10K) or wasn't attempted
+        if not discovered:
+            logger.info(f"  Trying domain root fallback for {name}...")
+            for base_url in base_urls:
+                result = self._check_url(base_url)
+                if result:
+                    found_url, source_type = result
+                    discovered.append(DiscoveredSource(
+                        municipality=name,
+                        state=state,
+                        url=found_url,
+                        source_type=source_type,
+                        confidence=0.3,
+                        population=population,
+                    ))
+                    logger.info(f"  ~ Found (low confidence): {found_url}")
+                    break
 
         # Log if nothing found
         if not discovered:

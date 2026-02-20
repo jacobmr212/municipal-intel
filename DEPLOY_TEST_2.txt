@@ -1,0 +1,15 @@
+GitHub Auto-Deploy Test
+======================
+
+Testing if Railway auto-deploys when pushing to GitHub.
+
+Timestamp: 2026-02-19 16:50 PST
+Test ID: DEPLOY_TEST_2
+
+Expected behavior:
+- This file is committed and pushed to GitHub
+- Railway should automatically detect the push
+- Railway should trigger a new build and deployment
+- Deployment should complete within 60-90 seconds
+
+If you're reading this in the Railway logs, auto-deploy is working!

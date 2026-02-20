@@ -75,8 +75,18 @@ After discovering 111 CO sources and 42 ID sources, ran verification scan to con
 - **Code reduction**: Removed ~100 lines of duplicated logic
 - **Domain fix**: Now uses resolved_url instead of stale domain values
 - **File**: src/enrichment.py:236-307 (delegation pattern implemented)
-- **Next**: Re-run enrichment on underperforming states (CA 8.6%, NY 9.7%, PA 1.5%, NJ 4.6%) with NEW code
-- **Expected**: 50-100+ new sources in major metros, 3-4x coverage improvement in underperforming states
+
+⚠️ **Follow-up Issue Discovered (Feb 19, 2026):**
+- **Root Cause**: Major metros (LA, SF, NYC, etc.) have old/broken sources from pre-2cfda11 enrichment
+- **Skip Logic**: EnrichmentEngine.enrich_state() skips cities that already have sources (src/enrichment.py:368)
+- **Impact**: JavaScript fallback never activates on cities that need it most
+
+✅ **Force Re-enrichment Flag Implemented (Feb 19, 2026):**
+- **Solution**: Added `force_reenrich` parameter to EnrichmentEngine.enrich_state()
+- **Behavior**: When `force_reenrich=True`, bypasses "already enriched" skip logic
+- **File**: src/enrichment.py:311-371
+- **Usage**: `engine.enrich_state('CA', force_reenrich=True)` to re-discover sources
+- **Next**: Re-run enrichment on CA/NY/PA/NJ major metros with force flag to activate JS fallback
 
 ### Known Issues
 1. ~~Source coverage thin outside Utah~~ → ✅ Fixed: Nationwide coverage with 1,376+ sources across 49 jurisdictions

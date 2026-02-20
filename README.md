@@ -7,7 +7,7 @@ Automatically discovers and scans municipal meeting minutes for signals related 
 Built to replace expensive third-party monitoring services that charge thousands of dollars to manually read town hall meeting notes.
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
-![Streamlit](https://img.shields.io/badge/streamlit-1.31+-red)
+![FastAPI](https://img.shields.io/badge/fastapi-0.109+-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
@@ -44,27 +44,31 @@ Built to replace expensive third-party monitoring services that charge thousands
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/municipal-intel.git
+git clone https://github.com/jacobmr212/municipal-intel.git
 cd municipal-intel
 
 # Install dependencies
 pip install -r requirements.txt
 
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your database URL and API keys
+
 # Run the app
-streamlit run app.py
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The app will open at `http://localhost:8501`.
+The app will open at `http://localhost:8000`.
 
-### Deploy to Streamlit Cloud (Free)
+### Deploy to Railway (Production)
 
 1. Push this repo to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repo
-4. Set `app.py` as the main file
-5. Click Deploy
+2. Go to [railway.app](https://railway.app)
+3. Create a new project from your GitHub repo
+4. Add environment variables (DATABASE_URL, JWT_SECRET_KEY, RESEND_API_KEY, etc.)
+5. Railway will automatically detect main.py and deploy
 
-Your app will be live at `https://your-app.streamlit.app` within minutes.
+Your app will be live at your Railway domain within minutes.
 
 ---
 
@@ -89,13 +93,13 @@ To add a municipality:
 
 ### AI-Enhanced Analysis (Optional)
 
-Toggle "AI-Enhanced Analysis" in the sidebar to get Claude-powered sales briefs on hot/warm leads. Requires:
+The platform includes Claude-powered analysis for lead assessments. Add to your `.env` file:
 
 ```bash
-export ANTHROPIC_API_KEY="your-key-here"
+ANTHROPIC_API_KEY="your-key-here"
 ```
 
-Or add it as a secret in Streamlit Cloud settings.
+Or add it as an environment variable in Railway.
 
 ### Signal Keywords
 
@@ -107,19 +111,22 @@ Edit `src/signals.py` to customize keyword lists, weights, and lead classificati
 
 ```
 municipal-intel/
-├── app.py                  # Streamlit web application
+├── main.py                 # FastAPI web application
 ├── requirements.txt        # Python dependencies
+├── templates/              # Jinja2 HTML templates
+├── static/                 # CSS, JS, images
 ├── data/
 │   └── municipalities.json # Municipality database (by state)
 ├── src/
+│   ├── database.py         # SQLAlchemy models & DB setup
+│   ├── auth.py             # Magic link authentication
 │   ├── signals.py          # Signal definitions & lead classification
 │   ├── discovery.py        # Auto-discovery of meeting minutes pages
 │   ├── scraper.py          # Web scraping engine (HTML + PDF)
 │   ├── analyzer.py         # Document analysis & scoring
-│   └── reporter.py         # HTML/JSON report generation
-├── reports/                # Generated reports (gitignored)
-└── .streamlit/
-    └── config.toml         # Streamlit theme configuration
+│   ├── enrichment.py       # Source enrichment engine
+│   └── ai_client.py        # Claude API integration
+└── scripts/                # Enrichment & utility scripts
 ```
 
 ---
