@@ -2460,6 +2460,10 @@ async function startAssessment() {
     const data = await response.json();
 
     if (data.id) {
+      // Show toast if reusing existing assessment
+      if (data.reused) {
+        showToast('Continuing your in-progress assessment', 'success');
+      }
       // Redirect to assessment page
       window.location.href = `/assessment/${data.id}`;
     }

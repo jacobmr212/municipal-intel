@@ -2950,7 +2950,10 @@ async def create_assessment(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new assessment for the current user."""
+    """
+    Get or create an assessment for the current user.
+    Reuses existing 'draft' assessment if one exists (1 assessment per user policy).
+    """
     import uuid as _uuid
     from datetime import datetime
     import traceback
@@ -2959,13 +2962,26 @@ async def create_assessment(
     print(f"DEBUG: User dict = {user}")
 
     try:
-        assessment_id = str(_uuid.uuid4())
-
         # Get user_id safely
         user_id = user.get("user_id") or user.get("id")
         if not user_id:
             raise ValueError(f"No user ID found in user dict. Keys: {list(user.keys())}")
 
+        # Check if user already has a draft assessment
+        existing = db.execute(text("""
+            SELECT id, status FROM "Assessment"
+            WHERE "userId" = :user_id AND status = 'draft'
+            ORDER BY "createdAt" DESC
+            LIMIT 1
+        """), {"user_id": user_id}).fetchone()
+
+        if existing:
+            # Reuse existing draft assessment
+            print(f"Reusing existing draft assessment: {existing[0]}")
+            return {"id": existing[0], "status": existing[1], "reused": True}
+
+        # No existing draft, create new assessment
+        assessment_id = str(_uuid.uuid4())
         db.execute(text("""
             INSERT INTO "Assessment" (id, "userId", status, "createdAt", "updatedAt")
             VALUES (:id, :user_id, 'draft', :now, :now)
@@ -2976,7 +2992,8 @@ async def create_assessment(
         })
         db.commit()
 
-        return {"id": assessment_id, "status": "draft"}
+        print(f"Created new draft assessment: {assessment_id}")
+        return {"id": assessment_id, "status": "draft", "reused": False}
     except Exception as e:
         db.rollback()
         print(f"ERROR creating assessment: {e}")
