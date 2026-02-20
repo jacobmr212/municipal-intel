@@ -1973,8 +1973,8 @@ async def assessment_section(
             "script": "section2_script.js"
         },
         "3a": {
-            "title": "Payroll & Pay Codes",
-            "description": "Assess payroll complexity and pay code management",
+            "title": "Pay Code Inventory",
+            "description": "Document your current pay codes and structure",
             "script": "section3a_script.js"
         }
     }
@@ -2364,6 +2364,12 @@ questions = [
     required: false
   }}
 ];
+
+// Initialize wizard (load progress, set up first question)
+document.addEventListener('DOMContentLoaded', () => {{
+  loadProgress();
+  initializeWizard();
+}});
 """
 
 
@@ -2768,519 +2774,277 @@ setTimeout(init, 300);
 
 
 def generate_section3a_script():
-    """Generate Section 3: Payroll & Pay Codes - Complete (10 questions)."""
-    return f"""
-// Section 3: Payroll & Pay Codes - Complete (Q1-Q10)
-// Wizard interface to assess payroll complexity and pay code management
+    """Generate Section 3A conversational script for pay code inventory."""
+    return """
+// Section 3A: Pay Code Inventory
+// Conversational flow for collecting pay code details
 
-const questions = [
-  // Q1: Pay Code Types Used (Multi-Select)
-  {{
-    id: 'q1_pay_code_types',
-    type: 'multi-select',
-    text: 'Which types of pay codes does your organization use?',
-    aiContext: 'Types of pay codes in use - indicates payroll complexity',
-    help: 'Pay codes are categories in your payroll system like "Regular Pay", "Overtime", "Vacation Pay", etc. Select all that apply.',
-    options: [
-      {{ value: 'regular-pay', label: 'Regular Pay' }},
-      {{ value: 'overtime', label: 'Overtime' }},
-      {{ value: 'vacation', label: 'Vacation' }},
-      {{ value: 'sick-leave', label: 'Sick Leave' }},
-      {{ value: 'comp-time', label: 'Comp Time' }},
-      {{ value: 'holiday', label: 'Holiday Pay' }},
-      {{ value: 'longevity', label: 'Longevity Pay' }},
-      {{ value: 'shift-differential', label: 'Shift Differential' }},
-      {{ value: 'standby-oncall', label: 'Standby/On-Call' }},
-      {{ value: 'bilingual-pay', label: 'Bilingual Pay' }},
-      {{ value: 'certification-pay', label: 'Certification/Education Pay' }},
-      {{ value: 'car-allowance', label: 'Car Allowance' }},
-      {{ value: 'uniform-allowance', label: 'Uniform Allowance' }},
-      {{ value: 'severance', label: 'Severance' }},
-      {{ value: 'other', label: 'Other' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q2: Total Pay Code Count
-  {{
-    id: 'q2_total_pay_codes',
-    type: 'dropdown',
-    text: 'Approximately how many different pay codes does your organization have in total?',
-    aiContext: 'Total number of pay codes - key complexity indicator',
-    help: 'This includes all types of pay - regular, overtime, leave, allowances, etc. If you\\'re not sure, your payroll system administrator can help you find this.',
-    options: [
-      {{ value: 'under-20', label: 'Under 20' }},
-      {{ value: '20-50', label: '20-50' }},
-      {{ value: '50-100', label: '50-100' }},
-      {{ value: '100-200', label: '100-200' }},
-      {{ value: 'over-200', label: 'Over 200' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q3: Naming Conventions
-  {{
-    id: 'q3_naming_conventions',
-    type: 'single-select',
-    text: 'Do you have standardized naming conventions for pay codes?',
-    aiContext: 'Pay code naming standards - impacts maintainability',
-    help: 'For example, do all overtime codes start with "OT-" or all leave codes start with "LV-"? Standardized naming makes payroll easier to manage.',
-    options: [
-      {{ value: 'yes-consistent', label: 'Yes, consistent naming across all codes' }},
-      {{ value: 'partial', label: 'Partially - some categories are standardized' }},
-      {{ value: 'no', label: 'No standardized naming' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q4: Overtime Pay Codes
-  {{
-    id: 'q4_overtime_codes',
-    type: 'dropdown',
-    text: 'How many different pay codes do you have for overtime?',
-    aiContext: 'Overtime code count - often unnecessarily complex',
-    help: 'Examples: time-and-a-half, double-time, callback overtime, etc. Some organizations have separate codes for each department or bargaining unit.',
-    options: [
-      {{ value: '1-2', label: '1-2 codes' }},
-      {{ value: '3-5', label: '3-5 codes' }},
-      {{ value: '6-10', label: '6-10 codes' }},
-      {{ value: 'over-10', label: 'Over 10 codes' }},
-      {{ value: 'none', label: 'We don\\'t use overtime codes' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q5: Leave/Time Off Codes
-  {{
-    id: 'q5_leave_codes',
-    type: 'dropdown',
-    text: 'How many different pay codes do you have for leave/time off (vacation, sick, etc.)?',
-    aiContext: 'Leave code count - another common bloat area',
-    help: 'Includes vacation, sick leave, comp time, personal days, bereavement, jury duty, etc.',
-    options: [
-      {{ value: '1-3', label: '1-3 codes' }},
-      {{ value: '4-6', label: '4-6 codes' }},
-      {{ value: '7-10', label: '7-10 codes' }},
-      {{ value: 'over-10', label: 'Over 10 codes' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q6: Retirement Eligibility Tracking
-  {{
-    id: 'q6_retirement_tracking',
-    type: 'single-select',
-    text: 'Do you track which pay codes are eligible for retirement contributions?',
-    aiContext: 'Retirement eligibility tracking - compliance requirement',
-    help: 'Some types of pay (like certain allowances) might not count toward retirement. Tracking this correctly is important for compliance.',
-    options: [
-      {{ value: 'yes-all', label: 'Yes, for all pay codes' }},
-      {{ value: 'yes-some', label: 'Yes, but only for some codes' }},
-      {{ value: 'no', label: 'No, we don\\'t track this' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q7: Bargaining Unit Duplication
-  {{
-    id: 'q7_bargaining_unit_duplication',
-    type: 'single-select',
-    text: 'Do different bargaining units or departments have separate pay codes for the same type of pay?',
-    aiContext: 'Pay code duplication across units - common bloat pattern',
-    help: 'For example, do you have "Police Overtime", "Fire Overtime", "Public Works Overtime" as separate codes instead of one "Overtime" code?',
-    options: [
-      {{ value: 'yes-many', label: 'Yes, many duplicate codes across units' }},
-      {{ value: 'yes-some', label: 'Yes, some duplication exists' }},
-      {{ value: 'no', label: 'No, codes are shared across units' }},
-      {{ value: 'not-applicable', label: 'We only have one bargaining unit' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q8: Frequency of Adding New Codes
-  {{
-    id: 'q8_new_code_frequency',
-    type: 'dropdown',
-    text: 'How often do you add new pay codes to your system?',
-    aiContext: 'Pay code growth rate - indicates governance',
-    help: 'Frequent additions without cleanup lead to bloat over time.',
-    options: [
-      {{ value: 'rarely', label: 'Rarely (less than once per year)' }},
-      {{ value: 'annually', label: 'Annually during contract negotiations' }},
-      {{ value: 'quarterly', label: 'A few times per year' }},
-      {{ value: 'monthly', label: 'Monthly or more often' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q9: Pay Code Cleanup
-  {{
-    id: 'q9_cleanup_recent',
-    type: 'single-select',
-    text: 'Have you reviewed and removed unused pay codes in the last 12 months?',
-    aiContext: 'Recent cleanup activity - maintenance practice',
-    help: 'Regular cleanup prevents accumulation of obsolete pay codes that clutter reports and cause confusion.',
-    options: [
-      {{ value: 'yes-comprehensive', label: 'Yes, comprehensive review and cleanup' }},
-      {{ value: 'yes-partial', label: 'Yes, but only partial cleanup' }},
-      {{ value: 'no', label: 'No cleanup in the last year' }},
-      {{ value: 'never', label: 'Never done a cleanup' }},
-      {{ value: 'not-sure', label: 'Not sure' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }},
-
-  // Q10: Biggest Pay Code Challenges (Multi-Select)
-  {{
-    id: 'q10_challenges',
-    type: 'multi-select',
-    text: 'What are your biggest challenges with pay code management?',
-    aiContext: 'User-reported pain points',
-    help: 'Select all that apply. This helps us identify specific areas for improvement.',
-    options: [
-      {{ value: 'too-many-codes', label: 'Too many pay codes - hard to find the right one' }},
-      {{ value: 'unclear-naming', label: 'Unclear code names - staff confused about which to use' }},
-      {{ value: 'duplicate-codes', label: 'Duplicate or overlapping codes' }},
-      {{ value: 'incorrect-usage', label: 'Staff frequently use wrong codes' }},
-      {{ value: 'reporting-difficult', label: 'Difficult to generate payroll reports' }},
-      {{ value: 'retirement-tracking', label: 'Trouble tracking retirement eligibility' }},
-      {{ value: 'contract-changes', label: 'Hard to update codes when contracts change' }},
-      {{ value: 'system-limitations', label: 'Payroll system limitations' }},
-      {{ value: 'no-challenges', label: 'No significant challenges' }}
-    ],
-    required: true,
-    autoAdvance: false
-  }}
+const PAY_CODE_CATEGORIES = [
+  { value: 'regular-pay', label: 'Regular Pay' },
+  { value: 'overtime', label: 'Overtime' },
+  { value: 'vacation', label: 'Vacation' },
+  { value: 'sick-leave', label: 'Sick Leave' },
+  { value: 'comp-time', label: 'Comp Time' },
+  { value: 'holiday', label: 'Holiday Pay' },
+  { value: 'longevity', label: 'Longevity Pay' },
+  { value: 'shift-differential', label: 'Shift Differential' },
+  { value: 'standby-oncall', label: 'Standby/On-Call' },
+  { value: 'bilingual-pay', label: 'Bilingual Pay' },
+  { value: 'certification-pay', label: 'Certification/Education Pay' },
+  { value: 'car-allowance', label: 'Car Allowance' },
+  { value: 'uniform-allowance', label: 'Uniform Allowance' },
+  { value: 'severance', label: 'Severance' },
+  { value: 'other', label: 'Other' }
 ];
 
-// === STATE MANAGEMENT ===
-let currentQuestionIndex = 0;
-let answers = {{}};
-let saveIndicatorTimeout = null;
+const CALCULATION_METHODS = [
+  { value: 'hourly-rate', label: 'Hourly Rate (hours × rate)' },
+  { value: 'salary-flat', label: 'Salary/Flat Amount per Period' },
+  { value: 'flat-amount', label: 'One-Time Flat Amount' },
+  { value: 'percent-base', label: 'Percentage of Base Pay' },
+  { value: 'percent-gross', label: 'Percentage of Gross' },
+  { value: 'other-formula', label: 'Other Formula/Method' }
+];
 
-// === SAVE & RESUME ===
-function saveToStorage() {{
-  const data = {{
-    currentQuestionIndex,
-    answers,
-    lastSaved: new Date().toISOString()
-  }};
+// Track selected categories and pay codes
+let selectedCategories = [];
+let currentCategoryIndex = 0;
+let currentCategory = null;
+let payCodesByCategory = {}; // { 'overtime': [{name, gl, method, ...}] }
+let currentPayCode = {};
 
-  if (ANONYMOUS) {{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }}
+// Start the conversation
+setTimeout(() => {
+  addMessage('assistant', 'Welcome to Section 3A!');
+  setTimeout(() => {
+    addMessage('assistant', 'This section is about pay codes — the different types of pay your employees can receive.');
+    setTimeout(() => {
+      addMessage('assistant', 'Pay codes are categories in your payroll system like "Regular Pay", "Overtime", "Vacation Pay", etc. Each type of pay might have its own rules for how it\\'s calculated and whether it counts toward retirement.');
+      setTimeout(() => {
+        addMessage('assistant', 'We\\'ll walk through the types of pay you use and gather some details about each one. This helps identify ways to simplify your payroll setup.');
+        setTimeout(() => {
+          currentStep = 'category_selection';
+          addMessage('assistant', 'First, which types of pay does your organization use? Select all that apply:', 'multi-select-start', {
+            categories: PAY_CODE_CATEGORIES
+          });
+        }, 800);
+      }, 800);
+    }, 800);
+  }, 800);
+}, 500);
 
-  // Also save to server
-  saveProgress('in-progress');
+// Handle category selection (multi-select pattern)
+window.handleCategoryToggle = function(category) {
+  if (selectedCategories.includes(category)) {
+    selectedCategories = selectedCategories.filter(c => c !== category);
+  } else {
+    selectedCategories.push(category);
+  }
+  // Update UI to show selected state
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  categoryBtns.forEach(btn => {
+    if (btn.dataset.category === category) {
+      btn.classList.toggle('selected');
+    }
+  });
+};
 
-  // Show save indicator
-  showSaveIndicator();
-}}
+window.handleCategoryConfirm = function() {
+  if (selectedCategories.length === 0) {
+    alert('Please select at least one pay code category.');
+    return;
+  }
 
-function loadFromStorage() {{
-  if (!ANONYMOUS) return false;
+  answers['selectedCategories'] = selectedCategories;
+  const categoryLabels = selectedCategories.map(c =>
+    PAY_CODE_CATEGORIES.find(cat => cat.value === c)?.label || c
+  ).join(', ');
 
-  try {{
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {{
-      const data = JSON.parse(saved);
-      currentQuestionIndex = data.currentQuestionIndex || 0;
-      answers = data.answers || {{}};
-      console.log('Resumed Section 3 from localStorage:', data);
-      return true;
-    }}
-  }} catch (err) {{
-    console.error('Failed to load from localStorage:', err);
-  }}
-  return false;
-}}
+  addMessage('user', `Selected: ${categoryLabels}`);
 
-function showSaveIndicator() {{
-  let indicator = document.getElementById('saveIndicator');
-  if (!indicator) {{
-    indicator = document.createElement('div');
-    indicator.id = 'saveIndicator';
-    indicator.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #22C55E;
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      opacity: 0;
-      transition: opacity 0.3s;
-      z-index: 1000;
-    `;
-    indicator.textContent = 'Saved';
-    document.body.appendChild(indicator);
-  }}
+  setTimeout(() => {
+    addMessage('assistant', `Great! You selected ${selectedCategories.length} categor${selectedCategories.length > 1 ? 'ies' : 'y'}.`);
+    setTimeout(() => {
+      addMessage('assistant', 'Now let\\'s document the pay codes in each category. I\\'ll walk you through them one at a time.');
+      setTimeout(() => {
+        currentCategory = selectedCategories[0];
+        currentCategoryIndex = 0;
+        payCodesByCategory[currentCategory] = [];
+        startPayCodeCollection(currentCategory);
+      }, 800);
+    }, 600);
+  }, 600);
+};
 
-  // Clear existing timeout
-  if (saveIndicatorTimeout) clearTimeout(saveIndicatorTimeout);
+function startPayCodeCollection(category) {
+  const categoryLabel = PAY_CODE_CATEGORIES.find(c => c.value === category)?.label || category;
+  currentStep = 'pay_code_name';
+  currentPayCode = { category: category };
 
-  // Show indicator
-  indicator.style.opacity = '1';
+  setTimeout(() => {
+    addMessage('assistant', `Let\\'s start with ${categoryLabel}. What\\'s the name of the first pay code?`, 'text-input', {
+      inputType: 'text',
+      placeholder: 'e.g., OT - Time and a Half'
+    });
+  }, 600);
+}
 
-  // Hide after 2 seconds
-  saveIndicatorTimeout = setTimeout(() => {{
-    indicator.style.opacity = '0';
-  }}, 2000);
-}}
+// Handle user input
+window.handleUserInput = function(step, value) {
+  if (step === 'pay_code_name') {
+    currentPayCode.name = value;
+    answers[currentStep] = value;
+    addMessage('user', value);
 
-// === NAVIGATION ===
-function goToQuestion(index) {{
-  if (index < 0 || index >= questions.length) return;
+    setTimeout(() => {
+      addMessage('assistant', `"${value}" — got it.`);
+      setTimeout(() => {
+        addMessage('assistant', 'Each pay code is connected to a GL (General Ledger) account — that\\'s the budget code where the expense gets recorded. It might look like "5100" or "01-100-5100" depending on your system.');
+        setTimeout(() => {
+          currentStep = 'gl_account';
+          addMessage('assistant', 'What account code is this pay type mapped to?', 'text-input', {
+            inputType: 'text',
+            placeholder: 'e.g., 5100 or 01-100-5100'
+          });
+        }, 800);
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'gl_account') {
+    currentPayCode.glAccount = value;
+    answers[currentStep] = value;
+    addMessage('user', value);
 
-  currentQuestionIndex = index;
-  renderQuestion();
-  updateProgress();
-}}
+    setTimeout(() => {
+      addMessage('assistant', 'How is this pay code calculated?', 'select', {
+        options: CALCULATION_METHODS
+      });
+      currentStep = 'calculation_method';
+    }, 600);
+  }
+  else if (step === 'calculation_method') {
+    currentPayCode.calculationMethod = value;
+    const label = CALCULATION_METHODS.find(m => m.value === value)?.label || value;
+    answers[currentStep] = value;
+    addMessage('user', label);
 
-function nextQuestion() {{
-  if (currentQuestionIndex < questions.length - 1) {{
-    goToQuestion(currentQuestionIndex + 1);
-  }} else {{
-    completeSection();
-  }}
-}}
+    setTimeout(() => {
+      addMessage('assistant', '"Pensionable" means this type of pay counts when calculating retirement benefits. For example, regular salary is usually pensionable, but car allowances often aren\\'t. Check with HR if you\\'re not sure!');
+      setTimeout(() => {
+        addMessage('assistant', 'Does this pay type count toward retirement benefits?', 'choice-buttons', {
+          options: [
+            { value: 'yes', label: 'Yes' },
+            { value: 'no', label: 'No' },
+            { value: 'unsure', label: 'Not sure' }
+          ]
+        });
+        currentStep = 'is_pensionable';
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'is_pensionable') {
+    currentPayCode.isPensionable = value;
+    answers[currentStep] = value;
+    addMessage('user', value.charAt(0).toUpperCase() + value.slice(1));
 
-function previousQuestion() {{
-  if (currentQuestionIndex > 0) {{
-    goToQuestion(currentQuestionIndex - 1);
-  }}
-}}
+    setTimeout(() => {
+      addMessage('assistant', 'FLSA is the Fair Labor Standards Act — federal law that governs overtime pay. Some types of pay (like shift differentials) must be included when calculating overtime rates, while others don\\'t. This is an HR/payroll question, so "Not sure" is totally fine!');
+      setTimeout(() => {
+        addMessage('assistant', 'Does this pay type get included when calculating overtime?', 'choice-buttons', {
+          options: [
+            { value: 'yes', label: 'Yes' },
+            { value: 'no', label: 'No' },
+            { value: 'unsure', label: 'Not sure' }
+          ]
+        });
+        currentStep = 'is_flsa_base';
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'is_flsa_base') {
+    currentPayCode.isFlsaBase = value;
+    answers[currentStep] = value;
+    addMessage('user', value.charAt(0).toUpperCase() + value.slice(1));
 
-function completeSection() {{
-  saveProgress('completed');
-  updateProgress(100);
+    // Save this pay code
+    payCodesByCategory[currentCategory].push({ ...currentPayCode });
 
-  // Show completion message
-  const container = document.getElementById('wizardContainer');
-  container.innerHTML = `
-    <div style="text-align: center; padding: 3rem 1rem;">
-      <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-      <h2 style="color: var(--navy); margin-bottom: 1rem;">Section Complete!</h2>
-      <p style="color: var(--warm-gray); margin-bottom: 2rem;">
-        Great work! Your responses have been saved.
-      </p>
-      <p style="color: var(--warm-gray); font-size: 0.875rem;">
-        Redirecting to dashboard...
-      </p>
-    </div>
-  `;
+    setTimeout(() => {
+      addMessage('assistant', `Pay code "${currentPayCode.name}" saved.`);
+      setTimeout(() => {
+        currentStep = 'add_another';
+        const categoryLabel = PAY_CODE_CATEGORIES.find(c => c.value === currentCategory)?.label;
+        addMessage('assistant', `Do you have another ${categoryLabel} pay code to add?`, 'choice-buttons', {
+          options: [
+            { value: 'yes', label: 'Yes, add another' },
+            { value: 'no', label: 'No, move to next category' }
+          ]
+        });
+      }, 800);
+    }, 600);
+  }
+  else if (step === 'add_another') {
+    if (value === 'yes') {
+      addMessage('user', 'Yes, add another');
+      currentPayCode = { category: currentCategory };
+      setTimeout(() => {
+        currentStep = 'pay_code_name';
+        addMessage('assistant', 'What\\'s the name of the next pay code?', 'text-input', {
+          inputType: 'text',
+          placeholder: 'e.g., OT - Double Time'
+        });
+      }, 600);
+    } else {
+      addMessage('user', 'No, move to next category');
 
-  setTimeout(() => {{
-    window.location.href = '/app';
-  }}, 2000);
-}}
+      // Move to next category or finish
+      currentCategoryIndex++;
+      if (currentCategoryIndex < selectedCategories.length) {
+        currentCategory = selectedCategories[currentCategoryIndex];
+        payCodesByCategory[currentCategory] = [];
+        setTimeout(() => {
+          startPayCodeCollection(currentCategory);
+        }, 600);
+      } else {
+        // All categories complete
+        setTimeout(() => {
+          finishSection();
+        }, 600);
+      }
+    }
+  }
 
-// === RENDERING ===
-function renderQuestion() {{
-  const q = questions[currentQuestionIndex];
-  const container = document.getElementById('wizardContainer');
+  // Auto-save
+  saveProgress();
+};
 
-  // Fade out
-  container.style.opacity = '0';
+function finishSection() {
+  // Calculate totals
+  let totalPayCodes = 0;
+  for (let cat in payCodesByCategory) {
+    totalPayCodes += payCodesByCategory[cat].length;
+  }
 
-  setTimeout(() => {{
-    container.innerHTML = `
-      <div class="wizard-question">
-        <div class="question-header">
-          <div class="question-number">Question ${{currentQuestionIndex + 1}} of ${{questions.length}}</div>
-          <h2 class="question-text">${{q.text}}</h2>
-          ${{q.help ? `<p class="question-help">${{q.help}}</p>` : ''}}
-        </div>
+  answers['payCodesByCategory'] = payCodesByCategory;
+  answers['totalPayCodes'] = totalPayCodes;
 
-        <div class="question-input" id="questionInput"></div>
+  addMessage('assistant', `Excellent! You\\'ve documented ${totalPayCodes} pay codes across ${selectedCategories.length} categories.`);
 
-        <div class="question-actions">
-          <button
-            class="btn-back"
-            onclick="previousQuestion()"
-            ${{currentQuestionIndex === 0 ? 'disabled' : ''}}
-          >
-            ← Back
-          </button>
-          <button
-            class="btn-continue"
-            id="continueBtn"
-            onclick="handleContinue()"
-            disabled
-          >
-            ${{currentQuestionIndex === questions.length - 1 ? 'Complete' : 'Continue'}}
-          </button>
-        </div>
-      </div>
-    `;
-
-    // Render input component
-    renderInput(q);
-
-    // Fade in
-    container.style.opacity = '1';
-  }}, 150);
-}}
-
-function renderInput(q) {{
-  const inputContainer = document.getElementById('questionInput');
-  const savedAnswer = answers[q.id];
-
-  if (q.type === 'dropdown') {{
-    const select = document.createElement('select');
-    select.className = 'question-select';
-    select.innerHTML = `
-      <option value="">-- Select --</option>
-      ${{q.options.map(opt =>
-        `<option value="${{opt.value}}" ${{savedAnswer === opt.value ? 'selected' : ''}}>${{opt.label}}</option>`
-      ).join('')}}
-    `;
-    select.addEventListener('change', (e) => {{
-      answers[q.id] = e.target.value;
-      updateContinueButton();
-      saveToStorage();
-    }});
-    inputContainer.appendChild(select);
-
-    // Enable continue if answer exists
-    if (savedAnswer) updateContinueButton();
-  }}
-
-  else if (q.type === 'single-select') {{
-    const grid = document.createElement('div');
-    grid.className = 'choice-grid';
-
-    q.options.forEach(opt => {{
-      const card = document.createElement('button');
-      card.className = 'choice-card';
-      card.textContent = opt.label;
-      card.dataset.value = opt.value;
-
-      if (savedAnswer === opt.value) {{
-        card.classList.add('selected');
-      }}
-
-      card.addEventListener('click', () => {{
-        // Deselect all others
-        grid.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
-        // Select this one
-        card.classList.add('selected');
-        answers[q.id] = opt.value;
-        updateContinueButton();
-        saveToStorage();
-      }});
-
-      grid.appendChild(card);
-    }});
-
-    inputContainer.appendChild(grid);
-
-    // Enable continue if answer exists
-    if (savedAnswer) updateContinueButton();
-  }}
-
-  else if (q.type === 'multi-select') {{
-    const savedValues = savedAnswer || [];
-
-    const grid = document.createElement('div');
-    grid.className = 'choice-grid';
-
-    q.options.forEach(opt => {{
-      const card = document.createElement('button');
-      card.className = 'choice-card';
-      card.textContent = opt.label;
-      card.dataset.value = opt.value;
-
-      if (savedValues.includes(opt.value)) {{
-        card.classList.add('selected');
-      }}
-
-      card.addEventListener('click', () => {{
-        card.classList.toggle('selected');
-
-        // Get all selected values
-        const selected = Array.from(grid.querySelectorAll('.choice-card.selected'))
-          .map(c => c.dataset.value);
-
-        answers[q.id] = selected;
-        updateContinueButton();
-        saveToStorage();
-      }});
-
-      grid.appendChild(card);
-    }});
-
-    inputContainer.appendChild(grid);
-
-    // Enable continue if answer exists
-    if (savedValues.length > 0) updateContinueButton();
-  }}
-}}
-
-function updateContinueButton() {{
-  const btn = document.getElementById('continueBtn');
-  const q = questions[currentQuestionIndex];
-  const answer = answers[q.id];
-
-  if (q.type === 'dropdown' || q.type === 'single-select') {{
-    btn.disabled = !answer;
-  }} else if (q.type === 'multi-select') {{
-    btn.disabled = !answer || answer.length === 0;
-  }}
-}}
-
-function handleContinue() {{
-  const btn = document.getElementById('continueBtn');
-  if (btn.disabled) return;
-
-  nextQuestion();
-}}
-
-function updateProgress() {{
-  const percentage = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const progressBar = document.getElementById('progressBar');
-  if (progressBar) {{
-    progressBar.style.width = percentage + '%';
-  }}
-}}
-
-// === INITIALIZATION ===
-function init() {{
-  // Load saved progress
-  const resumed = loadFromStorage();
-
-  // Render first/resumed question
-  renderQuestion();
-  updateProgress();
-
-  if (resumed) {{
-    console.log('Resumed Section 3 at Q' + (currentQuestionIndex + 1));
-  }}
-}}
-
-// Start wizard
-setTimeout(init, 300);
+  setTimeout(() => {
+    addMessage('assistant', 'In the full version, I\\'ll analyze these for consolidation opportunities and compliance issues.');
+    setTimeout(() => {
+      saveProgress('completed');
+      updateProgress(100);
+      setTimeout(() => {
+        addMessage('assistant', 'Section 3A complete! Returning to dashboard...');
+        setTimeout(() => {
+          window.location.href = '/app';
+        }, 2000);
+      }, 800);
+    }, 1000);
+  }, 800);
+}
 """
-
-
 
 
 # ============================================================
