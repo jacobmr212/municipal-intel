@@ -2007,10 +2007,12 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1: Organization Profile - WIZARD TEST (4 questions)."""
+    """Generate Section 1: Organization Profile - 12 questions (Groups 1-2)."""
     return f"""
-// Section 1: Organization Profile - WIZARD TEST
-// Testing 4 different input types: dropdown, single-select (auto-advance), number, single-select (manual)
+// Section 1: Organization Profile - Groups 1-2 (Q1-Q12)
+// Group 1: Identity & Scale (Q1-Q4)
+// Group 2: Operational Footprint (Q5-Q12)
+// Groups 3-4 (Q13-Q22) coming next
 
 const STATES_FULL = [
   {{ value: 'AL', label: 'Alabama' }},
@@ -2088,6 +2090,44 @@ const GOVERNANCE_STRUCTURES = [
   {{ value: 'other', label: 'Other' }}
 ];
 
+const SERVICES = [
+  {{ value: 'water', label: 'Water' }},
+  {{ value: 'wastewater', label: 'Wastewater/Sewer' }},
+  {{ value: 'stormwater', label: 'Stormwater' }},
+  {{ value: 'electric', label: 'Electric Utility' }},
+  {{ value: 'gas', label: 'Gas Utility' }},
+  {{ value: 'solid_waste', label: 'Solid Waste/Recycling' }},
+  {{ value: 'building_permits', label: 'Building Permits & Inspections' }},
+  {{ value: 'planning_zoning', label: 'Planning & Zoning' }},
+  {{ value: 'code_enforcement', label: 'Code Enforcement' }},
+  {{ value: 'municipal_court', label: 'Municipal Court' }},
+  {{ value: 'police', label: 'Police Services' }},
+  {{ value: 'fire', label: 'Fire Services' }},
+  {{ value: 'ems', label: 'EMS/Ambulance' }},
+  {{ value: 'parks_rec', label: 'Parks & Recreation' }},
+  {{ value: 'library', label: 'Library' }},
+  {{ value: 'public_works', label: 'Public Works/Streets' }},
+  {{ value: 'transit', label: 'Public Transit' }},
+  {{ value: 'airport', label: 'Airport' }},
+  {{ value: 'cemetery', label: 'Cemetery' }},
+  {{ value: 'animal_control', label: 'Animal Control' }}
+];
+
+const MONTHS = [
+  {{ value: '01', label: 'January' }},
+  {{ value: '02', label: 'February' }},
+  {{ value: '03', label: 'March' }},
+  {{ value: '04', label: 'April' }},
+  {{ value: '05', label: 'May' }},
+  {{ value: '06', label: 'June' }},
+  {{ value: '07', label: 'July' }},
+  {{ value: '08', label: 'August' }},
+  {{ value: '09', label: 'September' }},
+  {{ value: '10', label: 'October' }},
+  {{ value: '11', label: 'November' }},
+  {{ value: '12', label: 'December' }}
+];
+
 // Define wizard questions
 questions = [
   {{
@@ -2126,6 +2166,82 @@ questions = [
     autoAdvance: false,
     help: 'Your governance structure affects how financial decisions are made and who needs access to the ERP system.',
     required: true
+  }},
+  {{
+    id: 'q5_employee_count',
+    type: 'number',
+    text: 'How many full-time employees does your organization have?',
+    aiContext: 'Staffing levels help us understand your operational capacity.',
+    placeholder: 'e.g., 75',
+    help: 'Include all full-time equivalent (FTE) positions. Part-time staff can be counted as 0.5 FTE each.',
+    required: true
+  }},
+  {{
+    id: 'q6_department_count',
+    type: 'number',
+    text: 'How many departments or divisions does your organization have?',
+    aiContext: 'This helps us gauge your organizational complexity.',
+    placeholder: 'e.g., 12',
+    help: 'Count major organizational units like Police, Fire, Public Works, Finance, etc.',
+    required: true
+  }},
+  {{
+    id: 'q7_fund_count',
+    type: 'number',
+    text: 'How many funds does your organization manage?',
+    aiContext: 'Fund structure is critical for proper financial reporting.',
+    placeholder: 'e.g., 8',
+    help: 'Include all governmental, proprietary, and fiduciary funds (General Fund, Special Revenue, Enterprise, etc.).',
+    required: true
+  }},
+  {{
+    id: 'q8_services',
+    type: 'multi-select',
+    text: 'Which services does your organization provide?',
+    aiContext: 'Service mix drives system requirements.',
+    options: SERVICES,
+    help: 'Select all services your organization provides directly (not contracted out). This helps us understand billing, permitting, and operational needs.',
+    required: true
+  }},
+  {{
+    id: 'q9_has_utilities',
+    type: 'single-select',
+    text: 'Does your organization operate any public utilities?',
+    aiContext: 'Utility billing adds significant complexity.',
+    options: [
+      {{ value: 'yes', label: 'Yes' }},
+      {{ value: 'no', label: 'No' }}
+    ],
+    autoAdvance: false,
+    help: 'Public utilities include water, wastewater, electric, gas, or stormwater services with customer billing.',
+    required: true
+  }},
+  {{
+    id: 'q10_fiscal_year_end',
+    type: 'dropdown',
+    text: 'What is your fiscal year end month?',
+    aiContext: 'Fiscal year timing affects reporting cycles.',
+    options: MONTHS,
+    help: 'Most municipalities use June 30 or December 31, but your state may require a different fiscal year.',
+    required: true
+  }},
+  {{
+    id: 'q11_total_revenue',
+    type: 'number',
+    text: 'What is your organization\\'s approximate annual revenue?',
+    aiContext: 'Revenue scale helps us size the right solution.',
+    placeholder: 'e.g., 25000000 (or leave blank to skip)',
+    help: 'Include all revenue sources: taxes, fees, grants, utility revenue, etc. You can skip this question if you\\'re not sure.',
+    required: false
+  }},
+  {{
+    id: 'q12_annual_budget',
+    type: 'number',
+    text: 'What is your organization\\'s approximate annual budget?',
+    aiContext: 'Budget size helps us understand your financial operations scale.',
+    placeholder: 'e.g., 25000000 (or leave blank to skip)',
+    help: 'Include all appropriations across all funds. You can skip this question if you\\'re not sure.',
+    required: false
   }}
 ];
 
