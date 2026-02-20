@@ -20,7 +20,7 @@ from sqlalchemy import text
 import json
 import os
 
-from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User
+from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User, Watchlist, Territory
 from src.discovery import SourceDiscovery
 from src.scraper import MunicipalScraper
 from src.analyzer import DocumentAnalyzer
@@ -347,7 +347,7 @@ async def apple_touch_icon():
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    return {"status": "ok", "version": "2.0"}
+    return {"status": "ok", "version": "2.0.1"}
 
 
 # ============================================================

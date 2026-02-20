@@ -227,6 +227,56 @@ class Lead(Base):
         return f"<Lead: {self.municipality}, {self.state} - {self.lead_type.upper()} ({self.relevance_score:.1f})>"
 
 
+class Watchlist(Base):
+    """
+    Watchlist items - municipalities marked by user for monitoring.
+
+    Users can add municipalities to their watchlist to receive automatic
+    updates when new signals are detected.
+    """
+    __tablename__ = "watchlist"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    municipality_id = Column(Integer, ForeignKey("municipalities.id"), nullable=False, index=True)
+
+    # Notes
+    notes = Column(Text, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+    # Relationships
+    user = relationship("User")
+    municipality = relationship("Municipality")
+
+    def __repr__(self):
+        return f"<Watchlist: {self.municipality.name if self.municipality else 'Unknown'}, {self.municipality.state if self.municipality else '??'}>"
+
+
+class Territory(Base):
+    """
+    Territory definitions - state/region assignments for users.
+
+    Enables automatic filtering of Feed results based on user's assigned
+    geographic coverage areas.
+    """
+    __tablename__ = "territories"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    state = Column(String(2), nullable=False, index=True)  # Two-letter state code
+
+    # Metadata
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User")
+
+    def __repr__(self):
+        return f"<Territory: {self.user.email if self.user else 'Unknown'} → {self.state}>"
+
+
 # Database setup
 # pool_pre_ping: test connections before use (handles Neon idle SSL drops)
 # pool_recycle: recycle connections every 5 min (Neon closes idle after ~5 min)
