@@ -2007,13 +2007,13 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1: Organization Profile - Complete (21 questions)."""
+    """Generate Section 1: Organization Profile - Complete (20 questions)."""
     return f"""
-// Section 1: Organization Profile - Complete (Q1-Q21)
+// Section 1: Organization Profile - Complete (Q1-Q20)
 // Group 1: Identity & Scale (Q1-Q4)
-// Group 2: Operational Footprint (Q5-Q11)
-// Group 3: Current Systems (Q12-Q16)
-// Group 4: Change Readiness (Q17-Q21)
+// Group 2: Operational Footprint (Q5-Q10)
+// Group 3: Current Systems (Q11-Q15)
+// Group 4: Change Readiness (Q16-Q20)
 
 const STATES_FULL = [
   {{ value: 'AL', label: 'Alabama' }},
@@ -2214,16 +2214,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q10_total_revenue',
-    type: 'number',
-    text: 'What is your organization\\'s approximate annual revenue?',
-    aiContext: 'Revenue scale helps us size the right solution.',
-    placeholder: 'e.g., 25000000 (or leave blank to skip)',
-    help: 'Include all revenue sources: taxes, fees, grants, utility revenue, etc. You can skip this question if you\\'re not sure.',
-    required: false
-  }},
-  {{
-    id: 'q11_annual_budget',
+    id: 'q10_annual_budget',
     type: 'number',
     text: 'What is your organization\\'s approximate annual budget?',
     aiContext: 'Budget size helps us understand your financial operations scale.',
@@ -2232,7 +2223,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q12_current_erp',
+    id: 'q11_current_erp',
     type: 'text',
     text: 'What ERP or accounting system do you currently use?',
     aiContext: 'Understanding your current system helps us identify migration challenges.',
@@ -2241,7 +2232,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q13_current_payroll',
+    id: 'q12_current_payroll',
     type: 'text',
     text: 'What payroll system do you currently use?',
     aiContext: 'Payroll integration is a key requirement for most municipalities.',
@@ -2250,7 +2241,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q14_system_count',
+    id: 'q13_system_count',
     type: 'single-select',
     text: 'Approximately how many different software systems does your organization use?',
     aiContext: 'System sprawl is a common municipal challenge.',
@@ -2266,7 +2257,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q15_integration_issues',
+    id: 'q14_integration_issues',
     type: 'single-select',
     text: 'How well do your current systems integrate with each other?',
     aiContext: 'Integration gaps create manual work and data inconsistencies.',
@@ -2281,7 +2272,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q16_biggest_pain_point',
+    id: 'q15_biggest_pain_point',
     type: 'text',
     text: 'What is your biggest system-related pain point right now?',
     aiContext: 'This helps us prioritize recommendations.',
@@ -2290,7 +2281,7 @@ questions = [
     required: false
   }},
   {{
-    id: 'q17_timeline',
+    id: 'q16_timeline',
     type: 'single-select',
     text: 'What is your timeline for making a change?',
     aiContext: 'Timeline affects solution options and implementation approach.',
@@ -2306,7 +2297,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q18_budget_status',
+    id: 'q17_budget_status',
     type: 'single-select',
     text: 'Do you have budget allocated or approved for new software?',
     aiContext: 'Budget readiness is a key factor in implementation planning.',
@@ -2321,7 +2312,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q19_internal_champion',
+    id: 'q18_internal_champion',
     type: 'single-select',
     text: 'Do you have an internal champion or project lead identified?',
     aiContext: 'Successful implementations need internal leadership.',
@@ -2335,7 +2326,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q20_change_drivers',
+    id: 'q19_change_drivers',
     type: 'multi-select',
     text: 'What is driving your interest in new software? (Select all that apply)',
     aiContext: 'Understanding motivations helps us focus on what matters most.',
@@ -2354,7 +2345,7 @@ questions = [
     required: true
   }},
   {{
-    id: 'q21_implementation_concerns',
+    id: 'q20_implementation_concerns',
     type: 'multi-select',
     text: 'What concerns do you have about implementing new software? (Select all that apply)',
     aiContext: 'Identifying concerns early helps us address them proactively.',
