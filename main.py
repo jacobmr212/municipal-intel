@@ -2007,12 +2007,13 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1: Organization Profile - 12 questions (Groups 1-2)."""
+    """Generate Section 1: Organization Profile - Complete (22 questions)."""
     return f"""
-// Section 1: Organization Profile - Groups 1-2 (Q1-Q12)
+// Section 1: Organization Profile - Complete (Q1-Q22)
 // Group 1: Identity & Scale (Q1-Q4)
 // Group 2: Operational Footprint (Q5-Q12)
-// Groups 3-4 (Q13-Q22) coming next
+// Group 3: Current Systems (Q13-Q17)
+// Group 4: Change Readiness (Q18-Q22)
 
 const STATES_FULL = [
   {{ value: 'AL', label: 'Alabama' }},
@@ -2241,6 +2242,147 @@ questions = [
     aiContext: 'Budget size helps us understand your financial operations scale.',
     placeholder: 'e.g., 25000000 (or leave blank to skip)',
     help: 'Include all appropriations across all funds. You can skip this question if you\\'re not sure.',
+    required: false
+  }},
+  {{
+    id: 'q13_current_erp',
+    type: 'text',
+    text: 'What ERP or accounting system do you currently use?',
+    aiContext: 'Understanding your current system helps us identify migration challenges.',
+    placeholder: 'e.g., Caselle Clarity, Tyler Munis, QuickBooks, etc.',
+    help: 'Enter the name of your primary financial/accounting software. If you use multiple systems, list the main one.',
+    required: false
+  }},
+  {{
+    id: 'q14_current_payroll',
+    type: 'text',
+    text: 'What payroll system do you currently use?',
+    aiContext: 'Payroll integration is a key requirement for most municipalities.',
+    placeholder: 'e.g., ADP, Paychex, built into ERP, etc.',
+    help: 'This could be the same as your ERP system, a separate software, or an outsourced service.',
+    required: false
+  }},
+  {{
+    id: 'q15_system_count',
+    type: 'single-select',
+    text: 'Approximately how many different software systems does your organization use?',
+    aiContext: 'System sprawl is a common municipal challenge.',
+    options: [
+      {{ value: '1-3', label: '1-3 systems' }},
+      {{ value: '4-6', label: '4-6 systems' }},
+      {{ value: '7-10', label: '7-10 systems' }},
+      {{ value: '10+', label: 'More than 10 systems' }},
+      {{ value: 'unknown', label: 'Not sure' }}
+    ],
+    autoAdvance: false,
+    help: 'Include all major systems: ERP, payroll, utility billing, permitting, asset management, etc.',
+    required: true
+  }},
+  {{
+    id: 'q16_integration_issues',
+    type: 'single-select',
+    text: 'How well do your current systems integrate with each other?',
+    aiContext: 'Integration gaps create manual work and data inconsistencies.',
+    options: [
+      {{ value: 'well_integrated', label: 'Well integrated - data flows automatically' }},
+      {{ value: 'some_integration', label: 'Some integration - with manual steps' }},
+      {{ value: 'mostly_manual', label: 'Mostly manual - lots of re-entering data' }},
+      {{ value: 'completely_siloed', label: 'Completely siloed - no integration' }}
+    ],
+    autoAdvance: false,
+    help: 'Think about how data moves between your accounting, payroll, utility billing, and other systems.',
+    required: true
+  }},
+  {{
+    id: 'q17_biggest_pain_point',
+    type: 'text',
+    text: 'What is your biggest system-related pain point right now?',
+    aiContext: 'This helps us prioritize recommendations.',
+    placeholder: 'e.g., manual data entry, slow month-end close, poor reporting, etc.',
+    help: 'What takes the most time, causes the most frustration, or keeps you up at night?',
+    required: false
+  }},
+  {{
+    id: 'q18_timeline',
+    type: 'single-select',
+    text: 'What is your timeline for making a change?',
+    aiContext: 'Timeline affects solution options and implementation approach.',
+    options: [
+      {{ value: 'urgent', label: 'Urgent - within 3-6 months' }},
+      {{ value: 'this_year', label: 'This fiscal year' }},
+      {{ value: 'next_year', label: 'Next fiscal year' }},
+      {{ value: 'exploring', label: 'Just exploring - no specific timeline' }},
+      {{ value: 'not_sure', label: 'Not sure yet' }}
+    ],
+    autoAdvance: false,
+    help: 'This helps us understand urgency and recommend appropriate next steps.',
+    required: true
+  }},
+  {{
+    id: 'q19_budget_status',
+    type: 'single-select',
+    text: 'Do you have budget allocated or approved for new software?',
+    aiContext: 'Budget readiness is a key factor in implementation planning.',
+    options: [
+      {{ value: 'approved', label: 'Yes - budget approved' }},
+      {{ value: 'requested', label: 'Requested but not yet approved' }},
+      {{ value: 'planning', label: 'Planning to request in next budget cycle' }},
+      {{ value: 'no_budget', label: 'No budget discussions yet' }},
+      {{ value: 'not_sure', label: 'Not sure' }}
+    ],
+    autoAdvance: false,
+    required: true
+  }},
+  {{
+    id: 'q20_internal_champion',
+    type: 'single-select',
+    text: 'Do you have an internal champion or project lead identified?',
+    aiContext: 'Successful implementations need internal leadership.',
+    options: [
+      {{ value: 'yes', label: 'Yes - identified and committed' }},
+      {{ value: 'potential', label: 'Potential person but not formalized' }},
+      {{ value: 'no', label: 'Not yet' }}
+    ],
+    autoAdvance: false,
+    help: 'An internal champion is someone who can drive the project, make decisions, and keep stakeholders aligned.',
+    required: true
+  }},
+  {{
+    id: 'q21_change_drivers',
+    type: 'multi-select',
+    text: 'What is driving your interest in new software? (Select all that apply)',
+    aiContext: 'Understanding motivations helps us focus on what matters most.',
+    options: [
+      {{ value: 'outdated_system', label: 'Current system is outdated or unsupported' }},
+      {{ value: 'compliance', label: 'Compliance or audit concerns' }},
+      {{ value: 'efficiency', label: 'Need to improve efficiency and reduce manual work' }},
+      {{ value: 'reporting', label: 'Better reporting and data visibility' }},
+      {{ value: 'integration', label: 'Better system integration' }},
+      {{ value: 'cost', label: 'Reduce operational costs' }},
+      {{ value: 'staff_turnover', label: 'Staff turnover or knowledge loss concerns' }},
+      {{ value: 'growth', label: 'Organization growth or service expansion' }},
+      {{ value: 'council_mandate', label: 'Council or leadership mandate' }}
+    ],
+    help: 'Select all major factors driving your consideration of new software.',
+    required: true
+  }},
+  {{
+    id: 'q22_implementation_concerns',
+    type: 'multi-select',
+    text: 'What concerns do you have about implementing new software? (Select all that apply)',
+    aiContext: 'Identifying concerns early helps us address them proactively.',
+    options: [
+      {{ value: 'cost', label: 'Cost and budget constraints' }},
+      {{ value: 'disruption', label: 'Disruption to daily operations' }},
+      {{ value: 'data_migration', label: 'Data migration and historical data' }},
+      {{ value: 'staff_training', label: 'Staff training and adoption' }},
+      {{ value: 'timeline', label: 'Implementation timeline' }},
+      {{ value: 'vendor_selection', label: 'Choosing the right vendor' }},
+      {{ value: 'customization', label: 'System customization needs' }},
+      {{ value: 'integration', label: 'Integration with existing systems' }},
+      {{ value: 'no_concerns', label: 'No major concerns' }}
+    ],
+    help: 'Select all that apply. This helps us provide targeted guidance.',
     required: false
   }}
 ];
