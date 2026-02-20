@@ -2495,9 +2495,9 @@ window.handleUserInput = function(step, value) {{
       setTimeout(() => {{
         currentQuestionNumber = 12;
         currentStep = 'q12_annual_budget';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your annual operating budget (approximate)?\\n\\nJust the number, e.g., 25000000 for $25M`, 'text-input', {{
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your annual operating budget (approximate)?\\n\\n(Optional - but helps us provide more accurate recommendations. Type "Skip" to bypass.)\\n\\nJust the number, e.g., 25000000 for $25M`, 'text-input', {{
           inputType: 'number',
-          placeholder: 'e.g., 25000000'
+          placeholder: 'e.g., 25000000 or "Skip"'
         }});
       }}, 600);
     }}, 400);
@@ -2505,10 +2505,13 @@ window.handleUserInput = function(step, value) {{
 
   // Q12: Annual Budget
   else if (step === 'q12_annual_budget') {{
-    const budget = parseInt(value);
-
     setTimeout(() => {{
-      addMessage('assistant', `Budget: $${{(budget / 1000000).toFixed(1)}}M — noted.`);
+      if (value.toLowerCase() === 'skip') {{
+        addMessage('assistant', `No problem, let's continue.`);
+      }} else {{
+        const budget = parseInt(value);
+        addMessage('assistant', `Budget: $${{(budget / 1000000).toFixed(1)}}M — noted.`);
+      }}
 
       setTimeout(() => {{
         // GROUP 2 COMPLETE
