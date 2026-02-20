@@ -2007,318 +2007,280 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1 conversational script with all 13 questions."""
-    # Load retirement systems data
-    import json
-    with open('data/retirement_systems.json', 'r') as f:
-        retirement_systems = json.load(f)
-
-    retirement_systems_json = json.dumps(retirement_systems)
-
+    """Generate Section 1: Organization Profile - Group 1 (Identity & Scale) - Proof of Concept."""
     return f"""
-// Section 1: Organization Profile
-// Full version with 13 questions
+// Section 1: Organization Profile - REBUILD
+// Group 1: Identity & Scale (Q1-Q5) - PROOF OF CONCEPT
+// Full version will have 22 questions across 4 groups
 
-const STATES = [
-  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+const STATES_FULL = [
+  {{ value: 'AL', label: 'Alabama' }},
+  {{ value: 'AK', label: 'Alaska' }},
+  {{ value: 'AZ', label: 'Arizona' }},
+  {{ value: 'AR', label: 'Arkansas' }},
+  {{ value: 'CA', label: 'California' }},
+  {{ value: 'CO', label: 'Colorado' }},
+  {{ value: 'CT', label: 'Connecticut' }},
+  {{ value: 'DE', label: 'Delaware' }},
+  {{ value: 'FL', label: 'Florida' }},
+  {{ value: 'GA', label: 'Georgia' }},
+  {{ value: 'HI', label: 'Hawaii' }},
+  {{ value: 'ID', label: 'Idaho' }},
+  {{ value: 'IL', label: 'Illinois' }},
+  {{ value: 'IN', label: 'Indiana' }},
+  {{ value: 'IA', label: 'Iowa' }},
+  {{ value: 'KS', label: 'Kansas' }},
+  {{ value: 'KY', label: 'Kentucky' }},
+  {{ value: 'LA', label: 'Louisiana' }},
+  {{ value: 'ME', label: 'Maine' }},
+  {{ value: 'MD', label: 'Maryland' }},
+  {{ value: 'MA', label: 'Massachusetts' }},
+  {{ value: 'MI', label: 'Michigan' }},
+  {{ value: 'MN', label: 'Minnesota' }},
+  {{ value: 'MS', label: 'Mississippi' }},
+  {{ value: 'MO', label: 'Missouri' }},
+  {{ value: 'MT', label: 'Montana' }},
+  {{ value: 'NE', label: 'Nebraska' }},
+  {{ value: 'NV', label: 'Nevada' }},
+  {{ value: 'NH', label: 'New Hampshire' }},
+  {{ value: 'NJ', label: 'New Jersey' }},
+  {{ value: 'NM', label: 'New Mexico' }},
+  {{ value: 'NY', label: 'New York' }},
+  {{ value: 'NC', label: 'North Carolina' }},
+  {{ value: 'ND', label: 'North Dakota' }},
+  {{ value: 'OH', label: 'Ohio' }},
+  {{ value: 'OK', label: 'Oklahoma' }},
+  {{ value: 'OR', label: 'Oregon' }},
+  {{ value: 'PA', label: 'Pennsylvania' }},
+  {{ value: 'RI', label: 'Rhode Island' }},
+  {{ value: 'SC', label: 'South Carolina' }},
+  {{ value: 'SD', label: 'South Dakota' }},
+  {{ value: 'TN', label: 'Tennessee' }},
+  {{ value: 'TX', label: 'Texas' }},
+  {{ value: 'UT', label: 'Utah' }},
+  {{ value: 'VT', label: 'Vermont' }},
+  {{ value: 'VA', label: 'Virginia' }},
+  {{ value: 'WA', label: 'Washington' }},
+  {{ value: 'WV', label: 'West Virginia' }},
+  {{ value: 'WI', label: 'Wisconsin' }},
+  {{ value: 'WY', label: 'Wyoming' }},
+  {{ value: 'DC', label: 'District of Columbia' }}
 ];
 
-const RETIREMENT_SYSTEMS = {retirement_systems_json};
-
-const MONTHS = [
-  {{ value: '01', label: 'January' }},
-  {{ value: '02', label: 'February' }},
-  {{ value: '03', label: 'March' }},
-  {{ value: '04', label: 'April' }},
-  {{ value: '05', label: 'May' }},
-  {{ value: '06', label: 'June' }},
-  {{ value: '07', label: 'July' }},
-  {{ value: '08', label: 'August' }},
-  {{ value: '09', label: 'September' }},
-  {{ value: '10', label: 'October' }},
-  {{ value: '11', label: 'November' }},
-  {{ value: '12', label: 'December' }}
+const ENTITY_TYPES = [
+  {{ value: 'city', label: 'City' }},
+  {{ value: 'town', label: 'Town' }},
+  {{ value: 'county', label: 'County' }},
+  {{ value: 'village', label: 'Village' }},
+  {{ value: 'borough', label: 'Borough' }},
+  {{ value: 'special_district', label: 'Special District' }},
+  {{ value: 'tribal_government', label: 'Tribal Government' }},
+  {{ value: 'school_district', label: 'School District' }},
+  {{ value: 'regional_authority', label: 'Regional Authority' }}
 ];
 
-// Track union groups for chip builder
-let unionGroups = [];
+const GOVERNANCE_STRUCTURES = [
+  {{ value: 'mayor_council_strong', label: 'Mayor-Council (Strong Mayor)' }},
+  {{ value: 'mayor_council_weak', label: 'Mayor-Council (Weak Mayor)' }},
+  {{ value: 'council_manager', label: 'Council-Manager' }},
+  {{ value: 'commission', label: 'Commission' }},
+  {{ value: 'town_meeting', label: 'Town Meeting' }},
+  {{ value: 'other', label: 'Other' }}
+];
 
-// Start the conversation
+// Track current question number
+let currentQuestionNumber = 1;
+const totalQuestions = 22; // Will be 22 when fully implemented
+
+// Helper: Get population tier
+function getPopulationTier(pop) {{
+  const p = parseInt(pop);
+  if (p < 2500) return 'Micro municipality';
+  if (p < 10000) return 'Small municipality';
+  if (p < 25000) return 'Small-mid municipality';
+  if (p < 50000) return 'Mid-size municipality';
+  if (p < 100000) return 'Large municipality';
+  return 'Major municipality';
+}}
+
+// Start the conversation - CONSOLIDATED MESSAGE (no more multiple bubbles!)
 setTimeout(() => {{
-  addMessage('assistant', 'Welcome to Section 1!');
+  addMessage('assistant', 'Welcome to Section 1! This section helps us understand your organization\\'s basic information. It takes about 10-15 minutes, and you can save and come back anytime. Let\\'s get started.');
+
   setTimeout(() => {{
-    addMessage('assistant', 'This section helps us understand your organization\\'s basic information. It takes about 5-10 minutes.');
-    setTimeout(() => {{
-      addMessage('assistant', 'You can save and come back anytime if you need to look something up. Ready to get started?');
-      setTimeout(() => {{
-        currentStep = 'state';
-        addMessage('assistant', 'First, which state is your organization located in?', 'select', {{
-          options: STATES.map(s => ({{ value: s, label: s }}))
-        }});
-      }}, 800);
-    }}, 800);
-  }}, 800);
+    currentStep = 'q1_state';
+    addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Which state is your organization located in?`, 'select', {{
+      options: STATES_FULL
+    }});
+  }}, 600);
 }}, 500);
 
 // Handle user input
 window.handleUserInput = function(step, value) {{
-  if (step === 'state') {{
+
+  // Q1: State
+  if (step === 'q1_state') {{
+    const stateName = STATES_FULL.find(s => s.value === value)?.label || value;
+
     setTimeout(() => {{
-      addMessage('assistant', `Great! You're in ${{value}}.`);
+      addMessage('assistant', `Got it — ${{stateName}}.`);
+
       setTimeout(() => {{
-        currentStep = 'entity_type';
-        addMessage('assistant', 'What type of government entity are you?', 'choice-buttons', {{
-          options: [
-            {{ value: 'city', label: 'City' }},
-            {{ value: 'county', label: 'County' }},
-            {{ value: 'town', label: 'Town' }},
-            {{ value: 'village', label: 'Village' }}
-          ]
+        currentQuestionNumber = 2;
+        currentStep = 'q2_entity_type';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What type of government entity are you?`, 'choice-buttons', {{
+          options: ENTITY_TYPES
         }});
-      }}, 800);
-    }}, 600);
+      }}, 500);
+    }}, 400);
   }}
-  else if (step === 'entity_type') {{
-    setTimeout(() => {{
-      addMessage('assistant', `Got it, you're a ${{value}}.`);
+
+  // Q2: Entity Type
+  else if (step === 'q2_entity_type') {{
+    const entityLabel = ENTITY_TYPES.find(e => e.value === value)?.label || value;
+
+    // If special district, ask follow-up
+    if (value === 'special_district') {{
       setTimeout(() => {{
-        currentStep = 'population';
-        addMessage('assistant', 'What is your population?', 'text-input', {{
+        currentStep = 'q2_special_district_type';
+        addMessage('assistant', 'What type of special district?', 'text-input', {{
+          inputType: 'text',
+          placeholder: 'e.g., water, fire, transit'
+        }});
+      }}, 400);
+      return;
+    }}
+
+    setTimeout(() => {{
+      currentQuestionNumber = 3;
+      currentStep = 'q3_organization_name';
+      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?`, 'text-input', {{
+        inputType: 'text',
+        placeholder: 'e.g., City of Eagle, Town of Vail'
+      }});
+    }}, 400);
+  }}
+
+  // Q2 sub: Special district type
+  else if (step === 'q2_special_district_type') {{
+    answers['entity_type_detail'] = value;
+
+    setTimeout(() => {{
+      currentQuestionNumber = 3;
+      currentStep = 'q3_organization_name';
+      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?`, 'text-input', {{
+        inputType: 'text',
+        placeholder: 'e.g., Eagle Water District'
+      }});
+    }}, 400);
+  }}
+
+  // Q3: Organization Name
+  else if (step === 'q3_organization_name') {{
+    setTimeout(() => {{
+      addMessage('assistant', `Welcome, ${{value}}.`);
+
+      setTimeout(() => {{
+        currentQuestionNumber = 4;
+        currentStep = 'q4_population';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the approximate population you serve?`, 'text-input', {{
           inputType: 'number',
           placeholder: 'e.g., 15000'
         }});
-      }}, 800);
-    }}, 600);
+      }}, 500);
+    }}, 400);
   }}
-  else if (step === 'population') {{
+
+  // Q4: Population
+  else if (step === 'q4_population') {{
+    const pop = parseInt(value);
+    const tier = getPopulationTier(pop);
+
     setTimeout(() => {{
-      addMessage('assistant', `Population: ${{parseInt(value).toLocaleString()}}`);
+      addMessage('assistant', `${{pop.toLocaleString()}} — ${{tier}}. That gives me a good baseline for complexity.`);
+
       setTimeout(() => {{
-        currentStep = 'organization';
-        addMessage('assistant', 'What is the name of your organization?', 'text-input', {{
+        currentQuestionNumber = 5;
+        currentStep = 'q5_governance';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your governance structure?\\n\\nCouncil-Manager means you have a hired city/town manager. Strong Mayor means the mayor has executive authority and can veto council actions.`, 'choice-buttons', {{
+          options: GOVERNANCE_STRUCTURES
+        }});
+      }}, 600);
+    }}, 400);
+  }}
+
+  // Q5: Governance Structure
+  else if (step === 'q5_governance') {{
+    const govLabel = GOVERNANCE_STRUCTURES.find(g => g.value === value)?.label || value;
+
+    // If "Other", ask follow-up
+    if (value === 'other') {{
+      setTimeout(() => {{
+        currentStep = 'q5_governance_other';
+        addMessage('assistant', 'Please specify your governance structure:', 'text-input', {{
           inputType: 'text',
-          placeholder: 'e.g., City of Springfield'
+          placeholder: 'e.g., Modified commission'
         }});
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'organization') {{
-    setTimeout(() => {{
-      addMessage('assistant', `Perfect! Nice to meet you, ${{value}}.`);
-      setTimeout(() => {{
-        addMessage('assistant', 'Next, I need to know about your employee retirement system.');
-        setTimeout(() => {{
-          addMessage('assistant', 'This is the pension or retirement plan your employees contribute to (like PERS, IMRF, CalPERS, etc.). Check with your HR or Finance department if you\\'re not sure.');
-          setTimeout(() => {{
-            currentStep = 'retirement_system';
-            const selectedState = answers['state'];
-            const retirementOptions = RETIREMENT_SYSTEMS[selectedState] || [];
-            addMessage('assistant', 'Which retirement system do your employees participate in?', 'select', {{
-              options: retirementOptions
-            }});
-          }}, 800);
-        }}, 800);
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'retirement_system') {{
-    setTimeout(() => {{
-      const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
-      addMessage('assistant', `Got it, you use ${{label}}.`);
-      setTimeout(() => {{
-        addMessage('assistant', 'Now let\\'s talk about your fiscal year.');
-        setTimeout(() => {{
-          addMessage('assistant', 'Your fiscal year is your organization\\'s 12-month accounting period. Many municipalities start July 1st, but some use October 1st or January 1st. Check your budget documents if you\\'re unsure.');
-          setTimeout(() => {{
-            currentStep = 'fiscal_year_month';
-            addMessage('assistant', 'What month does your fiscal year start?', 'select', {{
-              options: MONTHS
-            }});
-          }}, 800);
-        }}, 800);
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'fiscal_year_month') {{
-    setTimeout(() => {{
-      const monthLabel = MONTHS.find(m => m.value === value)?.label || value;
-      addMessage('assistant', `${{monthLabel}} — got it.`);
-      setTimeout(() => {{
-        currentStep = 'fiscal_year_day';
-        const days = Array.from({{ length: 31 }}, (_, i) => ({{ value: String(i + 1), label: String(i + 1) }}));
-        addMessage('assistant', 'And which day of the month?', 'select', {{
-          options: days
-        }});
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'fiscal_year_day') {{
-    setTimeout(() => {{
-      const month = answers['fiscal_year_month'];
-      const monthLabel = MONTHS.find(m => m.value === month)?.label || month;
-      addMessage('assistant', `Fiscal year starts: ${{monthLabel}} ${{value}}`);
-      setTimeout(() => {{
-        currentStep = 'department_count';
-        addMessage('assistant', 'How many departments does your organization have?', 'text-input', {{
-          inputType: 'number',
-          placeholder: 'e.g., 12'
-        }});
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'department_count') {{
-    setTimeout(() => {{
-      addMessage('assistant', `${{value}} departments — noted.`);
-      setTimeout(() => {{
-        currentStep = 'has_unions';
-        addMessage('assistant', 'Does your organization have unionized employees?', 'choice-buttons', {{
-          options: [
-            {{ value: 'yes', label: 'Yes' }},
-            {{ value: 'no', label: 'No' }}
-          ]
-        }});
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'has_unions') {{
-    if (value === 'yes') {{
-      setTimeout(() => {{
-        addMessage('assistant', 'Understood. We\\'ll need to track union groups.');
-        setTimeout(() => {{
-          currentStep = 'union_groups';
-          addMessage('assistant', 'Please list your union groups (e.g., "Police Union", "Firefighters Local 123"). Type one and press Enter, then add more. Type "done" when finished.', 'text-input', {{
-            inputType: 'text',
-            placeholder: 'e.g., Police Union'
-          }});
-        }}, 800);
-      }}, 600);
-    }} else {{
-      // Skip union groups
-      answers['union_groups'] = [];
-      setTimeout(() => {{
-        addMessage('assistant', 'No unions — got it.');
-        setTimeout(() => {{
-          addMessage('assistant', 'Tax jurisdictions are areas where you collect or distribute taxes (like sales tax districts, special taxing districts, TIF zones, etc.). If you only have your main city/county, enter 1. If you\\'re not sure, just enter your best estimate.');
-          setTimeout(() => {{
-            currentStep = 'tax_jurisdictions';
-            addMessage('assistant', 'How many tax jurisdictions does your organization operate in?', 'text-input', {{
-              inputType: 'number',
-              placeholder: 'e.g., 1 or 3'
-            }});
-          }}, 800);
-        }}, 800);
-      }}, 600);
-    }}
-  }}
-  else if (step === 'union_groups') {{
-    if (value.toLowerCase() === 'done') {{
-      answers['union_groups'] = unionGroups;
-      setTimeout(() => {{
-        if (unionGroups.length === 0) {{
-          addMessage('assistant', 'No union groups added.');
-        }} else {{
-          addMessage('assistant', `Union groups: ${{unionGroups.join(', ')}}`);
-        }}
-        setTimeout(() => {{
-          addMessage('assistant', 'Tax jurisdictions are areas where you collect or distribute taxes (like sales tax districts, special taxing districts, TIF zones, etc.). If you only have your main city/county, enter 1. If you\\'re not sure, just enter your best estimate.');
-          setTimeout(() => {{
-            currentStep = 'tax_jurisdictions';
-            addMessage('assistant', 'How many tax jurisdictions does your organization operate in?', 'text-input', {{
-              inputType: 'number',
-              placeholder: 'e.g., 1 or 3'
-            }});
-          }}, 800);
-        }}, 800);
-      }}, 600);
-    }} else {{
-      // Add to union groups
-      unionGroups.push(value);
-      setTimeout(() => {{
-        addMessage('assistant', `Added "${{value}}". Add another or type "done".`);
-        setTimeout(() => {{
-          addMessage('assistant', '', 'text-input', {{
-            inputType: 'text',
-            placeholder: 'e.g., Firefighters Local 123 or "done"'
-          }});
-        }}, 500);
       }}, 400);
+      return;
     }}
-  }}
-  else if (step === 'tax_jurisdictions') {{
+
     setTimeout(() => {{
-      addMessage('assistant', `${{value}} tax jurisdiction${{value === '1' ? '' : 's'}} — noted.`);
+      addMessage('assistant', `${{govLabel}} — noted.`);
+
       setTimeout(() => {{
-        addMessage('assistant', 'Almost done! Just a couple more questions.');
+        // GROUP 1 COMPLETE
+        addMessage('assistant', '--- Group 1 complete: Identity & Scale ---');
+
         setTimeout(() => {{
-          addMessage('assistant', 'Your ERP (Enterprise Resource Planning) system is the software you use for accounting, budgeting, payroll, and other financial operations. Common examples are Tyler Munis, Incode, SAP, Oracle, or even Excel/QuickBooks for smaller organizations.');
+          addMessage('assistant', 'This is a proof of concept. Group 1 (Q1-Q5) complete. Groups 2-4 (Q6-Q22) will be implemented next.');
+
           setTimeout(() => {{
-            currentStep = 'current_erp';
-            addMessage('assistant', 'What system are you currently using for your financial operations?', 'text-input', {{
-              inputType: 'text',
-              placeholder: 'e.g., Tyler Munis, Excel, QuickBooks'
-            }});
-          }}, 800);
-        }}, 800);
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'current_erp') {{
-    setTimeout(() => {{
-      addMessage('assistant', `Current system: ${{value}}`);
-      setTimeout(() => {{
-        currentStep = 'employee_count';
-        addMessage('assistant', 'How many employees does your organization have?', 'text-input', {{
-          inputType: 'number',
-          placeholder: 'e.g., 250'
-        }});
-      }}, 800);
-    }}, 600);
-  }}
-  else if (step === 'employee_count') {{
-    setTimeout(() => {{
-      addMessage('assistant', `${{parseInt(value).toLocaleString()}} employees — perfect.`);
-      setTimeout(() => {{
-        addMessage('assistant', 'That\\'s all the questions for Section 1! Great job!');
-        setTimeout(() => {{
-          addMessage('assistant', 'Let me save your responses...');
-          setTimeout(() => {{
-            // Save progress
-            saveProgress('completed');
-            updateProgress(100);
+            saveProgress('in-progress');
+            updateProgress(23); // 5 of 22 questions = ~23%
+
             setTimeout(() => {{
-              addMessage('assistant', 'Section 1 complete! Taking you back to the dashboard where you can continue with Section 2.');
+              addMessage('assistant', 'Returning to dashboard...');
               setTimeout(() => {{
                 window.location.href = '/app';
-              }}, 2500);
-            }}, 800);
+              }}, 2000);
+            }}, 1000);
           }}, 1000);
         }}, 800);
-      }}, 800);
-    }}, 600);
+      }}, 500);
+    }}, 400);
   }}
 
-  // Update progress
-  const allSteps = [
-    'state', 'entity_type', 'population', 'organization', 'retirement_system',
-    'fiscal_year_month', 'fiscal_year_day', 'department_count', 'has_unions',
-    'union_groups', 'tax_jurisdictions', 'current_erp', 'employee_count'
-  ];
+  // Q5 sub: Other governance type
+  else if (step === 'q5_governance_other') {{
+    answers['governance_structure_detail'] = value;
 
-  // Calculate progress (skip union_groups if no unions)
-  let relevantSteps = allSteps;
-  if (answers['has_unions'] === 'no') {{
-    relevantSteps = allSteps.filter(s => s !== 'union_groups');
+    setTimeout(() => {{
+      addMessage('assistant', `${{value}} — noted.`);
+
+      setTimeout(() => {{
+        addMessage('assistant', '--- Group 1 complete: Identity & Scale ---');
+
+        setTimeout(() => {{
+          addMessage('assistant', 'This is a proof of concept. Group 1 (Q1-Q5) complete. Groups 2-4 (Q6-Q22) will be implemented next.');
+
+          setTimeout(() => {{
+            saveProgress('in-progress');
+            updateProgress(23); // 5 of 22 questions = ~23%
+
+            setTimeout(() => {{
+              addMessage('assistant', 'Returning to dashboard...');
+              setTimeout(() => {{
+                window.location.href = '/app';
+              }}, 2000);
+            }}, 1000);
+          }}, 1000);
+        }}, 800);
+      }}, 500);
+    }}, 400);
   }}
 
-  const currentIndex = relevantSteps.indexOf(currentStep);
-  const progress = currentIndex >= 0 ? ((currentIndex + 1) / relevantSteps.length) * 100 : 0;
-  updateProgress(progress);
-
-  // Auto-save
+  // Auto-save after each answer
   saveProgress();
 }};
 """
