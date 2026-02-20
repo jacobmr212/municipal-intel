@@ -2076,12 +2076,13 @@ const ENTITY_TYPES = [
   {{ value: 'special_district', label: 'Special District' }},
   {{ value: 'tribal_government', label: 'Tribal Government' }},
   {{ value: 'school_district', label: 'School District' }},
-  {{ value: 'regional_authority', label: 'Regional Authority' }}
+  {{ value: 'regional_authority', label: 'Regional Authority' }},
+  {{ value: 'other', label: 'Other' }}
 ];
 
 const GOVERNANCE_STRUCTURES = [
-  {{ value: 'mayor_council_strong', label: 'Mayor-Council (Strong Mayor)' }},
-  {{ value: 'mayor_council_weak', label: 'Mayor-Council (Weak Mayor)' }},
+  {{ value: 'mayor_council_executive', label: 'Mayor-Council (Executive Mayor)' }},
+  {{ value: 'mayor_council_ceremonial', label: 'Mayor-Council (Ceremonial Mayor)' }},
   {{ value: 'council_manager', label: 'Council-Manager' }},
   {{ value: 'commission', label: 'Commission' }},
   {{ value: 'town_meeting', label: 'Town Meeting' }},
@@ -2238,12 +2239,24 @@ window.handleUserInput = function(step, value) {{
       return;
     }}
 
+    // If other, ask follow-up
+    if (value === 'other') {{
+      setTimeout(() => {{
+        currentStep = 'q2_other_entity_type';
+        addMessage('assistant', 'Please specify your organization type:', 'text-input', {{
+          inputType: 'text',
+          placeholder: 'e.g., Joint Powers Authority'
+        }});
+      }}, 400);
+      return;
+    }}
+
     setTimeout(() => {{
       currentQuestionNumber = 3;
       currentStep = 'q3_organization_name';
-      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?`, 'text-input', {{
+      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
         inputType: 'text',
-        placeholder: 'e.g., City of Eagle, Town of Vail'
+        placeholder: 'e.g., City of Eagle, Town of Vail, or "Skip"'
       }});
     }}, 400);
   }}
@@ -2255,9 +2268,23 @@ window.handleUserInput = function(step, value) {{
     setTimeout(() => {{
       currentQuestionNumber = 3;
       currentStep = 'q3_organization_name';
-      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?`, 'text-input', {{
+      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
         inputType: 'text',
-        placeholder: 'e.g., Eagle Water District'
+        placeholder: 'e.g., Eagle Water District, or "Skip"'
+      }});
+    }}, 400);
+  }}
+
+  // Q2 sub: Other entity type
+  else if (step === 'q2_other_entity_type') {{
+    answers['entity_type_detail'] = value;
+
+    setTimeout(() => {{
+      currentQuestionNumber = 3;
+      currentStep = 'q3_organization_name';
+      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
+        inputType: 'text',
+        placeholder: 'e.g., Central Valley Authority, or "Skip"'
       }});
     }}, 400);
   }}
@@ -2265,14 +2292,18 @@ window.handleUserInput = function(step, value) {{
   // Q3: Organization Name
   else if (step === 'q3_organization_name') {{
     setTimeout(() => {{
-      addMessage('assistant', `Welcome, ${{value}}.`);
+      if (value.toLowerCase() === 'skip') {{
+        addMessage('assistant', `No problem, let's continue.`);
+      }} else {{
+        addMessage('assistant', `Welcome, ${{value}}.`);
+      }}
 
       setTimeout(() => {{
         currentQuestionNumber = 4;
         currentStep = 'q4_population';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the approximate population you serve?`, 'text-input', {{
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the approximate population you serve?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
           inputType: 'number',
-          placeholder: 'e.g., 15000'
+          placeholder: 'e.g., 15000, or "Skip"'
         }});
       }}, 500);
     }}, 400);
@@ -2280,16 +2311,19 @@ window.handleUserInput = function(step, value) {{
 
   // Q4: Population
   else if (step === 'q4_population') {{
-    const pop = parseInt(value);
-    const tier = getPopulationTier(pop);
-
     setTimeout(() => {{
-      addMessage('assistant', `${{pop.toLocaleString()}} — ${{tier}}. That gives me a good baseline for complexity.`);
+      if (value.toLowerCase() === 'skip') {{
+        addMessage('assistant', `No problem, let's continue.`);
+      }} else {{
+        const pop = parseInt(value);
+        const tier = getPopulationTier(pop);
+        addMessage('assistant', `${{pop.toLocaleString()}} — ${{tier}}. That gives me a good baseline for complexity.`);
+      }}
 
       setTimeout(() => {{
         currentQuestionNumber = 5;
         currentStep = 'q5_governance';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your governance structure?\\n\\nCouncil-Manager means you have a hired city/town manager. Strong Mayor means the mayor has executive authority and can veto council actions.`, 'choice-buttons', {{
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your governance structure?\\n\\nExecutive Mayor: Mayor has executive authority. Ceremonial Mayor: Mayor has limited powers, council makes decisions. Council-Manager: Hired professional manager runs day-to-day operations.`, 'choice-buttons', {{
           options: GOVERNANCE_STRUCTURES
         }});
       }}, 600);
@@ -2366,7 +2400,7 @@ window.handleUserInput = function(step, value) {{
       setTimeout(() => {{
         currentQuestionNumber = 7;
         currentStep = 'q7_department_count';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many departments does your organization have?`, 'text-input', {{
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many departments does your organization have?\\n\\nDepartments are the organizational units within your government (Police, Fire, Public Works, Finance, etc.). This helps us understand your organizational structure.`, 'text-input', {{
           inputType: 'number',
           placeholder: 'e.g., 12'
         }});
