@@ -714,6 +714,7 @@ async def get_feed(
     state: Optional[str] = None,
     lead_type: Optional[str] = None,
     customer_status: Optional[str] = None,
+    days: Optional[int] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -755,6 +756,11 @@ async def get_feed(
         query = query.filter(Lead.lead_type == lead_type.lower())
     if customer_status:
         query = query.filter(Lead.customer_status == customer_status.lower())
+    if days:
+        # Filter by scan completion date within last N days
+        from datetime import datetime, timedelta
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        query = query.filter(Scan.completed_at >= cutoff_date)
 
     # Get total count for pagination metadata
     total_count = query.count()

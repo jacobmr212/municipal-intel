@@ -23,12 +23,12 @@
     <!-- Top Navigation -->
     <nav class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" height="36" class="mr-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-4">
+                    <img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" height="36">
                     <span class="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">Scanner</span>
                 </div>
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center gap-4">
                     <span class="text-sm text-gray-600">{{ user.email }}</span>
                     <span class="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">{{ user.role }}</span>
                     <a href="/app" class="text-sm text-blue-600 hover:text-blue-800">← Back to Dashboard</a>
@@ -299,7 +299,13 @@
                 </div>
 
                 <div id="watchlist-results" class="space-y-3">
-                    <p class="text-sm text-gray-500">Loading watchlist...</p>
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Your watchlist is empty</h3>
+                        <p class="mt-1 text-sm text-gray-500">Mark municipalities during scans to track them here.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -332,7 +338,18 @@
                 </div>
 
                 <div id="territories-results" class="space-y-2">
-                    <p class="text-sm text-gray-500">Loading territories...</p>
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No territories assigned</h3>
+                        <p class="mt-1 text-sm text-gray-500">Add states to filter your feed automatically.</p>
+                        <div class="mt-6">
+                            <button onclick="showAddTerritoryForm()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                + Add State
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -387,13 +404,34 @@
 
             try {
                 const response = await fetch(`/api/feed?days=${daysFilter}&lead_type=${typeFilter}`);
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 const container = document.getElementById('feed-results');
                 container.innerHTML = '';
 
                 if (data.leads.length === 0) {
-                    container.innerHTML = '<p class="text-sm text-gray-500">No leads found in the selected time period.</p>';
+                    container.innerHTML = `
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No recent leads found</h3>
+                            <p class="mt-1 text-sm text-gray-500">Run a scan to start discovering opportunities.</p>
+                            <div class="mt-6">
+                                <button onclick="switchTab('scanner')" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    Start a Scan
+                                </button>
+                            </div>
+                        </div>
+                    `;
                     return;
                 }
 
@@ -403,7 +441,20 @@
                 });
             } catch (error) {
                 console.error('Failed to load feed:', error);
-                document.getElementById('feed-results').innerHTML = '<p class="text-sm text-red-600">Failed to load feed. Please try again.</p>';
+                document.getElementById('feed-results').innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Failed to load feed</h3>
+                        <p class="mt-1 text-sm text-gray-500">There was an error connecting to the server. Please try again.</p>
+                        <div class="mt-6">
+                            <button onclick="loadFeed()" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
+                `;
             }
         }
 
