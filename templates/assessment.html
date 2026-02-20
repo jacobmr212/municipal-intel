@@ -261,7 +261,12 @@
       gap: 1rem;
       align-items: start;
       margin-bottom: 1.5rem;
-      animation: fadeIn 0.3s ease-in;
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+    }
+
+    .typing-indicator.show {
+      opacity: 1;
     }
 
     .typing-indicator .message-content {
@@ -370,12 +375,20 @@
       `;
       container.appendChild(indicator);
       smoothScrollToBottom();
+
+      // Trigger fade-in after a tiny delay (allows CSS transition to work)
+      setTimeout(() => {
+        indicator.classList.add('show');
+      }, 10);
     }
 
-    // Hide typing indicator
-    function hideTypingIndicator() {
+    // Hide typing indicator with fade-out
+    async function hideTypingIndicator() {
       const indicator = document.getElementById('typingIndicator');
       if (indicator) {
+        indicator.classList.remove('show');
+        // Wait for fade-out transition before removing
+        await new Promise(resolve => setTimeout(resolve, 400));
         indicator.remove();
       }
     }
@@ -394,8 +407,8 @@
       // If it's an assistant message, show typing indicator first
       if (role === 'assistant') {
         showTypingIndicator();
-        await new Promise(resolve => setTimeout(resolve, 800)); // 800ms delay
-        hideTypingIndicator();
+        await new Promise(resolve => setTimeout(resolve, 600)); // Brief typing delay
+        await hideTypingIndicator(); // Wait for fade-out to complete
       }
 
       const message = {
@@ -517,8 +530,8 @@
       answers[currentStep] = value;
       addMessage('user', label);
 
-      // Small delay before AI responds
-      await new Promise(resolve => setTimeout(resolve, 400));
+      // Brief pause before AI responds
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // This will be overridden by section-specific logic
       if (window.handleUserInput) {
@@ -535,8 +548,8 @@
       answers[currentStep] = value;
       addMessage('user', value);
 
-      // Small delay before AI responds
-      await new Promise(resolve => setTimeout(resolve, 400));
+      // Brief pause before AI responds
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       if (window.handleUserInput) {
         window.handleUserInput(currentStep, value);
@@ -553,8 +566,8 @@
       answers[currentStep] = value;
       addMessage('user', label);
 
-      // Small delay before AI responds
-      await new Promise(resolve => setTimeout(resolve, 400));
+      // Brief pause before AI responds
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       if (window.handleUserInput) {
         window.handleUserInput(currentStep, value);
