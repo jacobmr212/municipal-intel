@@ -1994,7 +1994,7 @@ async def assessment_section(
     elif section_number == "3a":
         section_script = generate_section3a_script()
 
-    return templates.TemplateResponse("assessment.html", {
+    return templates.TemplateResponse("assessment_wizard.html", {
         "request": request,
         "user": user,
         "assessment_id": assessment_id,
@@ -2007,11 +2007,10 @@ async def assessment_section(
 
 
 def generate_section1_script():
-    """Generate Section 1: Organization Profile - Group 1 (Identity & Scale) - Proof of Concept."""
+    """Generate Section 1: Organization Profile - WIZARD TEST (4 questions)."""
     return f"""
-// Section 1: Organization Profile - REBUILD
-// Group 1: Identity & Scale (Q1-Q5) - PROOF OF CONCEPT
-// Full version will have 22 questions across 4 groups
+// Section 1: Organization Profile - WIZARD TEST
+// Testing 4 different input types: dropdown, single-select (auto-advance), number, single-select (manual)
 
 const STATES_FULL = [
   {{ value: 'AL', label: 'Alabama' }},
@@ -2089,457 +2088,52 @@ const GOVERNANCE_STRUCTURES = [
   {{ value: 'other', label: 'Other' }}
 ];
 
-const SERVICES = [
-  {{ value: 'water', label: 'Water' }},
-  {{ value: 'wastewater', label: 'Wastewater/Sewer' }},
-  {{ value: 'stormwater', label: 'Stormwater' }},
-  {{ value: 'electric', label: 'Electric Utility' }},
-  {{ value: 'gas', label: 'Gas Utility' }},
-  {{ value: 'solid_waste', label: 'Solid Waste/Recycling' }},
-  {{ value: 'building_permits', label: 'Building Permits & Inspections' }},
-  {{ value: 'planning_zoning', label: 'Planning & Zoning' }},
-  {{ value: 'code_enforcement', label: 'Code Enforcement' }},
-  {{ value: 'municipal_court', label: 'Municipal Court' }},
-  {{ value: 'police', label: 'Police Services' }},
-  {{ value: 'fire', label: 'Fire Services' }},
-  {{ value: 'ems', label: 'EMS/Ambulance' }},
-  {{ value: 'parks_rec', label: 'Parks & Recreation' }},
-  {{ value: 'library', label: 'Library' }},
-  {{ value: 'public_works', label: 'Public Works/Streets' }},
-  {{ value: 'transit', label: 'Public Transit' }},
-  {{ value: 'airport', label: 'Airport' }},
-  {{ value: 'cemetery', label: 'Cemetery' }},
-  {{ value: 'animal_control', label: 'Animal Control' }}
+// Define wizard questions
+questions = [
+  {{
+    id: 'q1_state',
+    type: 'dropdown',
+    text: 'Which state is your organization located in?',
+    aiContext: "Let's start with the basics.",
+    options: STATES_FULL,
+    help: 'We need your state location to assess state-specific compliance requirements and benchmark you against similar municipalities.',
+    required: true
+  }},
+  {{
+    id: 'q2_entity_type',
+    type: 'single-select',
+    text: 'What type of government entity are you?',
+    aiContext: 'This helps us tailor recommendations to your organizational structure.',
+    options: ENTITY_TYPES,
+    autoAdvance: true,
+    required: true
+  }},
+  {{
+    id: 'q3_population',
+    type: 'number',
+    text: 'What is the approximate population you serve?',
+    aiContext: 'Population size is a key driver of system complexity.',
+    placeholder: 'e.g., 15000',
+    help: 'Enter the total population within your jurisdiction. This helps us understand your operational scale and compare you to similar municipalities.',
+    required: false
+  }},
+  {{
+    id: 'q4_governance',
+    type: 'single-select',
+    text: 'What is your governance structure?',
+    aiContext: 'Different governance models have different decision-making needs.',
+    options: GOVERNANCE_STRUCTURES,
+    autoAdvance: false,
+    help: 'Your governance structure affects how financial decisions are made and who needs access to the ERP system.',
+    required: true
+  }}
 ];
 
-const MONTHS = [
-  {{ value: '01', label: 'January' }},
-  {{ value: '02', label: 'February' }},
-  {{ value: '03', label: 'March' }},
-  {{ value: '04', label: 'April' }},
-  {{ value: '05', label: 'May' }},
-  {{ value: '06', label: 'June' }},
-  {{ value: '07', label: 'July' }},
-  {{ value: '08', label: 'August' }},
-  {{ value: '09', label: 'September' }},
-  {{ value: '10', label: 'October' }},
-  {{ value: '11', label: 'November' }},
-  {{ value: '12', label: 'December' }}
-];
-
-// Track current question number
-let currentQuestionNumber = 1;
-const totalQuestions = 22; // Will be 22 when fully implemented
-
-// Track selected services for Q8
-let selectedServices = [];
-
-// Helper: Get population tier
-function getPopulationTier(pop) {{
-  const p = parseInt(pop);
-  if (p < 2500) return 'Micro municipality';
-  if (p < 10000) return 'Small municipality';
-  if (p < 25000) return 'Small-mid municipality';
-  if (p < 50000) return 'Mid-size municipality';
-  if (p < 100000) return 'Large municipality';
-  return 'Major municipality';
-}}
-
-// Helper: Get employee tier
-function getEmployeeTier(count) {{
-  const c = parseInt(count);
-  if (c < 25) return 'Very small staff';
-  if (c < 100) return 'Small staff';
-  if (c < 250) return 'Medium staff';
-  if (c < 500) return 'Large staff';
-  return 'Very large staff';
-}}
-
-// Handle service selection (multi-select for Q8)
-window.handleCategoryToggle = function(service) {{
-  if (selectedServices.includes(service)) {{
-    selectedServices = selectedServices.filter(s => s !== service);
-  }} else {{
-    selectedServices.push(service);
-  }}
-
-  // Update UI
-  const button = document.querySelector(`.category-btn[data-category="${{service}}"]`);
-  if (button) {{
-    if (selectedServices.includes(service)) {{
-      button.classList.add('selected');
-    }} else {{
-      button.classList.remove('selected');
-    }}
-  }}
-}};
-
-window.handleCategoryConfirm = function() {{
-  answers['services'] = selectedServices;
-
-  const serviceLabels = selectedServices.map(s =>
-    SERVICES.find(svc => svc.value === s)?.label || s
-  ).join(', ');
-
-  if (selectedServices.length === 0) {{
-    addMessage('user', 'No services selected');
-  }} else {{
-    addMessage('user', `Services: ${{serviceLabels}}`);
-  }}
-
-  // Proceed to next question
-  window.handleUserInput('q8_services', selectedServices);
-}};
-
-// Start the conversation - CONSOLIDATED MESSAGE (no more multiple bubbles!)
-setTimeout(() => {{
-  addMessage('assistant', 'Welcome to Section 1! This section helps us understand your organization\\'s basic information. It takes about 10-15 minutes, and you can save and come back anytime. Let\\'s get started.');
-
-  setTimeout(() => {{
-    currentStep = 'q1_state';
-    addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Which state is your organization located in?`, 'select', {{
-      options: STATES_FULL
-    }});
-  }}, 600);
-}}, 500);
-
-// Handle user input
-window.handleUserInput = function(step, value) {{
-
-  // Q1: State
-  if (step === 'q1_state') {{
-    const stateName = STATES_FULL.find(s => s.value === value)?.label || value;
-
-    setTimeout(() => {{
-      addMessage('assistant', `Got it — ${{stateName}}.`);
-
-      setTimeout(() => {{
-        currentQuestionNumber = 2;
-        currentStep = 'q2_entity_type';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What type of government entity are you?`, 'choice-buttons', {{
-          options: ENTITY_TYPES
-        }});
-      }}, 500);
-    }}, 400);
-  }}
-
-  // Q2: Entity Type
-  else if (step === 'q2_entity_type') {{
-    const entityLabel = ENTITY_TYPES.find(e => e.value === value)?.label || value;
-
-    // If special district, ask follow-up
-    if (value === 'special_district') {{
-      setTimeout(() => {{
-        currentStep = 'q2_special_district_type';
-        addMessage('assistant', 'What type of special district?', 'text-input', {{
-          inputType: 'text',
-          placeholder: 'e.g., water, fire, transit'
-        }});
-      }}, 400);
-      return;
-    }}
-
-    // If other, ask follow-up
-    if (value === 'other') {{
-      setTimeout(() => {{
-        currentStep = 'q2_other_entity_type';
-        addMessage('assistant', 'Please specify your organization type:', 'text-input', {{
-          inputType: 'text',
-          placeholder: 'e.g., Joint Powers Authority'
-        }});
-      }}, 400);
-      return;
-    }}
-
-    setTimeout(() => {{
-      currentQuestionNumber = 3;
-      currentStep = 'q3_organization_name';
-      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
-        inputType: 'text',
-        placeholder: 'e.g., City of Eagle, Town of Vail, or "Skip"'
-      }});
-    }}, 400);
-  }}
-
-  // Q2 sub: Special district type
-  else if (step === 'q2_special_district_type') {{
-    answers['entity_type_detail'] = value;
-
-    setTimeout(() => {{
-      currentQuestionNumber = 3;
-      currentStep = 'q3_organization_name';
-      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
-        inputType: 'text',
-        placeholder: 'e.g., Eagle Water District, or "Skip"'
-      }});
-    }}, 400);
-  }}
-
-  // Q2 sub: Other entity type
-  else if (step === 'q2_other_entity_type') {{
-    answers['entity_type_detail'] = value;
-
-    setTimeout(() => {{
-      currentQuestionNumber = 3;
-      currentStep = 'q3_organization_name';
-      addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the name of your organization?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
-        inputType: 'text',
-        placeholder: 'e.g., Central Valley Authority, or "Skip"'
-      }});
-    }}, 400);
-  }}
-
-  // Q3: Organization Name
-  else if (step === 'q3_organization_name') {{
-    setTimeout(() => {{
-      if (value.toLowerCase() === 'skip') {{
-        addMessage('assistant', `No problem, let's continue.`);
-      }} else {{
-        addMessage('assistant', `Welcome, ${{value}}.`);
-      }}
-
-      setTimeout(() => {{
-        currentQuestionNumber = 4;
-        currentStep = 'q4_population';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is the approximate population you serve?\\n\\n(Optional - you can type "Skip" if you prefer not to share)`, 'text-input', {{
-          inputType: 'text',
-          placeholder: 'e.g., 15000, or type "Skip"'
-        }});
-      }}, 500);
-    }}, 400);
-  }}
-
-  // Q4: Population
-  else if (step === 'q4_population') {{
-    setTimeout(() => {{
-      if (value.toLowerCase() === 'skip') {{
-        addMessage('assistant', `No problem, let's continue.`);
-      }} else {{
-        const pop = parseInt(value);
-        const tier = getPopulationTier(pop);
-        addMessage('assistant', `${{pop.toLocaleString()}} — ${{tier}}. That gives me a good baseline for complexity.`);
-      }}
-
-      setTimeout(() => {{
-        currentQuestionNumber = 5;
-        currentStep = 'q5_governance';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your governance structure?\\n\\nExecutive Mayor: Mayor has executive authority. Ceremonial Mayor: Mayor has limited powers, council makes decisions. Council-Manager: Hired professional manager runs day-to-day operations.`, 'choice-buttons', {{
-          options: GOVERNANCE_STRUCTURES
-        }});
-      }}, 600);
-    }}, 400);
-  }}
-
-  // Q5: Governance Structure
-  else if (step === 'q5_governance') {{
-    const govLabel = GOVERNANCE_STRUCTURES.find(g => g.value === value)?.label || value;
-
-    // If "Other", ask follow-up
-    if (value === 'other') {{
-      setTimeout(() => {{
-        currentStep = 'q5_governance_other';
-        addMessage('assistant', 'Please specify your governance structure:', 'text-input', {{
-          inputType: 'text',
-          placeholder: 'e.g., Modified commission'
-        }});
-      }}, 400);
-      return;
-    }}
-
-    setTimeout(() => {{
-      addMessage('assistant', `${{govLabel}} — noted.`);
-
-      setTimeout(() => {{
-        // GROUP 1 COMPLETE - Transition to Group 2
-        addMessage('assistant', '--- Group 1 complete: Identity & Scale ---');
-
-        setTimeout(() => {{
-          currentQuestionNumber = 6;
-          currentStep = 'q6_employee_count';
-          addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many employees does your organization have in total?\\n\\nInclude all full-time, part-time, and seasonal employees.`, 'text-input', {{
-            inputType: 'number',
-            placeholder: 'e.g., 150'
-          }});
-        }}, 800);
-      }}, 500);
-    }}, 400);
-  }}
-
-  // Q5 sub: Other governance type
-  else if (step === 'q5_governance_other') {{
-    answers['governance_structure_detail'] = value;
-
-    setTimeout(() => {{
-      addMessage('assistant', `${{value}} — noted.`);
-
-      setTimeout(() => {{
-        addMessage('assistant', '--- Group 1 complete: Identity & Scale ---');
-
-        setTimeout(() => {{
-          currentQuestionNumber = 6;
-          currentStep = 'q6_employee_count';
-          addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many employees does your organization have in total?\\n\\nInclude all full-time, part-time, and seasonal employees.`, 'text-input', {{
-            inputType: 'number',
-            placeholder: 'e.g., 150'
-          }});
-        }}, 800);
-      }}, 500);
-    }}, 400);
-  }}
-
-  // GROUP 2: OPERATIONAL FOOTPRINT (Q6-Q12)
-
-  // Q6: Employee Count
-  else if (step === 'q6_employee_count') {{
-    const count = parseInt(value);
-    const tier = getEmployeeTier(count);
-
-    setTimeout(() => {{
-      addMessage('assistant', `${{count.toLocaleString()}} employees — ${{tier}}.`);
-
-      setTimeout(() => {{
-        currentQuestionNumber = 7;
-        currentStep = 'q7_department_count';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many departments does your organization have?\\n\\nDepartments are the organizational units within your government (Police, Fire, Public Works, Finance, etc.). This helps us understand your organizational structure.`, 'text-input', {{
-          inputType: 'number',
-          placeholder: 'e.g., 12'
-        }});
-      }}, 600);
-    }}, 400);
-  }}
-
-  // Q7: Department Count
-  else if (step === 'q7_department_count') {{
-    const deptCount = parseInt(value);
-
-    setTimeout(() => {{
-      addMessage('assistant', `${{deptCount}} departments — noted.`);
-
-      setTimeout(() => {{
-        currentQuestionNumber = 8;
-        currentStep = 'q8_services';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Which services does your organization provide directly?\\n\\nSelect all that apply:`, 'multi-select-start', {{
-          categories: SERVICES
-        }});
-      }}, 600);
-    }}, 400);
-  }}
-
-  // Q8: Services Provided (multi-select)
-  else if (step === 'q8_services') {{
-    // value is an array of selected service codes
-    const selectedServices = value.map(v => SERVICES.find(s => s.value === v)?.label || v);
-
-    setTimeout(() => {{
-      addMessage('assistant', `Services: ${{selectedServices.join(', ')}}`);
-
-      setTimeout(() => {{
-        currentQuestionNumber = 9;
-        currentStep = 'q9_has_unions';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Does your organization have unionized employees?`, 'choice-buttons', {{
-          options: [
-            {{ value: 'yes', label: 'Yes' }},
-            {{ value: 'no', label: 'No' }}
-          ]
-        }});
-      }}, 600);
-    }}, 400);
-  }}
-
-  // Q9: Union Presence
-  else if (step === 'q9_has_unions') {{
-    if (value === 'yes') {{
-      setTimeout(() => {{
-        currentQuestionNumber = 10;
-        currentStep = 'q10_bargaining_units';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many bargaining units or union groups do you have?`, 'text-input', {{
-          inputType: 'number',
-          placeholder: 'e.g., 3'
-        }});
-      }}, 400);
-    }} else {{
-      // Skip Q10, go to Q11
-      answers['bargaining_units'] = 0;
-      setTimeout(() => {{
-        currentQuestionNumber = 11;
-        currentStep = 'q11_fiscal_year';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What month does your fiscal year start?`, 'select', {{
-          options: MONTHS
-        }});
-      }}, 400);
-    }}
-  }}
-
-  // Q10: Bargaining Units
-  else if (step === 'q10_bargaining_units') {{
-    setTimeout(() => {{
-      addMessage('assistant', `${{value}} bargaining units — noted.`);
-
-      setTimeout(() => {{
-        currentQuestionNumber = 11;
-        currentStep = 'q11_fiscal_year';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What month does your fiscal year start?`, 'select', {{
-          options: MONTHS
-        }});
-      }}, 600);
-    }}, 400);
-  }}
-
-  // Q11: Fiscal Year Start
-  else if (step === 'q11_fiscal_year') {{
-    const monthLabel = MONTHS.find(m => m.value === value)?.label || value;
-
-    setTimeout(() => {{
-      addMessage('assistant', `Fiscal year starts: ${{monthLabel}}`);
-
-      setTimeout(() => {{
-        currentQuestionNumber = 12;
-        currentStep = 'q12_annual_budget';
-        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your annual operating budget (approximate)?\\n\\n(Optional - but helps us provide more accurate recommendations. Type "Skip" to bypass.)\\n\\nJust the number, e.g., 25000000 for $25M`, 'text-input', {{
-          inputType: 'text',
-          placeholder: 'e.g., 25000000 or type "Skip"'
-        }});
-      }}, 600);
-    }}, 400);
-  }}
-
-  // Q12: Annual Budget
-  else if (step === 'q12_annual_budget') {{
-    setTimeout(() => {{
-      if (value.toLowerCase() === 'skip') {{
-        addMessage('assistant', `No problem, let's continue.`);
-      }} else {{
-        const budget = parseInt(value);
-        addMessage('assistant', `Budget: $${{(budget / 1000000).toFixed(1)}}M — noted.`);
-      }}
-
-      setTimeout(() => {{
-        // GROUP 2 COMPLETE
-        addMessage('assistant', '--- Group 2 complete: Operational Footprint ---');
-
-        setTimeout(() => {{
-          addMessage('assistant', 'Great progress! Groups 3-4 (Q13-Q22) coming soon. Returning to assessment dashboard...');
-
-          setTimeout(() => {{
-            saveProgress('in-progress');
-            updateProgress(55); // 12 of 22 questions = ~55%
-
-            setTimeout(() => {{
-              addMessage('assistant', 'Progress saved.');
-              setTimeout(() => {{
-                const assessmentId = ASSESSMENT_ID || 'anonymous';
-                window.location.href = `/assessment/${{assessmentId}}`;
-              }}, 2000);
-            }}, 1000);
-          }}, 1000);
-        }}, 800);
-      }}, 500);
-    }}, 400);
-  }}
-
-  // Auto-save after each answer
-  saveProgress();
-}};
+// Initialize wizard (load progress, set up first question)
+document.addEventListener('DOMContentLoaded', () => {{
+  loadProgress();
+  initializeWizard();
+}});
 """
 
 
