@@ -2105,7 +2105,7 @@ questions = [
     text: 'What type of government entity are you?',
     aiContext: 'This helps us tailor recommendations to your organizational structure.',
     options: ENTITY_TYPES,
-    autoAdvance: true,
+    autoAdvance: false,
     required: true
   }},
   {{
