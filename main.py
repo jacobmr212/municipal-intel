@@ -2374,297 +2374,403 @@ document.addEventListener('DOMContentLoaded', () => {{
 
 
 def generate_section2_script():
-    """Generate Section 2 conversational script for GL & COA assessment."""
-    return """
-// Section 2: General Ledger & Chart of Accounts
-// Conversational flow to assess COA structure and identify optimization opportunities
+    """Generate Section 2: General Ledger & Chart of Accounts - Complete (6 questions)."""
+    return f"""
+// Section 2: General Ledger & Chart of Accounts - Complete (Q1-Q6)
+// Wizard interface to assess COA structure and identify optimization opportunities
 
-// Start the conversation
-setTimeout(() => {
-  addMessage('assistant', 'Welcome to Section 2!');
-  setTimeout(() => {
-    addMessage('assistant', 'This section is about your General Ledger and Chart of Accounts.');
-    setTimeout(() => {
-      addMessage('assistant', 'Don\\'t worry if these terms sound technical! Your Chart of Accounts (COA) is simply the list of all budget categories your organization uses to track money (like "Police Salaries" or "Park Maintenance"). Your General Ledger (GL) is the master record of all transactions.');
-      setTimeout(() => {
-        addMessage('assistant', 'We\\'ll ask some questions to see if your accounting structure could be simplified or improved. This takes about 5-7 minutes.');
-        setTimeout(() => {
-          currentStep = 'account_count';
-          addMessage('assistant', 'Ready? Let\\'s start. Approximately how many account codes does your organization use?', 'select', {
-            options: [
-              { value: 'under-500', label: 'Under 500' },
-              { value: '500-1000', label: '500-1,000' },
-              { value: '1000-2000', label: '1,000-2,000' },
-              { value: '2000-5000', label: '2,000-5,000' },
-              { value: 'over-5000', label: 'Over 5,000' },
-              { value: 'not-sure', label: 'Not sure' }
-            ]
-          });
-        }, 800);
-      }, 800);
-    }, 800);
-  }, 800);
-}, 500);
+const questions = [
+  // Q1: Account Code Count
+  {{
+    id: 'q1_account_count',
+    type: 'dropdown',
+    text: 'Approximately how many account codes does your organization use?',
+    aiContext: 'Number of account codes in Chart of Accounts - helps identify COA bloat',
+    help: 'Your Chart of Accounts (COA) is simply the list of all budget categories your organization uses to track money (like "Police Salaries" or "Park Maintenance"). Don\\'t worry if you\\'re not sure—just make your best estimate.',
+    options: [
+      {{ value: 'under-500', label: 'Under 500' }},
+      {{ value: '500-1000', label: '500-1,000' }},
+      {{ value: '1000-2000', label: '1,000-2,000' }},
+      {{ value: '2000-5000', label: '2,000-5,000' }},
+      {{ value: 'over-5000', label: 'Over 5,000' }},
+      {{ value: 'not-sure', label: 'Not sure' }}
+    ],
+    required: true,
+    autoAdvance: false
+  }},
 
-// Handle user input
-window.handleUserInput = function(step, value) {
-  if (step === 'account_count') {
-    answers['account_count'] = value;
-    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
-    addMessage('user', label);
+  // Q2: Last COA Review
+  {{
+    id: 'q2_last_review',
+    type: 'dropdown',
+    text: 'When did someone last conduct a comprehensive review of your Chart of Accounts to clean up old/unused codes?',
+    aiContext: 'Frequency of COA maintenance - identifies risk of accumulated bloat',
+    help: 'This would be a thorough review—not just adding a new account here and there, but actually going through the whole list to remove outdated codes or consolidate duplicates.',
+    options: [
+      {{ value: 'within-1-year', label: 'Within the last year' }},
+      {{ value: '1-2-years', label: '1-2 years ago' }},
+      {{ value: '2-5-years', label: '2-5 years ago' }},
+      {{ value: '5-10-years', label: '5-10 years ago' }},
+      {{ value: 'over-10-years', label: 'Over 10 years ago' }},
+      {{ value: 'never', label: 'Never / Not sure' }}
+    ],
+    required: true,
+    autoAdvance: false
+  }},
 
-    setTimeout(() => {
-      if (value === '2000-5000' || value === 'over-5000') {
-        addMessage('assistant', 'That\\'s quite a few accounts! Organizations with thousands of account codes sometimes have "bloat" — meaning they have more categories than they really need, which can make budgeting and reporting more complicated.');
-      } else if (value === 'under-500') {
-        addMessage('assistant', 'That\\'s a lean, streamlined structure. For smaller municipalities, this is typically ideal — easier to manage and understand.');
-      } else if (value === 'not-sure') {
-        addMessage('assistant', 'No problem! Your finance team can help you find this later if needed.');
-      } else {
-        addMessage('assistant', 'That\\'s in the normal range for most municipalities your size.');
-      }
+  // Q3: Inactive Account Percentage
+  {{
+    id: 'q3_inactive_percentage',
+    type: 'dropdown',
+    text: 'Roughly what percentage of your account codes had ZERO activity during your last fiscal year?',
+    aiContext: 'Percentage of inactive accounts - key indicator of COA health',
+    help: '"Inactive accounts" are budget codes that had no money go in or out during your last fiscal year. Having too many inactive accounts is a red flag that your chart could use cleanup. If you\\'re not sure, just make your best guess.',
+    options: [
+      {{ value: 'under-5', label: 'Under 5%' }},
+      {{ value: '5-15', label: '5-15%' }},
+      {{ value: '15-30', label: '15-30%' }},
+      {{ value: '30-50', label: '30-50%' }},
+      {{ value: 'over-50', label: 'Over 50%' }},
+      {{ value: 'not-sure', label: 'Not sure' }}
+    ],
+    required: true,
+    autoAdvance: false
+  }},
 
-      setTimeout(() => {
-        addMessage('assistant', 'Next question: When did someone last sit down and review your entire list of account codes to clean up old/unused ones?');
-        setTimeout(() => {
-          addMessage('assistant', 'This would be a comprehensive review — not just adding a new account here and there, but actually going through the whole list to remove outdated codes or consolidate duplicates.');
-          setTimeout(() => {
-            currentStep = 'last_review';
-            addMessage('assistant', 'When was this last done?', 'select', {
-              options: [
-                { value: 'within-1-year', label: 'Within the last year' },
-                { value: '1-2-years', label: '1-2 years ago' },
-                { value: '2-5-years', label: '2-5 years ago' },
-                { value: '5-10-years', label: '5-10 years ago' },
-                { value: 'over-10-years', label: 'Over 10 years ago' },
-                { value: 'never', label: 'Never / Not sure' }
-              ]
-            });
-          }, 800);
-        }, 800);
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'last_review') {
-    answers['last_review'] = value;
-    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
-    addMessage('user', label);
+  // Q4: Fund Count
+  {{
+    id: 'q4_fund_count',
+    type: 'dropdown',
+    text: 'How many different funds does your municipality operate?',
+    aiContext: 'Number of funds - affects reporting complexity',
+    help: 'Funds are separate "buckets" of money with their own accounting. Common examples: General Fund, Water/Sewer Fund, Parks Fund, Capital Improvement Fund, etc. Most municipalities have several funds to keep certain money separate.',
+    options: [
+      {{ value: '1-3', label: '1-3 funds' }},
+      {{ value: '4-7', label: '4-7 funds' }},
+      {{ value: '8-15', label: '8-15 funds' }},
+      {{ value: 'over-15', label: 'Over 15 funds' }},
+      {{ value: 'not-sure', label: 'Not sure' }}
+    ],
+    required: true,
+    autoAdvance: false
+  }},
 
-    setTimeout(() => {
-      if (value === '5-10-years' || value === 'over-10-years' || value === 'never') {
-        addMessage('assistant', '⚠️ COAs that haven\\'t been reviewed in 5+ years almost always have significant bloat and structural issues.');
-      } else if (value === 'within-1-year' || value === '1-2-years') {
-        addMessage('assistant', 'Great! Regular reviews keep your COA clean and efficient.');
-      }
+  // Q5: Month-End Close Duration
+  {{
+    id: 'q5_month_close',
+    type: 'dropdown',
+    text: 'How many business days does it typically take to close the books each month?',
+    aiContext: 'Month-end close duration - indicates process efficiency',
+    help: '"Month-end close" is when your finance team reconciles accounts, posts adjusting entries, and closes the books for the previous month. A long close process often means complicated account structures or too many manual steps.',
+    options: [
+      {{ value: 'under-5-days', label: 'Under 5 business days' }},
+      {{ value: '5-8-days', label: '5-8 business days' }},
+      {{ value: '8-15-days', label: '8-15 business days' }},
+      {{ value: 'over-15-days', label: 'Over 15 business days' }},
+      {{ value: 'not-sure', label: 'Not sure' }}
+    ],
+    required: true,
+    autoAdvance: false
+  }},
 
-      setTimeout(() => {
-        addMessage('assistant', 'Here\\'s an important one: Think about all your account codes. Roughly what percentage had ZERO activity last year?');
-        setTimeout(() => {
-          addMessage('assistant', '"Inactive accounts" are budget codes that had no money go in or out during your last fiscal year. Having too many inactive accounts is a red flag that your chart could use cleanup. If you\\'re not sure, that\\'s okay — just make your best guess or select "Not sure".');
-          setTimeout(() => {
-            currentStep = 'inactive_percentage';
-            addMessage('assistant', 'What percentage of your accounts were completely inactive?', 'select', {
-              options: [
-                { value: 'under-5', label: 'Under 5%' },
-                { value: '5-15', label: '5-15%' },
-                { value: '15-30', label: '15-30%' },
-                { value: '30-50', label: '30-50%' },
-                { value: 'over-50', label: 'Over 50%' },
-                { value: 'not-sure', label: 'Not sure' }
-              ]
-            });
-          }, 800);
-        }, 800);
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'inactive_percentage') {
-    answers['inactive_percentage'] = value;
-    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
-    addMessage('user', label);
+  // Q6: Known COA Issues (Multi-Select)
+  {{
+    id: 'q6_known_issues',
+    type: 'multi-select',
+    text: 'Are you aware of any specific issues with your current Chart of Accounts?',
+    aiContext: 'Known COA pain points reported by user',
+    help: 'Select all that apply. If you\\'re not experiencing any particular issues, you can select "No known issues."',
+    options: [
+      {{ value: 'duplicate-accounts', label: 'Duplicate or similar accounts' }},
+      {{ value: 'confusing-names', label: 'Confusing account names' }},
+      {{ value: 'high-inactive', label: 'Too many inactive accounts' }},
+      {{ value: 'mispostings', label: 'Frequent mispostings' }},
+      {{ value: 'reporting-difficulty', label: 'Difficult to generate reports' }},
+      {{ value: 'none', label: 'No known issues' }}
+    ],
+    required: true,
+    autoAdvance: false
+  }}
+];
 
-    setTimeout(() => {
-      if (value === '15-30' || value === '30-50' || value === 'over-50') {
-        addMessage('assistant', '⚠️ High percentages of inactive accounts signal COA bloat. Well-maintained municipal COAs typically have fewer than 10% inactive accounts.');
-      } else if (value === 'under-5') {
-        addMessage('assistant', 'Excellent! A low percentage of inactive accounts indicates a well-maintained COA.');
-      }
+// === STATE MANAGEMENT ===
+let currentQuestionIndex = 0;
+let answers = {{}};
+let saveIndicatorTimeout = null;
 
-      setTimeout(() => {
-        addMessage('assistant', 'Funds are separate "buckets" of money with their own accounting. Common examples: General Fund, Water/Sewer Fund, Parks Fund, Capital Improvement Fund, etc. Most municipalities have several funds to keep certain money separate.');
-        setTimeout(() => {
-          currentStep = 'fund_count';
-          addMessage('assistant', 'How many different funds does your municipality operate?', 'select', {
-            options: [
-              { value: '1-3', label: '1-3 funds' },
-              { value: '4-7', label: '4-7 funds' },
-              { value: '8-15', label: '8-15 funds' },
-              { value: 'over-15', label: 'Over 15 funds' },
-              { value: 'not-sure', label: 'Not sure' }
-            ]
-          });
-        }, 800);
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'fund_count') {
-    answers['fund_count'] = value;
-    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
-    addMessage('user', label);
+// === SAVE & RESUME ===
+function saveToStorage() {{
+  const data = {{
+    currentQuestionIndex,
+    answers,
+    lastSaved: new Date().toISOString()
+  }};
 
-    setTimeout(() => {
-      if (value === 'over-15') {
-        addMessage('assistant', 'A large number of funds can complicate reporting. We\\'ll note this for our analysis.');
-      }
+  if (ANONYMOUS) {{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }}
 
-      setTimeout(() => {
-        addMessage('assistant', 'Almost done! Last question is about your month-end close process.');
-        setTimeout(() => {
-          addMessage('assistant', '"Month-end close" is when your finance team reconciles accounts, posts adjusting entries, and closes the books for the previous month. A long close process often means complicated account structures or too many manual steps.');
-          setTimeout(() => {
-            currentStep = 'month_close';
-            addMessage('assistant', 'How many business days does it typically take to close the books each month?', 'select', {
-              options: [
-                { value: 'under-5-days', label: 'Under 5 business days' },
-                { value: '5-8-days', label: '5-8 business days' },
-                { value: '8-15-days', label: '8-15 business days' },
-                { value: 'over-15-days', label: 'Over 15 business days' },
-                { value: 'not-sure', label: 'Not sure' }
-              ]
-            });
-          }, 800);
-        }, 800);
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'month_close') {
-    answers['month_close'] = value;
-    const label = document.getElementById('selectInput')?.options[document.getElementById('selectInput')?.selectedIndex]?.text || value;
-    addMessage('user', label);
+  // Also save to server
+  saveProgress('in-progress');
 
-    setTimeout(() => {
-      if (value === '8-15-days' || value === 'over-15-days') {
-        addMessage('assistant', '⚠️ Extended close cycles often stem from COA complexity, reconciliation difficulties, or manual processes.');
-      } else if (value === 'under-5-days') {
-        addMessage('assistant', 'Excellent! A quick close indicates efficient processes.');
-      }
+  // Show save indicator
+  showSaveIndicator();
+}}
 
-      setTimeout(() => {
-        currentStep = 'known_issues';
-        addMessage('assistant', 'Finally, are you aware of any specific issues with your current Chart of Accounts? (You can select "No known issues" if not)', 'multi-select-start', {
-          categories: [
-            { value: 'duplicate-accounts', label: 'Duplicate or similar accounts' },
-            { value: 'confusing-names', label: 'Confusing account names' },
-            { value: 'high-inactive', label: 'Too many inactive accounts' },
-            { value: 'mispostings', label: 'Frequent mispostings' },
-            { value: 'reporting-difficulty', label: 'Difficult to generate reports' },
-            { value: 'none', label: 'No known issues' }
-          ]
-        });
-      }, 800);
-    }, 600);
-  }
-  else if (step === 'known_issues_confirmed') {
-    // Multi-select completed via handleCategoryConfirm
-    setTimeout(() => {
-      addMessage('assistant', 'Great! I have all the information I need.');
-      setTimeout(() => {
-        addMessage('assistant', 'Let me analyze your COA structure using AI...');
-        currentStep = 'analyzing';
+function loadFromStorage() {{
+  if (!ANONYMOUS) return false;
 
-        // Call AI analysis API
-        fetch(`/api/assessments/${ASSESSMENT_ID}/analyze`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            section_number: '2',
-            data: {
-              account_count: answers['account_count'],
-              last_review: answers['last_review'],
-              inactive_percentage: answers['inactive_percentage'],
-              fund_count: answers['fund_count'],
-              month_close: answers['month_close'],
-              known_issues: answers['known_issues'] || []
-            }
-          })
-        })
-        .then(r => r.json())
-        .then(result => {
-          if (result.analysis && result.analysis.summary) {
-            setTimeout(() => {
-              addMessage('assistant', '✨ **Analysis Complete**');
-              setTimeout(() => {
-                addMessage('assistant', result.analysis.summary);
-                setTimeout(() => {
-                  if (result.analysis.findings && result.analysis.findings.length > 0) {
-                    addMessage('assistant', `I've identified ${result.analysis.findings.length} finding${result.analysis.findings.length > 1 ? 's' : ''} that you should be aware of:`);
-                    result.analysis.findings.forEach((finding, idx) => {
-                      setTimeout(() => {
-                        const severityEmoji = {
-                          'critical': '🚨',
-                          'high': '⚠️',
-                          'medium': '⚡',
-                          'low': 'ℹ️'
-                        }[finding.severity] || '•';
-                        addMessage('assistant', `${severityEmoji} **${finding.title}**\\n\\n${finding.description}\\n\\n**Impact:** ${finding.impact}\\n\\n**Recommendation:** ${finding.recommendation}`);
-                      }, idx * 1000);
-                    });
-                  }
-                  setTimeout(() => {
-                    finishSection();
-                  }, (result.analysis.findings?.length || 0) * 1000 + 1500);
-                }, 800);
-              }, 600);
-            }, 1000);
-          } else {
-            addMessage('assistant', 'AI analysis is currently unavailable, but your responses have been saved.');
-            setTimeout(() => {
-              finishSection();
-            }, 1500);
-          }
-        })
-        .catch(err => {
-          console.error('AI analysis error:', err);
-          addMessage('assistant', 'Unable to complete AI analysis, but your responses have been saved.');
-          setTimeout(() => {
-            finishSection();
-          }, 1500);
-        });
-      }, 800);
-    }, 600);
-  }
+  try {{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {{
+      const data = JSON.parse(saved);
+      currentQuestionIndex = data.currentQuestionIndex || 0;
+      answers = data.answers || {{}};
+      console.log('Resumed Section 2 from localStorage:', data);
+      return true;
+    }}
+  }} catch (err) {{
+    console.error('Failed to load from localStorage:', err);
+  }}
+  return false;
+}}
 
-  // Auto-save
-  saveProgress();
-};
+function showSaveIndicator() {{
+  let indicator = document.getElementById('saveIndicator');
+  if (!indicator) {{
+    indicator = document.createElement('div');
+    indicator.id = 'saveIndicator';
+    indicator.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #22C55E;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    `;
+    indicator.textContent = 'Saved';
+    document.body.appendChild(indicator);
+  }}
 
-// Override handleCategoryConfirm for known issues
-window.handleCategoryConfirm = function() {
-  answers['known_issues'] = selectedCategories;
+  // Clear existing timeout
+  if (saveIndicatorTimeout) clearTimeout(saveIndicatorTimeout);
 
-  const categoryLabels = selectedCategories.map(c =>
-    document.querySelectorAll('.category-btn[data-category="' + c + '"]')[0]?.textContent || c
-  ).join(', ');
+  // Show indicator
+  indicator.style.opacity = '1';
 
-  if (selectedCategories.length === 0 || (selectedCategories.length === 1 && selectedCategories[0] === 'none')) {
-    addMessage('user', 'No known issues');
-  } else {
-    addMessage('user', `Selected: ${categoryLabels}`);
-  }
+  // Hide after 2 seconds
+  saveIndicatorTimeout = setTimeout(() => {{
+    indicator.style.opacity = '0';
+  }}, 2000);
+}}
 
-  currentStep = 'known_issues_confirmed';
-  window.handleUserInput('known_issues_confirmed', selectedCategories);
-};
+// === NAVIGATION ===
+function goToQuestion(index) {{
+  if (index < 0 || index >= questions.length) return;
 
-function finishSection() {
-  addMessage('assistant', 'Section 2 complete! Returning to dashboard...');
+  currentQuestionIndex = index;
+  renderQuestion();
+  updateProgress();
+}}
+
+function nextQuestion() {{
+  if (currentQuestionIndex < questions.length - 1) {{
+    goToQuestion(currentQuestionIndex + 1);
+  }} else {{
+    completeSection();
+  }}
+}}
+
+function previousQuestion() {{
+  if (currentQuestionIndex > 0) {{
+    goToQuestion(currentQuestionIndex - 1);
+  }}
+}}
+
+function completeSection() {{
   saveProgress('completed');
   updateProgress(100);
-  setTimeout(() => {
+
+  // Show completion message
+  const container = document.getElementById('wizardContainer');
+  container.innerHTML = `
+    <div style="text-align: center; padding: 3rem 1rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+      <h2 style="color: var(--navy); margin-bottom: 1rem;">Section Complete!</h2>
+      <p style="color: var(--warm-gray); margin-bottom: 2rem;">
+        Great work! Your responses have been saved.
+      </p>
+      <p style="color: var(--warm-gray); font-size: 0.875rem;">
+        Redirecting to dashboard...
+      </p>
+    </div>
+  `;
+
+  setTimeout(() => {{
     window.location.href = '/app';
-  }, 2000);
-}
+  }}, 2000);
+}}
+
+// === RENDERING ===
+function renderQuestion() {{
+  const q = questions[currentQuestionIndex];
+  const container = document.getElementById('wizardContainer');
+
+  // Fade out
+  container.style.opacity = '0';
+
+  setTimeout(() => {{
+    container.innerHTML = `
+      <div class="wizard-question">
+        <div class="question-header">
+          <div class="question-number">Question ${{currentQuestionIndex + 1}} of ${{questions.length}}</div>
+          <h2 class="question-text">${{q.text}}</h2>
+          ${{q.help ? `<p class="question-help">${{q.help}}</p>` : ''}}
+        </div>
+
+        <div class="question-input" id="questionInput"></div>
+
+        <div class="question-actions">
+          <button
+            class="btn-back"
+            onclick="previousQuestion()"
+            ${{currentQuestionIndex === 0 ? 'disabled' : ''}}
+          >
+            ← Back
+          </button>
+          <button
+            class="btn-continue"
+            id="continueBtn"
+            onclick="handleContinue()"
+            disabled
+          >
+            ${{currentQuestionIndex === questions.length - 1 ? 'Complete' : 'Continue'}}
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Render input component
+    renderInput(q);
+
+    // Fade in
+    container.style.opacity = '1';
+  }}, 150);
+}}
+
+function renderInput(q) {{
+  const inputContainer = document.getElementById('questionInput');
+  const savedAnswer = answers[q.id];
+
+  if (q.type === 'dropdown') {{
+    const select = document.createElement('select');
+    select.className = 'question-select';
+    select.innerHTML = `
+      <option value="">-- Select --</option>
+      ${{q.options.map(opt =>
+        `<option value="${{opt.value}}" ${{savedAnswer === opt.value ? 'selected' : ''}}>${{opt.label}}</option>`
+      ).join('')}}
+    `;
+    select.addEventListener('change', (e) => {{
+      answers[q.id] = e.target.value;
+      updateContinueButton();
+      saveToStorage();
+    }});
+    inputContainer.appendChild(select);
+
+    // Enable continue if answer exists
+    if (savedAnswer) updateContinueButton();
+  }}
+
+  else if (q.type === 'multi-select') {{
+    const savedValues = savedAnswer || [];
+
+    const grid = document.createElement('div');
+    grid.className = 'choice-grid';
+
+    q.options.forEach(opt => {{
+      const card = document.createElement('button');
+      card.className = 'choice-card';
+      card.textContent = opt.label;
+      card.dataset.value = opt.value;
+
+      if (savedValues.includes(opt.value)) {{
+        card.classList.add('selected');
+      }}
+
+      card.addEventListener('click', () => {{
+        card.classList.toggle('selected');
+
+        // Get all selected values
+        const selected = Array.from(grid.querySelectorAll('.choice-card.selected'))
+          .map(c => c.dataset.value);
+
+        answers[q.id] = selected;
+        updateContinueButton();
+        saveToStorage();
+      }});
+
+      grid.appendChild(card);
+    }});
+
+    inputContainer.appendChild(grid);
+
+    // Enable continue if answer exists
+    if (savedValues.length > 0) updateContinueButton();
+  }}
+}}
+
+function updateContinueButton() {{
+  const btn = document.getElementById('continueBtn');
+  const q = questions[currentQuestionIndex];
+  const answer = answers[q.id];
+
+  if (q.type === 'dropdown') {{
+    btn.disabled = !answer;
+  }} else if (q.type === 'multi-select') {{
+    btn.disabled = !answer || answer.length === 0;
+  }}
+}}
+
+function handleContinue() {{
+  const btn = document.getElementById('continueBtn');
+  if (btn.disabled) return;
+
+  nextQuestion();
+}}
+
+function updateProgress() {{
+  const percentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const progressBar = document.getElementById('progressBar');
+  if (progressBar) {{
+    progressBar.style.width = percentage + '%';
+  }}
+}}
+
+// === INITIALIZATION ===
+function init() {{
+  // Load saved progress
+  const resumed = loadFromStorage();
+
+  // Render first/resumed question
+  renderQuestion();
+  updateProgress();
+
+  if (resumed) {{
+    console.log('Resumed Section 2 at Q' + (currentQuestionIndex + 1));
+  }}
+}}
+
+// Start wizard
+setTimeout(init, 300);
 """
+
 
 
 def generate_section3a_script():
