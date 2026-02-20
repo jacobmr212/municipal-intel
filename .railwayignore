@@ -1,0 +1,58 @@
+# Python virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Generated reports (will be regenerated)
+reports/
+
+# Data cache
+data/seen_hashes.json
+data/*.db
+*.sqlite3
+
+# Logs
+*.log
+
+# Test files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Deployment artifacts
+.vercel/
+.streamlit/
+
+# Git
+.git/
+
+# Documentation (not needed for runtime)
+*.md
+docs/
+
+# Scripts (if not needed for runtime)
+scripts/
+
+# Development dependencies
+node_modules/
