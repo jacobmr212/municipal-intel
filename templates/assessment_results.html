@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assessment Results - ERP Readiness Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy: #1B2A4A;
+      --blue: #2E5FA1;
+      --light-blue: #EBE9FE;
+      --warm-gray: #77716B;
+      --cream: #F5F3EF;
+      --border: #E5E2DC;
+      --green: #22C55E;
+      --yellow: #EAB308;
+      --purple: #667EEA;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--cream);
+      color: #1A1816;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--warm-gray);
+      font-size: 1.1rem;
+    }
+
+    .completion-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--green), #16A34A);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .results-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .results-section h2 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .answer-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .answer-label {
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+    }
+
+    .answer-value {
+      color: var(--warm-gray);
+      padding: 0.75rem;
+      background: var(--cream);
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .ai-upsell {
+      background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      margin: 3rem 0;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+
+    .ai-upsell h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .ai-upsell p {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+      line-height: 1.8;
+    }
+
+    .benefits-list {
+      text-align: left;
+      max-width: 500px;
+      margin: 0 auto 2rem;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .benefits-list li {
+      padding: 0.75rem 0;
+      padding-left: 2rem;
+      position: relative;
+      font-size: 1.05rem;
+    }
+
+    .benefits-list li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+      font-size: 1.3rem;
+    }
+
+    .email-form {
+      max-width: 500px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 2rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .email-form h3 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--navy);
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: white;
+      background: white;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: white;
+      color: var(--purple);
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .skip-link {
+      display: inline-block;
+      margin-top: 1rem;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .skip-link:hover {
+      color: white;
+    }
+
+    .success-message {
+      display: none;
+      background: var(--green);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+
+    .error-message {
+      display: none;
+      background: #EF4444;
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-btn:hover {
+      color: var(--navy);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--warm-gray);
+    }
+
+    @media (max-width: 768px) {
+      .ai-upsell {
+        padding: 2rem 1.5rem;
+      }
+
+      .ai-upsell h2 {
+        font-size: 1.5rem;
+      }
+
+      .email-form {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    {% if anonymous %}
+    <a href="/" class="back-btn">← Back to Home</a>
+    {% else %}
+    <a href="/app" class="back-btn">← Back to Dashboard</a>
+    {% endif %}
+
+    <div class="header">
+      <div class="completion-badge">✓ Assessment Complete!</div>
+      <h1>Your ERP Readiness Report</h1>
+      <p>Review your responses and next steps below</p>
+    </div>
+
+    <div id="loadingMessage" class="loading">
+      Loading your results...
+    </div>
+
+    <div id="resultsContent" style="display: none;">
+      <!-- Section summaries will be loaded here via JavaScript -->
+    </div>
+
+    {% if anonymous %}
+    <div class="ai-upsell">
+      <h2>🚀 Unlock AI-Powered Insights</h2>
+      <p>You've completed the assessment! Now discover what your responses really mean.</p>
+
+      <ul class="benefits-list">
+        <li>AI analysis of your ERP readiness</li>
+        <li>Personalized recommendations for improvement</li>
+        <li>Risk areas and compliance gaps identified</li>
+        <li>Save your results and track progress over time</li>
+        <li>Compare against similar municipalities</li>
+      </ul>
+
+      <div class="email-form">
+        <h3>Get Your Free AI Report</h3>
+        <form id="signupForm" onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="your@email.com"
+              required
+            />
+          </div>
+          <button type="submit" class="btn-submit" id="submitBtn">
+            Send Magic Link
+          </button>
+          <div class="success-message" id="successMessage">
+            ✓ Magic link sent! Check your email to create your account and access AI insights.
+          </div>
+          <div class="error-message" id="errorMessage"></div>
+        </form>
+        <a href="/" class="skip-link">No thanks, I'm done</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="results-section">
+      <h2>🤖 AI-Powered Insights</h2>
+      <p style="color: var(--warm-gray); font-style: italic;">
+        AI insights feature coming soon! Your detailed analysis will appear here.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    const ASSESSMENT_ID = "{{ assessment_id }}";
+    const ANONYMOUS = {% if anonymous %}true{% else %}false{% endif %};
+
+    // Load results from localStorage for anonymous users
+    function loadResults() {
+      if (!ANONYMOUS) {
+        // For authenticated users, we'd fetch from server
+        document.getElementById('loadingMessage').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'block';
+        return;
+      }
+
+      const sections = ['1', '2', '3a'];
+      const sectionTitles = {
+        '1': 'Organization Profile',
+        '2': 'General Ledger & Chart of Accounts',
+        '3a': 'Pay Code Inventory'
+      };
+
+      let resultsHTML = '';
+
+      sections.forEach(sectionNum => {
+        const storageKey = `assessment_${ASSESSMENT_ID}_section_${sectionNum}`;
+        const savedData = localStorage.getItem(storageKey);
+
+        if (savedData) {
+          try {
+            const data = JSON.parse(savedData);
+            const answers = data.answers || {};
+
+            if (Object.keys(answers).length > 0) {
+              resultsHTML += `
+                <div class="results-section">
+                  <h2>Section ${sectionNum}: ${sectionTitles[sectionNum]}</h2>
+              `;
+
+              Object.entries(answers).forEach(([key, value]) => {
+                const label = formatLabel(key);
+                const formattedValue = formatValue(value);
+
+                resultsHTML += `
+                  <div class="answer-group">
+                    <div class="answer-label">${label}</div>
+                    <div class="answer-value">${formattedValue}</div>
+                  </div>
+                `;
+              });
+
+              resultsHTML += `</div>`;
+            }
+          } catch (err) {
+            console.error(`Failed to load section ${sectionNum}:`, err);
+          }
+        }
+      });
+
+      if (resultsHTML) {
+        document.getElementById('resultsContent').innerHTML = resultsHTML;
+        document.getElementById('resultsContent').style.display = 'block';
+      } else {
+        document.getElementById('resultsContent').innerHTML = '<div class="results-section"><p>No assessment data found. Please complete the assessment first.</p></div>';
+        document.getElementById('resultsContent').style.display = 'block';
+      }
+
+      document.getElementById('loadingMessage').style.display = 'none';
+    }
+
+    function formatLabel(key) {
+      // Convert camelCase/snake_case to Title Case
+      return key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/_/g, ' ')
+        .replace(/^./, str => str.toUpperCase())
+        .trim();
+    }
+
+    function formatValue(value) {
+      if (Array.isArray(value)) {
+        return value.join(', ');
+      }
+      if (typeof value === 'object' && value !== null) {
+        return JSON.stringify(value, null, 2);
+      }
+      return String(value);
+    }
+
+    // Handle signup form submission
+    async function handleSignup(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const submitBtn = document.getElementById('submitBtn');
+      const successMsg = document.getElementById('successMessage');
+      const errorMsg = document.getElementById('errorMessage');
+
+      // Hide previous messages
+      successMsg.style.display = 'none';
+      errorMsg.style.display = 'none';
+
+      // Disable button
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+
+      try {
+        // Send magic link request
+        const response = await fetch('/auth/request-magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+
+        if (response.ok) {
+          successMsg.style.display = 'block';
+          document.getElementById('signupForm').reset();
+
+          // Store assessment ID in localStorage for data transfer
+          localStorage.setItem('pending_transfer_assessment', ASSESSMENT_ID);
+        } else {
+          const data = await response.json();
+          errorMsg.textContent = data.detail || 'Failed to send magic link. Please try again.';
+          errorMsg.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Magic Link';
+        }
+      } catch (err) {
+        console.error('Signup error:', err);
+        errorMsg.textContent = 'Network error. Please check your connection and try again.';
+        errorMsg.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Magic Link';
+      }
+    }
+
+    // Load results when page loads
+    document.addEventListener('DOMContentLoaded', loadResults);
+  </script>
+</body>
+</html>

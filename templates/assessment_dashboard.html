@@ -482,11 +482,10 @@
         `;
       }
 
-      // If all sections complete, show completion message or redirect to results
+      // If all sections complete, redirect to results
       if (completedCount === totalSections) {
-        console.log('All sections completed! Redirect to results page...');
-        // TODO: Redirect to results page when implemented
-        // window.location.href = `/assessment/${ASSESSMENT_ID}/results`;
+        console.log('All sections completed! Redirecting to results page...');
+        window.location.href = `/assessment/${ASSESSMENT_ID}/results`;
       }
     }
 

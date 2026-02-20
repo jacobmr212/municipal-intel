@@ -1910,6 +1910,31 @@ async def start_anonymous_assessment(
     })
 
 
+@app.get("/assessment/{assessment_id}/results", response_class=HTMLResponse)
+async def assessment_results(
+    assessment_id: str,
+    request: Request,
+    user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Assessment results page.
+    For anonymous users: Shows full report WITHOUT AI insights + upsell prompt.
+    For authenticated users: Shows full report WITH AI insights.
+    """
+    is_anonymous = assessment_id.startswith("anon-")
+
+    # For authenticated users, verify ownership
+    if not is_anonymous and not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    return templates.TemplateResponse("assessment_results.html", {
+        "request": request,
+        "user": user,
+        "assessment_id": assessment_id,
+        "anonymous": is_anonymous
+    })
+
+
 @app.get("/assessment/{assessment_id}/section/{section_number}", response_class=HTMLResponse)
 async def assessment_section(
     assessment_id: str,
