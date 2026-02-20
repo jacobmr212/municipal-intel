@@ -2481,7 +2481,7 @@ function loadAssessments() {
       const statusBadge = `<span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${a.status}</span>`;
 
       return `
-        <div style="padding: 0.75rem; background: #F5F3EF; border-radius: 6px; margin-bottom: 0.75rem;">
+        <div onclick="window.location.href='/assessment/${a.id}'" style="padding: 0.75rem; background: #F5F3EF; border-radius: 6px; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#E9E6E0'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#F5F3EF'; this.style.transform='translateY(0)'">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
             <strong style="font-size: 0.875rem;">Assessment</strong>
             ${statusBadge}
@@ -2489,6 +2489,9 @@ function loadAssessments() {
           <div style="color: #77716B; font-size: 0.75rem;">
             Created: ${formatDate(a.createdAt)}
             ${a.overallScore ? ` • Score: ${a.overallScore}/100` : ''}
+          </div>
+          <div style="color: #2E5FA1; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 500;">
+            Continue →
           </div>
         </div>
       `;
