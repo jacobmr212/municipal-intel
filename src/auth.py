@@ -192,13 +192,13 @@ def get_current_user(session_token: Optional[str] = Cookie(None)) -> dict:
     return payload
 
 
-def require_role(*roles: str):
+def require_role(roles: list[str]):
     """
     FastAPI dependency factory that enforces role-based access.
 
     Usage:
         @app.get("/municipal-intel")
-        async def page(user = Depends(require_role("consultant", "admin"))):
+        async def page(user = Depends(require_role(["consultant", "admin"]))):
             ...
     """
     def _check(user: dict = Depends(get_current_user)) -> dict:

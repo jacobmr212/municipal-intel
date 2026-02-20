@@ -707,6 +707,105 @@ async def get_covered_states(
     return {"states": [{"code": row.state, "source_count": row.source_count} for row in rows]}
 
 
+@app.get("/api/feed")
+async def get_feed(
+    limit: int = 50,
+    offset: int = 0,
+    state: Optional[str] = None,
+    lead_type: Optional[str] = None,
+    customer_status: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Feed API endpoint - returns recent leads from all scans.
+
+    Filters by user's territories if any exist.
+    Supports pagination and filtering.
+
+    Query parameters:
+    - limit: Number of results to return (default 50, max 200)
+    - offset: Pagination offset (default 0)
+    - state: Filter by state code (optional)
+    - lead_type: Filter by lead_type: hot | warm | cold (optional)
+    - customer_status: Filter by customer_status: existing_customer | new_opportunity (optional)
+
+    **Requires authentication.**
+    """
+    # Enforce max limit
+    limit = min(limit, 200)
+
+    # Start with base query joining leads with scans
+    query = (
+        db.query(Lead)
+        .join(Scan, Lead.scan_id == Scan.id)
+        .filter(Scan.status == "completed")
+    )
+
+    # Filter by user's territories if any exist
+    territories = db.query(Territory).filter(Territory.user_id == user["user_id"]).all()
+    if territories:
+        territory_states = [t.state for t in territories]
+        query = query.filter(Lead.state.in_(territory_states))
+
+    # Apply optional filters
+    if state:
+        query = query.filter(Lead.state == state.upper())
+    if lead_type:
+        query = query.filter(Lead.lead_type == lead_type.lower())
+    if customer_status:
+        query = query.filter(Lead.customer_status == customer_status.lower())
+
+    # Get total count for pagination metadata
+    total_count = query.count()
+
+    # Order by relevance score descending and apply pagination
+    leads = (
+        query
+        .order_by(Lead.relevance_score.desc())
+        .limit(limit)
+        .offset(offset)
+        .all()
+    )
+
+    # Format response
+    results = []
+    for lead in leads:
+        results.append({
+            "id": lead.id,
+            "municipality": lead.municipality,
+            "state": lead.state,
+            "population": lead.population,
+            "title": lead.title,
+            "url": lead.url,
+            "date": lead.date,
+            "source_type": lead.source_type,
+            "relevance_score": lead.relevance_score,
+            "lead_type": lead.lead_type,
+            "customer_status": lead.customer_status,
+            "recommended_action": lead.recommended_action,
+            "signal_matches": lead.signal_matches_json,
+            "notes": lead.notes,
+            "scan_id": lead.scan_id
+        })
+
+    return {
+        "leads": results,
+        "pagination": {
+            "total": total_count,
+            "limit": limit,
+            "offset": offset,
+            "has_more": (offset + limit) < total_count
+        },
+        "filters": {
+            "state": state,
+            "lead_type": lead_type,
+            "customer_status": customer_status,
+            "territories": [t.state for t in territories] if territories else None
+        }
+    }
+
+
 @app.post("/api/scans")
 async def create_scan(
     config: ScanConfig,
