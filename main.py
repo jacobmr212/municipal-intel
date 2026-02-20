@@ -2518,7 +2518,7 @@ window.handleUserInput = function(step, value) {{
         addMessage('assistant', '--- Group 2 complete: Operational Footprint ---');
 
         setTimeout(() => {{
-          addMessage('assistant', 'Groups 3-4 (Q13-Q22) will continue here. For now, returning to dashboard...');
+          addMessage('assistant', 'Great progress! Groups 3-4 (Q13-Q22) coming soon. Returning to assessment dashboard...');
 
           setTimeout(() => {{
             saveProgress('in-progress');
@@ -2527,7 +2527,8 @@ window.handleUserInput = function(step, value) {{
             setTimeout(() => {{
               addMessage('assistant', 'Progress saved.');
               setTimeout(() => {{
-                window.location.href = '/app';
+                const assessmentId = ASSESSMENT_ID || 'anonymous';
+                window.location.href = `/assessment/${{assessmentId}}`;
               }}, 2000);
             }}, 1000);
           }}, 1000);
