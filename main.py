@@ -2858,6 +2858,73 @@ async def create_assessment(
         raise HTTPException(status_code=500, detail=f"Failed to create assessment: {str(e)}")
 
 
+@app.post("/api/assessments/transfer")
+async def transfer_anonymous_assessment(
+    assessment_data: dict,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Transfer anonymous assessment data from localStorage to database.
+    Called when a user creates an account after completing anonymous assessment.
+    """
+    from datetime import datetime
+    import traceback
+
+    try:
+        # Generate new assessment ID (replace anon- ID with real UUID)
+        new_assessment_id = str(_uuid.uuid4())
+        user_id = user.get("user_id") or user.get("id")
+
+        if not user_id:
+            raise ValueError("No user ID found")
+
+        # Extract sections data from localStorage format
+        sections_data = assessment_data.get("sections", {})
+
+        # Create Assessment record
+        db.execute(text("""
+            INSERT INTO "Assessment" (id, "userId", status, "createdAt", "updatedAt")
+            VALUES (:id, :user_id, 'draft', :now, :now)
+        """), {
+            "id": new_assessment_id,
+            "user_id": user_id,
+            "now": datetime.utcnow()
+        })
+
+        # Create AssessmentSection records for each section
+        for section_num, section_data in sections_data.items():
+            answers = section_data.get("answers", {})
+            status = section_data.get("status", "draft")
+
+            if answers:  # Only save sections with answers
+                db.execute(text("""
+                    INSERT INTO "AssessmentSection"
+                    ("assessmentId", "sectionNumber", answers, status, "createdAt", "updatedAt")
+                    VALUES (:assessment_id, :section_number, :answers, :status, :now, :now)
+                """), {
+                    "assessment_id": new_assessment_id,
+                    "section_number": section_num,
+                    "answers": json.dumps(answers),
+                    "status": status,
+                    "now": datetime.utcnow()
+                })
+
+        db.commit()
+
+        return {
+            "success": True,
+            "assessment_id": new_assessment_id,
+            "message": "Assessment data transferred successfully"
+        }
+
+    except Exception as e:
+        db.rollback()
+        print(f"ERROR transferring assessment: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to transfer assessment: {str(e)}")
+
+
 @app.get("/api/assessments")
 async def list_assessments(
     user: dict = Depends(get_current_user),

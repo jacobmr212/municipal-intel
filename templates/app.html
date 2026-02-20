@@ -2509,9 +2509,79 @@ function formatDate(iso) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+// ── Anonymous Assessment Data Transfer ──
+async function transferAnonymousAssessment() {
+  const pendingAssessmentId = localStorage.getItem('pending_transfer_assessment');
+
+  if (!pendingAssessmentId) return; // No pending transfer
+
+  console.log('Detected pending assessment transfer:', pendingAssessmentId);
+
+  try {
+    // Collect all section data from localStorage
+    const sections = {};
+    const sectionNumbers = ['1', '2', '3a'];
+
+    sectionNumbers.forEach(sectionNum => {
+      const storageKey = `assessment_${pendingAssessmentId}_section_${sectionNum}`;
+      const savedData = localStorage.getItem(storageKey);
+
+      if (savedData) {
+        try {
+          const data = JSON.parse(savedData);
+          sections[sectionNum] = {
+            answers: data.answers || {},
+            status: data.status || 'draft'
+          };
+        } catch (err) {
+          console.error(`Failed to parse section ${sectionNum}:`, err);
+        }
+      }
+    });
+
+    if (Object.keys(sections).length === 0) {
+      console.log('No section data found, skipping transfer');
+      localStorage.removeItem('pending_transfer_assessment');
+      return;
+    }
+
+    // Transfer to server
+    const response = await fetch('/api/assessments/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sections: sections })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log('Assessment transferred successfully:', result.assessment_id);
+
+      // Clean up localStorage
+      localStorage.removeItem('pending_transfer_assessment');
+      sectionNumbers.forEach(sectionNum => {
+        const storageKey = `assessment_${pendingAssessmentId}_section_${sectionNum}`;
+        localStorage.removeItem(storageKey);
+      });
+
+      // Show success toast
+      showToast('Your assessment has been saved!', 'success');
+
+      // Reload assessments list to show the new one
+      loadAssessments();
+    } else {
+      console.error('Transfer failed:', await response.text());
+      showToast('Failed to save your assessment. Please try again.', 'error');
+    }
+  } catch (err) {
+    console.error('Error transferring assessment:', err);
+    showToast('Failed to save your assessment. Please try again.', 'error');
+  }
+}
+
 // ── Init ──
 buildStateGrid();
 loadAssessments();
+transferAnonymousAssessment(); // Check for pending transfers on page load
 
 // Wire up tier radios to trigger preview update
 document.querySelectorAll('input[name="tier"]').forEach(radio => {
