@@ -2088,6 +2088,44 @@ const GOVERNANCE_STRUCTURES = [
   {{ value: 'other', label: 'Other' }}
 ];
 
+const SERVICES = [
+  {{ value: 'water', label: 'Water' }},
+  {{ value: 'wastewater', label: 'Wastewater/Sewer' }},
+  {{ value: 'stormwater', label: 'Stormwater' }},
+  {{ value: 'electric', label: 'Electric Utility' }},
+  {{ value: 'gas', label: 'Gas Utility' }},
+  {{ value: 'solid_waste', label: 'Solid Waste/Recycling' }},
+  {{ value: 'building_permits', label: 'Building Permits & Inspections' }},
+  {{ value: 'planning_zoning', label: 'Planning & Zoning' }},
+  {{ value: 'code_enforcement', label: 'Code Enforcement' }},
+  {{ value: 'municipal_court', label: 'Municipal Court' }},
+  {{ value: 'police', label: 'Police Services' }},
+  {{ value: 'fire', label: 'Fire Services' }},
+  {{ value: 'ems', label: 'EMS/Ambulance' }},
+  {{ value: 'parks_rec', label: 'Parks & Recreation' }},
+  {{ value: 'library', label: 'Library' }},
+  {{ value: 'public_works', label: 'Public Works/Streets' }},
+  {{ value: 'transit', label: 'Public Transit' }},
+  {{ value: 'airport', label: 'Airport' }},
+  {{ value: 'cemetery', label: 'Cemetery' }},
+  {{ value: 'animal_control', label: 'Animal Control' }}
+];
+
+const MONTHS = [
+  {{ value: '01', label: 'January' }},
+  {{ value: '02', label: 'February' }},
+  {{ value: '03', label: 'March' }},
+  {{ value: '04', label: 'April' }},
+  {{ value: '05', label: 'May' }},
+  {{ value: '06', label: 'June' }},
+  {{ value: '07', label: 'July' }},
+  {{ value: '08', label: 'August' }},
+  {{ value: '09', label: 'September' }},
+  {{ value: '10', label: 'October' }},
+  {{ value: '11', label: 'November' }},
+  {{ value: '12', label: 'December' }}
+];
+
 // Track current question number
 let currentQuestionNumber = 1;
 const totalQuestions = 22; // Will be 22 when fully implemented
@@ -2101,6 +2139,16 @@ function getPopulationTier(pop) {{
   if (p < 50000) return 'Mid-size municipality';
   if (p < 100000) return 'Large municipality';
   return 'Major municipality';
+}}
+
+// Helper: Get employee tier
+function getEmployeeTier(count) {{
+  const c = parseInt(count);
+  if (c < 25) return 'Very small staff';
+  if (c < 100) return 'Small staff';
+  if (c < 250) return 'Medium staff';
+  if (c < 500) return 'Large staff';
+  return 'Very large staff';
 }}
 
 // Start the conversation - CONSOLIDATED MESSAGE (no more multiple bubbles!)
@@ -2229,23 +2277,16 @@ window.handleUserInput = function(step, value) {{
       addMessage('assistant', `${{govLabel}} — noted.`);
 
       setTimeout(() => {{
-        // GROUP 1 COMPLETE
+        // GROUP 1 COMPLETE - Transition to Group 2
         addMessage('assistant', '--- Group 1 complete: Identity & Scale ---');
 
         setTimeout(() => {{
-          addMessage('assistant', 'This is a proof of concept. Group 1 (Q1-Q5) complete. Groups 2-4 (Q6-Q22) will be implemented next.');
-
-          setTimeout(() => {{
-            saveProgress('in-progress');
-            updateProgress(23); // 5 of 22 questions = ~23%
-
-            setTimeout(() => {{
-              addMessage('assistant', 'Returning to dashboard...');
-              setTimeout(() => {{
-                window.location.href = '/app';
-              }}, 2000);
-            }}, 1000);
-          }}, 1000);
+          currentQuestionNumber = 6;
+          currentStep = 'q6_employee_count';
+          addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many employees does your organization have in total?\\n\\nInclude all full-time, part-time, and seasonal employees.`, 'text-input', {{
+            inputType: 'number',
+            placeholder: 'e.g., 150'
+          }});
         }}, 800);
       }}, 500);
     }}, 400);
@@ -2262,14 +2303,153 @@ window.handleUserInput = function(step, value) {{
         addMessage('assistant', '--- Group 1 complete: Identity & Scale ---');
 
         setTimeout(() => {{
-          addMessage('assistant', 'This is a proof of concept. Group 1 (Q1-Q5) complete. Groups 2-4 (Q6-Q22) will be implemented next.');
+          currentQuestionNumber = 6;
+          currentStep = 'q6_employee_count';
+          addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many employees does your organization have in total?\\n\\nInclude all full-time, part-time, and seasonal employees.`, 'text-input', {{
+            inputType: 'number',
+            placeholder: 'e.g., 150'
+          }});
+        }}, 800);
+      }}, 500);
+    }}, 400);
+  }}
+
+  // GROUP 2: OPERATIONAL FOOTPRINT (Q6-Q12)
+
+  // Q6: Employee Count
+  else if (step === 'q6_employee_count') {{
+    const count = parseInt(value);
+    const tier = getEmployeeTier(count);
+
+    setTimeout(() => {{
+      addMessage('assistant', `${{count.toLocaleString()}} employees — ${{tier}}.`);
+
+      setTimeout(() => {{
+        currentQuestionNumber = 7;
+        currentStep = 'q7_department_count';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many departments does your organization have?`, 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 12'
+        }});
+      }}, 600);
+    }}, 400);
+  }}
+
+  // Q7: Department Count
+  else if (step === 'q7_department_count') {{
+    const deptCount = parseInt(value);
+
+    setTimeout(() => {{
+      addMessage('assistant', `${{deptCount}} departments — noted.`);
+
+      setTimeout(() => {{
+        currentQuestionNumber = 8;
+        currentStep = 'q8_services';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Which services does your organization provide directly?\\n\\nSelect all that apply:`, 'multi-choice', {{
+          options: SERVICES
+        }});
+      }}, 600);
+    }}, 400);
+  }}
+
+  // Q8: Services Provided (multi-select)
+  else if (step === 'q8_services') {{
+    // value is an array of selected service codes
+    const selectedServices = value.map(v => SERVICES.find(s => s.value === v)?.label || v);
+
+    setTimeout(() => {{
+      addMessage('assistant', `Services: ${{selectedServices.join(', ')}}`);
+
+      setTimeout(() => {{
+        currentQuestionNumber = 9;
+        currentStep = 'q9_has_unions';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: Does your organization have unionized employees?`, 'choice-buttons', {{
+          options: [
+            {{ value: 'yes', label: 'Yes' }},
+            {{ value: 'no', label: 'No' }}
+          ]
+        }});
+      }}, 600);
+    }}, 400);
+  }}
+
+  // Q9: Union Presence
+  else if (step === 'q9_has_unions') {{
+    if (value === 'yes') {{
+      setTimeout(() => {{
+        currentQuestionNumber = 10;
+        currentStep = 'q10_bargaining_units';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: How many bargaining units or union groups do you have?`, 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 3'
+        }});
+      }}, 400);
+    }} else {{
+      // Skip Q10, go to Q11
+      answers['bargaining_units'] = 0;
+      setTimeout(() => {{
+        currentQuestionNumber = 11;
+        currentStep = 'q11_fiscal_year';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What month does your fiscal year start?`, 'select', {{
+          options: MONTHS
+        }});
+      }}, 400);
+    }}
+  }}
+
+  // Q10: Bargaining Units
+  else if (step === 'q10_bargaining_units') {{
+    setTimeout(() => {{
+      addMessage('assistant', `${{value}} bargaining units — noted.`);
+
+      setTimeout(() => {{
+        currentQuestionNumber = 11;
+        currentStep = 'q11_fiscal_year';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What month does your fiscal year start?`, 'select', {{
+          options: MONTHS
+        }});
+      }}, 600);
+    }}, 400);
+  }}
+
+  // Q11: Fiscal Year Start
+  else if (step === 'q11_fiscal_year') {{
+    const monthLabel = MONTHS.find(m => m.value === value)?.label || value;
+
+    setTimeout(() => {{
+      addMessage('assistant', `Fiscal year starts: ${{monthLabel}}`);
+
+      setTimeout(() => {{
+        currentQuestionNumber = 12;
+        currentStep = 'q12_annual_budget';
+        addMessage('assistant', `Question ${{currentQuestionNumber}} of ${{totalQuestions}}: What is your annual operating budget (approximate)?\\n\\nJust the number, e.g., 25000000 for $25M`, 'text-input', {{
+          inputType: 'number',
+          placeholder: 'e.g., 25000000'
+        }});
+      }}, 600);
+    }}, 400);
+  }}
+
+  // Q12: Annual Budget
+  else if (step === 'q12_annual_budget') {{
+    const budget = parseInt(value);
+
+    setTimeout(() => {{
+      addMessage('assistant', `Budget: $${{(budget / 1000000).toFixed(1)}}M — noted.`);
+
+      setTimeout(() => {{
+        // GROUP 2 COMPLETE
+        addMessage('assistant', '--- Group 2 complete: Operational Footprint ---');
+
+        setTimeout(() => {{
+          addMessage('assistant', 'Groups 3-4 (Q13-Q22) will continue here. For now, returning to dashboard...');
 
           setTimeout(() => {{
             saveProgress('in-progress');
-            updateProgress(23); // 5 of 22 questions = ~23%
+            updateProgress(55); // 12 of 22 questions = ~55%
 
             setTimeout(() => {{
-              addMessage('assistant', 'Returning to dashboard...');
+              addMessage('assistant', 'Progress saved.');
               setTimeout(() => {{
                 window.location.href = '/app';
               }}, 2000);
