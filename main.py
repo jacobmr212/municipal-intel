@@ -533,6 +533,15 @@ async def resources_page(request: Request):
     return templates.TemplateResponse("resources.html", {"request": request})
 
 
+@app.get("/playbook/thank-you", response_class=HTMLResponse)
+async def playbook_thank_you(request: Request, email: str = ""):
+    """Render the playbook download confirmation/thank-you page."""
+    return templates.TemplateResponse("playbook_thank_you.html", {
+        "request": request,
+        "email": email
+    })
+
+
 @app.post("/api/resources/download")
 async def download_resource(
     request: ResourceDownloadRequest,
@@ -610,41 +619,75 @@ async def download_resource(
             pdf_base64 = base64.b64encode(pdf_content).decode()
 
         # Compose email
-        recipient_name = request.name or "there"
+        first_name = request.name.split()[0] if request.name else "there"
         email_html = f"""
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #1A1816;">
             <div style="text-align: center; margin-bottom: 32px;">
-                <h1 style="color: #1A1816; font-size: 28px; margin: 0 0 8px 0;">Your ERP Playbook is Here</h1>
-                <p style="color: #7A756D; font-size: 16px; margin: 0;">Thanks for downloading from GovTech Diagnostic</p>
+                <img src="{app_url}/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" style="height: 48px; margin-bottom: 20px;">
+            </div>
+
+            <div style="border-bottom: 2px solid #EDE9E1; margin-bottom: 32px;"></div>
+
+            <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi {first_name},
+            </p>
+
+            <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Your copy of the <strong>Municipal ERP Replacement Playbook</strong> is attached to this email.
+            </p>
+
+            <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                This isn't a generic whitepaper. It's a practical, 32-page implementation guide built from patterns we've seen across hundreds of municipal ERP projects. Here's what's inside:
+            </p>
+
+            <ul style="color: #3D3A35; font-size: 16px; line-height: 1.8; margin: 0 0 28px 20px; padding: 0;">
+                <li style="margin-bottom: 8px;"><span style="color: #1B7A4E; font-weight: 600;">✓</span> 9 phases from "we have a problem" to post-go-live optimization</li>
+                <li style="margin-bottom: 8px;"><span style="color: #1B7A4E; font-weight: 600;">✓</span> 6 composite case studies showing what actually goes right and wrong</li>
+                <li style="margin-bottom: 8px;"><span style="color: #1B7A4E; font-weight: 600;">✓</span> Cost benchmarks by municipality size ($150K to $15M+)</li>
+                <li style="margin-bottom: 8px;"><span style="color: #1B7A4E; font-weight: 600;">✓</span> Ready-to-use templates: readiness assessment, vendor scorecard, TCO worksheet, evaluation criteria, data migration checklist</li>
+            </ul>
+
+            <div style="border-top: 2px solid #EDE9E1; border-bottom: 2px solid #EDE9E1; padding: 28px 0; margin: 32px 0;">
+                <h2 style="color: #1A1816; font-size: 20px; margin: 0 0 16px 0; font-weight: 600;">Where to Start</h2>
+
+                <p style="color: #3D3A35; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+                    If you're <strong>early in the process</strong> — wondering whether it's time to replace your system — start with Phase 1 (Recognize the Problem) and the self-assessment in Appendix A.
+                </p>
+
+                <p style="color: #3D3A35; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+                    If you're <strong>already building a case</strong> for leadership, jump to Phase 2 (Build the Internal Case) for the stakeholder mapping and business case framework.
+                </p>
+
+                <p style="color: #3D3A35; font-size: 15px; line-height: 1.6; margin: 0;">
+                    If you're <strong>in active procurement</strong>, Phases 4-6 cover requirements gathering, vendor evaluation, and contract negotiation — including the specific contract protections that save municipalities from the most common gotchas.
+                </p>
             </div>
 
             <div style="background: #F7F5F0; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
-                <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                    Hi {recipient_name},
-                </p>
-                <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                    Thanks for downloading the <strong>Municipal ERP Replacement Playbook</strong>! Your copy is attached to this email.
-                </p>
-                <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0;">
-                    This 32-page guide covers everything from recognizing pain points to successful go-live, including real cost benchmarks and 5 ready-to-use templates.
-                </p>
-            </div>
-
-            <div style="background: #FFFFFF; border: 1px solid #EDE9E1; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
-                <h2 style="color: #1A1816; font-size: 20px; margin: 0 0 16px 0;">Ready for a Deeper Dive?</h2>
+                <h2 style="color: #1A1816; font-size: 20px; margin: 0 0 16px 0; font-weight: 600;">Coming Soon: Free ERP Readiness Assessment</h2>
                 <p style="color: #3D3A35; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
-                    Take our <strong>free ERP Readiness Assessment</strong> to get a personalized report on your municipality's current state and improvement opportunities.
+                    We're building an AI-powered diagnostic that evaluates your municipality's ERP readiness across five dimensions — technology, process, data, organizational, and financial — and delivers a personalized findings report.
                 </p>
-                <a href="{app_url}/app" style="display: inline-block; background: #1E3BC0; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px;">
-                    Take Free Assessment →
+                <p style="color: #3D3A35; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+                    Vendor-neutral. No sales pitch. Free for municipalities.
+                </p>
+                <a href="{app_url}/#waitlist" style="display: inline-block; background: #1B7A4E; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px;">
+                    Join the Waitlist →
                 </a>
             </div>
 
-            <div style="border-top: 1px solid #EDE9E1; padding-top: 24px; text-align: center;">
-                <p style="color: #7A756D; font-size: 14px; margin: 0 0 8px 0;">
-                    Questions? Reply to this email or visit <a href="{app_url}" style="color: #1E3BC0; text-decoration: none;">govtechdiagnostic.com</a>
+            <div style="border-top: 2px solid #EDE9E1; padding-top: 28px; margin-top: 32px;">
+                <p style="color: #3D3A35; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+                    Questions? Reply to this email — it goes to a real person.
                 </p>
-                <p style="color: #7A756D; font-size: 13px; margin: 0;">
+                <p style="color: #7A756D; font-size: 14px; margin: 0 0 8px 0;">
+                    — The GovTech Diagnostic Team<br>
+                    <a href="{app_url}" style="color: #1E3BC0; text-decoration: none;">govtechdiagnostic.com</a>
+                </p>
+            </div>
+
+            <div style="text-align: center; padding-top: 24px; border-top: 1px solid #EDE9E1; margin-top: 24px;">
+                <p style="color: #9C9689; font-size: 12px; margin: 0;">
                     © 2026 GovTech Diagnostic. All rights reserved.
                 </p>
             </div>
@@ -656,7 +699,7 @@ async def download_resource(
         params = {
             "from": os.getenv("RESEND_FROM_EMAIL", "GovTech Diagnostic <noreply@govtechdiagnostic.com>"),
             "to": [request.email],
-            "subject": "Your Municipal ERP Replacement Playbook",
+            "subject": "Your Municipal ERP Replacement Playbook is ready",
             "html": email_html,
             "attachments": [
                 {

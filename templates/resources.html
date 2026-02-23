@@ -370,24 +370,8 @@ form.addEventListener('submit', async (e) => {
     const result = await response.json();
 
     if (response.ok) {
-      // Show success state
-      downloadCard.innerHTML = `
-        <div class="download-success">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="32" r="32" fill="#E6F5ED"/>
-            <path d="M20 32L28 40L44 24" stroke="#1B7A4E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <h3>Check Your Email!</h3>
-          <p>We've sent the ERP Replacement Playbook to <strong>${formData.email}</strong></p>
-          <p style="margin-top:16px; font-size:0.9rem;">Didn't receive it? Check your spam folder or <a href="mailto:support@govtechdiagnostic.com" style="color:var(--accent);">contact us</a>.</p>
-          <a href="/app" class="btn-secondary" style="margin-top:24px;">
-            <span>Take Free Assessment</span>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </a>
-        </div>
-      `;
+      // Redirect to thank-you page with email parameter
+      window.location.href = `/playbook/thank-you?email=${encodeURIComponent(formData.email)}`;
     } else {
       // Show error
       formMessage.innerHTML = `<div class="form-message error">${result.message || 'Failed to send playbook. Please try again.'}</div>`;

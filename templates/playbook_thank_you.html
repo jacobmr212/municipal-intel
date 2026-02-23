@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Playbook is On Its Way — GovTech Diagnostic</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/static/govtech-logo-dark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#1A1816;--ink-light:#3D3A35;--ink-muted:#7A756D;--sand:#F7F5F0;--sand-dark:#EDE9E1;--cream:#FDFCFA;--white:#FFFFFF;--accent:#1E3BC0;--success:#1B7A4E;--success-light:#E6F5ED;--green-tint:#f0f5f2;--serif:'DM Serif Display',Georgia,serif;--sans:'DM Sans',-apple-system,sans-serif}
+html{scroll-behavior:smooth;overflow-x:hidden;width:100%}
+body{font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.6;overflow-x:hidden;width:100%;-webkit-font-smoothing:antialiased}
+.container{max-width:1200px;margin:0 auto;padding:0 32px;width:100%;box-sizing:border-box}
+@media(max-width:768px){.container{padding:0 20px}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(253,252,250,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(26,24,22,0.06)}
+nav .container{display:flex;align-items:center;justify-content:space-between;height:72px}
+.nav-logo{display:flex;align-items:center;text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:0.85rem;font-weight:500;color:var(--ink-muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+footer{background:var(--sand);border-top:1px solid var(--sand-dark);padding:40px 0}
+footer .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+footer a{color:var(--ink-muted);text-decoration:none;font-size:0.9rem}
+footer a:hover{color:var(--ink)}
+.footer-links{display:flex;gap:32px}
+@media(max-width:640px){footer .container{flex-direction:column;align-items:flex-start}.footer-links{flex-direction:column;gap:12px}}
+.hero-section{padding:120px 0 80px;text-align:center}
+.checkmark{width:64px;height:64px;margin:0 auto 32px;animation:scaleIn .5s cubic-bezier(0.16,1,0.3,1)}
+.hero-title{font-family:var(--serif);font-size:3rem;color:var(--ink);margin-bottom:16px;line-height:1.2}
+.hero-sub{font-size:1.125rem;color:var(--ink-light);max-width:600px;margin:0 auto 12px;line-height:1.6}
+.hero-note{font-size:0.9375rem;color:var(--ink-muted)}
+.hero-note a{color:var(--accent);text-decoration:none}
+.hero-note a:hover{text-decoration:underline}
+@media(max-width:768px){.hero-title{font-size:2rem}.hero-sub{font-size:1rem}}
+.preview-section{padding:80px 0;background:var(--sand)}
+.section-title{font-family:var(--serif);font-size:2rem;text-align:center;margin-bottom:48px;color:var(--ink)}
+.playbook-cover{max-width:400px;margin:0 auto 48px;display:block}
+.playbook-cover img{width:100%;height:auto;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.12)}
+.phase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:48px}
+.phase-card{background:var(--white);border:1px solid var(--sand-dark);border-radius:12px;padding:28px;transition:all .2s}
+.phase-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);transform:translateY(-2px)}
+.phase-title{font-weight:600;color:var(--ink);font-size:1.125rem;margin-bottom:12px}
+.phase-desc{color:var(--ink-light);font-size:0.9375rem;line-height:1.6}
+.quote-section{padding:80px 0;background:var(--green-tint);border-top:1px solid rgba(27,122,78,0.1);border-bottom:1px solid rgba(27,122,78,0.1)}
+.quote-content{max-width:800px;margin:0 auto;text-align:center}
+.quote-text{font-family:var(--serif);font-size:1.75rem;color:var(--ink);margin-bottom:20px;line-height:1.4}
+.quote-author{color:var(--ink-muted);font-size:1rem}
+@media(max-width:768px){.quote-text{font-size:1.375rem}}
+.waitlist-section{padding:80px 0;text-align:center}
+.waitlist-title{font-family:var(--serif);font-size:2.25rem;margin-bottom:20px;color:var(--ink)}
+.waitlist-desc{font-size:1.0625rem;color:var(--ink-light);max-width:700px;margin:0 auto 32px;line-height:1.7}
+.btn-waitlist{display:inline-flex;align-items:center;gap:8px;padding:16px 32px;background:var(--success);color:var(--white);text-decoration:none;border-radius:8px;font-weight:600;font-size:1rem;transition:all .2s}
+.btn-waitlist:hover{background:#146839;transform:translateY(-2px);box-shadow:0 6px 20px rgba(27,122,78,0.25)}
+@media(max-width:768px){.waitlist-title{font-size:1.75rem}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" style="height:42px">
+    </a>
+    <div class="nav-links">
+      <a href="/#how-it-works">How it works</a>
+      <a href="/resources">Resources</a>
+      <a href="/">Home</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="container">
+    <div class="checkmark">
+      <svg viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="32" fill="#E6F5ED"/>
+        <path d="M20 32L28 40L44 24" stroke="#1B7A4E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 class="hero-title">Your Playbook is On Its Way</h1>
+    <p class="hero-sub">We've sent the Municipal ERP Replacement Playbook to <strong>{{ email }}</strong></p>
+    <p class="hero-note">Didn't receive it? Check your spam folder or <a href="mailto:hello@govtechdiagnostic.com">contact us</a>.</p>
+  </div>
+</section>
+
+<section class="preview-section">
+  <div class="container">
+    <h2 class="section-title">Here's a Preview of What You'll Find Inside</h2>
+    
+    <div class="playbook-cover">
+      <img src="/static/playbook-cover-flat.png" alt="Municipal ERP Replacement Playbook Cover">
+    </div>
+
+    <div class="phase-grid">
+      <div class="phase-card">
+        <div class="phase-title">Phase 1-3<br>Recognize → Assess</div>
+        <div class="phase-desc">Identify warning signs, build your case, assess readiness</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-title">Phase 4-6<br>Requirements → Contract</div>
+        <div class="phase-desc">Define specs, run demos, negotiate contracts that protect you</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-title">Phase 7-9<br>Implementation → Optimization</div>
+        <div class="phase-desc">Execute, go live, and stabilize for long-term success</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="quote-section">
+  <div class="container">
+    <div class="quote-content">
+      <p class="quote-text">"This is the best investment we've made in 20 years."</p>
+      <p class="quote-author">— Council Member, after a successful ERP go-live<br>(from the playbook case studies)</p>
+    </div>
+  </div>
+</section>
+
+<section class="waitlist-section">
+  <div class="container">
+    <h2 class="waitlist-title">Want a Personalized Readiness Assessment?</h2>
+    <p class="waitlist-desc">
+      We're building a free, AI-powered ERP diagnostic designed specifically for local government. 
+      It evaluates your payroll codes, GL structure, compliance posture, and modernization readiness — 
+      then delivers an actionable report.<br><br>
+      Vendor-neutral. No sales pitch. Launching soon.
+    </p>
+    <a href="/#waitlist" class="btn-waitlist">
+      <span>Join the Waitlist</span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-left">&copy; 2026 GovTech Diagnostic</div>
+    <div class="footer-links">
+      <a href="mailto:hello@govtechdiagnostic.com">hello@govtechdiagnostic.com</a>
+      <a href="/#consultants">For consultants</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
