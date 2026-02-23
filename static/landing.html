@@ -161,53 +161,30 @@ nav .container { display:flex; align-items:center; justify-content:space-between
 .trust-icon { width:20px; height:20px; color:var(--success); }
 .trust-divider { width:1px; height:24px; background:var(--sand-dark); }
 
-/* ===== PROBLEM ===== */
-.problem { padding:120px 0; }
+/* ===== COMING SOON ===== */
 .section-label { font-size:0.82rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:16px; }
-.problem h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; color:var(--ink); max-width:700px; margin-bottom:64px; }
-.problem-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; }
-.problem-card { padding:36px; background:var(--white); border:1px solid rgba(0,0,0,0.06); border-radius:14px; transition:all 0.35s cubic-bezier(0.16,1,0.3,1); }
-.problem-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(0,0,0,0.06); border-color:rgba(0,0,0,0.1); }
-.problem-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
-.problem-icon.red { background:#FEF2F2; color:#DC2626; }
-.problem-icon.amber { background:var(--warm-light); color:var(--warm); }
-.problem-icon.blue { background:var(--accent-light); color:var(--accent); }
-.problem-card h3 { font-size:1.1rem; font-weight:600; margin-bottom:10px; }
-.problem-card p { font-size:0.95rem; color:var(--ink-muted); line-height:1.65; }
-
-/* ===== HOW IT WORKS ===== */
-.how-it-works { padding:120px 0; background:var(--sand); }
-.how-it-works h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; text-align:center; margin-bottom:16px; }
-.how-subtitle { text-align:center; color:var(--ink-muted); font-size:1.1rem; max-width:600px; margin:0 auto 72px; }
-.steps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; position:relative; }
-.steps-grid::before { content:''; position:absolute; top:44px; left:12.5%; right:12.5%; height:2px; background:linear-gradient(90deg, var(--accent), var(--warm), var(--success), #8B5CF6); opacity:0.2; }
-.step { text-align:center; position:relative; }
-.step-number { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:1.3rem; margin:0 auto 20px; position:relative; z-index:1; transition:transform 0.3s cubic-bezier(0.16,1,0.3,1); }
-.step:hover .step-number { transform:scale(1.1); }
-.step-number.s1 { background:var(--accent-light); color:var(--accent); }
-.step-number.s2 { background:var(--warm-light); color:var(--warm); }
-.step-number.s3 { background:var(--success-light); color:var(--success); }
-.step-number.s4 { background:#F3EEFF; color:#8B5CF6; }
-.step h3 { font-size:1.05rem; font-weight:600; margin-bottom:8px; }
-.step p { font-size:0.9rem; color:var(--ink-muted); line-height:1.6; max-width:240px; margin:0 auto; }
-
-/* ===== NEXT STEPS ===== */
-.next-steps { padding:120px 0; }
-.next-steps h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; text-align:center; margin-bottom:16px; }
-.next-steps-sub { text-align:center; color:var(--ink-muted); font-size:1.05rem; max-width:680px; margin:0 auto 64px; line-height:1.7; }
-.paths-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
-.path-card { background:var(--white); border:1px solid rgba(0,0,0,0.06); border-radius:14px; padding:32px; transition:all 0.35s cubic-bezier(0.16,1,0.3,1); display:flex; flex-direction:column; }
-.path-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(0,0,0,0.06); border-color:rgba(0,0,0,0.1); }
-.path-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
-.path-icon.p1 { background:var(--accent-light); color:var(--accent); }
-.path-icon.p2 { background:var(--warm-light); color:var(--warm); }
-.path-icon.p3 { background:var(--success-light); color:var(--success); }
-.path-card h3 { font-size:1.15rem; font-weight:600; margin-bottom:8px; }
-.path-card .path-for { font-size:0.82rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-muted); margin-bottom:14px; }
-.path-card p { font-size:0.92rem; color:var(--ink-muted); line-height:1.7; margin-bottom:20px; }
-.path-benefits { list-style:none; display:flex; flex-direction:column; gap:10px; margin-top:auto; }
-.path-benefits li { display:flex; align-items:flex-start; gap:10px; font-size:0.88rem; color:var(--ink-light); line-height:1.5; }
-.path-benefits li svg { flex-shrink:0; margin-top:2px; color:var(--success); width:16px; height:16px; }
+.coming-soon { padding:120px 0; background:var(--sand); }
+.coming-soon h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; margin-bottom:16px; }
+.coming-soon-sub { text-align:center; color:var(--ink-muted); font-size:1.05rem; max-width:720px; margin:0 auto 64px; line-height:1.7; }
+.assessment-demo { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; max-width:1100px; margin:0 auto; }
+.demo-visual { position:relative; }
+.demo-screen { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,0.1); }
+.demo-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--sand); }
+.demo-title { font-weight:600; font-size:0.9rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-muted); }
+.demo-score { font-family:var(--serif); font-size:2.5rem; color:var(--accent); line-height:1; }
+.demo-score-label { font-size:1rem; color:var(--ink-muted); font-family:var(--sans); }
+.demo-categories { display:flex; flex-direction:column; gap:16px; }
+.demo-cat { display:flex; align-items:center; gap:12px; }
+.demo-cat-label { font-size:0.85rem; color:var(--ink-light); width:110px; flex-shrink:0; }
+.demo-bar { flex:1; height:10px; background:var(--sand); border-radius:10px; overflow:hidden; }
+.demo-fill { height:100%; border-radius:10px; }
+.demo-cat-score { font-size:0.85rem; font-weight:600; color:var(--ink); width:32px; text-align:right; }
+.demo-badge { position:absolute; top:20px; right:20px; background:var(--accent); color:var(--white); padding:6px 14px; border-radius:6px; font-size:0.75rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; }
+.demo-details h3 { font-size:1.35rem; font-weight:600; margin-bottom:20px; }
+.feature-list { list-style:none; display:flex; flex-direction:column; gap:16px; }
+.feature-list li { display:flex; align-items:flex-start; gap:12px; font-size:0.95rem; color:var(--ink-light); line-height:1.6; }
+.feature-list li svg { flex-shrink:0; margin-top:2px; color:var(--success); }
+.feature-list strong { color:var(--ink); font-weight:600; }
 
 /* ===== PLAYBOOK CTA ===== */
 .playbook-cta {
@@ -461,23 +438,13 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
   .playbook-preview { padding:24px; }
 
   /* Sections */
-  .problem { padding:80px 0; }
-  .problem h2 { font-size:clamp(1.6rem,7vw,2rem); margin-bottom:48px; max-width:100%; }
-  .problem-grid { grid-template-columns:1fr; gap:24px; }
-  .problem-card { padding:28px; box-sizing:border-box; }
-
-  .how-it-works { padding:80px 0; }
-  .how-it-works h2 { font-size:clamp(1.6rem,7vw,2rem); }
-  .how-subtitle { font-size:1rem; margin-bottom:56px; }
-  .steps-grid { grid-template-columns:1fr; gap:28px; }
-  .steps-grid::before { display:none; }
-  .step p { max-width:100%; }
-
-  .next-steps { padding:80px 0; }
-  .next-steps h2 { font-size:clamp(1.6rem,7vw,2rem); }
-  .next-steps-sub { font-size:1rem; margin-bottom:48px; }
-  .paths-grid { grid-template-columns:1fr; gap:24px; }
-  .path-card { padding:28px; }
+  .coming-soon { padding:80px 0; }
+  .coming-soon h2 { font-size:clamp(1.6rem,7vw,2rem); }
+  .coming-soon-sub { font-size:1rem; margin-bottom:48px; }
+  .assessment-demo { grid-template-columns:1fr; gap:48px; }
+  .demo-screen { padding:24px; }
+  .demo-header { flex-direction:column; align-items:flex-start; gap:12px; }
+  .demo-cat-label { width:90px; font-size:0.8rem; }
 
   .assessment-detail { padding:80px 0; }
   .playbook-cta { padding:80px 0; }
@@ -593,7 +560,7 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
     </div>
     <div class="hero-card">
       <div class="playbook-preview">
-        <img src="/static/playbook-cover-flat.png" alt="Municipal ERP Replacement Playbook" style="width: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); margin-bottom: 24px;">
+        <img src="/static/playbook-cover-flat.png" alt="Municipal ERP Replacement Playbook" style="width: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); margin-bottom: 12px;">
         <div class="playbook-stats">
           <div class="stat-item">
             <div class="stat-number">32</div>
@@ -631,85 +598,40 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
   </div>
 </section>
 
-<!-- PROBLEM -->
-<section class="problem" id="problem">
+<!-- COMING SOON: ASSESSMENT -->
+<section class="coming-soon" id="how-it-works">
   <div class="container">
-    <div class="section-label reveal">The challenge</div>
-    <h2 class="reveal stagger-1">Most municipalities don't know where their financial systems actually stand.</h2>
-    <div class="problem-grid">
-      <div class="problem-card reveal stagger-2">
-        <div class="problem-icon red"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-        <h3>Compliance blind spots</h3>
-        <p>State reporting requirements change annually. Without a systematic review, gaps accumulate silently until audit season arrives.</p>
-      </div>
-      <div class="problem-card reveal stagger-3">
-        <div class="problem-icon amber"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
-        <h3>Payroll complexity grows</h3>
-        <p>Special pay types, deferred comp, multi-jurisdiction taxes — legacy systems struggle as your payroll structure evolves beyond their design.</p>
-      </div>
-      <div class="problem-card reveal stagger-4">
-        <div class="problem-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-        <h3>No objective baseline</h3>
-        <p>When vendors pitch new systems, you have no independent assessment to compare against. Every proposal looks compelling without context.</p>
-      </div>
-    </div>
-  </div>
-</section>
+    <div class="section-label reveal" style="text-align:center;">Coming soon</div>
+    <h2 class="reveal stagger-1" style="text-align:center;">Free AI-Powered ERP Readiness Assessment</h2>
+    <p class="coming-soon-sub reveal stagger-2">We're building a free diagnostic tool that evaluates your municipality's ERP readiness across five dimensions and delivers a personalized findings report—no consultants, no sales calls, just honest analysis.</p>
 
-<!-- HOW IT WORKS -->
-<section class="how-it-works" id="how-it-works">
-  <div class="container">
-    <div class="section-label reveal" style="text-align:center;">Process</div>
-    <h2 class="reveal stagger-1">Four steps to clarity</h2>
-    <p class="how-subtitle reveal stagger-2">No consultants, no sales calls, no commitment. Just an honest look at where your financial systems stand.</p>
-    <div class="steps-grid">
-      <div class="step reveal stagger-2"><div class="step-number s1">1</div><h3>Answer questions</h3><p>A guided conversation about your payroll, GL, reporting, and compliance processes.</p></div>
-      <div class="step reveal stagger-3"><div class="step-number s2">2</div><h3>AI analyzes gaps</h3><p>Advanced AI evaluates your responses against 50-state compliance standards, GASB requirements, and industry benchmarks.</p></div>
-      <div class="step reveal stagger-4"><div class="step-number s3">3</div><h3>Get your report</h3><p>A professional diagnostic with AI-generated scores, findings, and specific recommendations you can act on.</p></div>
-      <div class="step reveal stagger-5"><div class="step-number s4">4</div><h3>Choose your path</h3><p>Three options tailored to your needs — from internal planning to expert guidance.</p></div>
-    </div>
-  </div>
-</section>
+    <div class="assessment-demo reveal stagger-3">
+      <div class="demo-visual">
+        <div class="demo-screen">
+          <div class="demo-header">
+            <span class="demo-title">Your ERP Readiness Report</span>
+            <span class="demo-score">72<span class="demo-score-label">/100</span></span>
+          </div>
+          <div class="demo-categories">
+            <div class="demo-cat"><span class="demo-cat-label">Payroll Codes</span><div class="demo-bar"><div class="demo-fill" style="width:68%;background:var(--accent);"></div></div><span class="demo-cat-score">68</span></div>
+            <div class="demo-cat"><span class="demo-cat-label">GL Structure</span><div class="demo-bar"><div class="demo-fill" style="width:52%;background:var(--warm);"></div></div><span class="demo-cat-score">52</span></div>
+            <div class="demo-cat"><span class="demo-cat-label">Compliance</span><div class="demo-bar"><div class="demo-fill" style="width:91%;background:var(--success);"></div></div><span class="demo-cat-score">91</span></div>
+            <div class="demo-cat"><span class="demo-cat-label">Data Quality</span><div class="demo-bar"><div class="demo-fill" style="width:74%;background:#8B5CF6;"></div></div><span class="demo-cat-score">74</span></div>
+            <div class="demo-cat"><span class="demo-cat-label">Integration</span><div class="demo-bar"><div class="demo-fill" style="width:41%;background:#F59E0B;"></div></div><span class="demo-cat-score">41</span></div>
+          </div>
+        </div>
+        <div class="demo-badge">Preview</div>
+      </div>
 
-<!-- NEXT STEPS -->
-<section class="next-steps" id="next-steps">
-  <div class="container">
-    <div class="section-label reveal" style="text-align:center;">After your assessment</div>
-    <h2 class="reveal stagger-1">What happens next is up to you</h2>
-    <p class="next-steps-sub reveal stagger-2">Your report is yours to use however you see fit. Here are three common paths municipalities take, each with clear benefits depending on where you are in your ERP journey.</p>
-    <div class="paths-grid">
-      <div class="path-card reveal stagger-2">
-        <div class="path-icon p1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-        <h3>Internal planning</h3>
-        <div class="path-for">Best for: Finance teams building a modernization roadmap</div>
-        <p>Use your diagnostic report to prioritize IT investments, plan process improvements, and build a business case before engaging vendors.</p>
-        <ul class="path-benefits">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Identify quick wins vs. long-term projects</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Budget estimates for remediation costs</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Staff training needs assessment</li>
+      <div class="demo-details">
+        <h3>What you'll get</h3>
+        <ul class="feature-list">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><strong>Comprehensive scoring</strong> across payroll codes, GL structure, compliance, data quality, and integrations</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><strong>AI-powered analysis</strong> against 50-state compliance standards and GASB requirements</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><strong>Actionable recommendations</strong> you can use for internal planning or council presentations</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><strong>Zero vendor bias</strong> — independent assessment with no sales pitch</li>
         </ul>
-      </div>
-      <div class="path-card reveal stagger-3">
-        <div class="path-icon p2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <h3>Council presentation</h3>
-        <div class="path-for">Best for: Municipalities needing decision-maker buy-in</div>
-        <p>Share the report with your city council or board to secure budget approval and support for financial system improvements.</p>
-        <ul class="path-benefits">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Third-party validation of concerns</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Clear risk communication for non-technical stakeholders</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Data-backed business case for funding</li>
-        </ul>
-      </div>
-      <div class="path-card reveal stagger-4">
-        <div class="path-icon p3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-        <h3>Expert connection</h3>
-        <div class="path-for">Best for: Municipalities ready to explore ERP solutions</div>
-        <p>Opt in to share your results with vetted ERP implementation specialists who can help you act on the findings.</p>
-        <ul class="path-benefits">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Skip cold vendor outreach — consultants contact you</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Specialists see your gaps before the first call</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Optional — you control who sees your report</li>
-        </ul>
+        <a href="#waitlist" class="btn-primary" style="margin-top:28px;">Join the Waitlist <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
       </div>
     </div>
   </div>
