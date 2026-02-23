@@ -185,7 +185,10 @@ nav .container { display:flex; align-items:center; justify-content:space-between
 .finding-card.warning { background:#DBEAFE; border-color:#3B82F6; }
 .finding-card.success { background:#D1FAE5; border-color:#10B981; }
 .finding-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.finding-icon { font-size:1.125rem; }
+.finding-icon { flex-shrink:0; }
+.finding-card.critical .finding-icon { color:#F59E0B; }
+.finding-card.warning .finding-icon { color:#3B82F6; }
+.finding-card.success .finding-icon { color:#10B981; }
 .finding-title { font-weight:600; font-size:0.9375rem; color:var(--ink); }
 .finding-body { font-size:0.875rem; color:var(--ink-light); line-height:1.6; }
 
@@ -636,7 +639,7 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
           <div class="preview-findings">
             <div class="finding-card critical">
               <div class="finding-header">
-                <span class="finding-icon">⚠️</span>
+                <svg class="finding-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 <span class="finding-title">3 Duplicate Payroll Codes Detected</span>
               </div>
               <div class="finding-body">AI identified "REG-1" and "REG-1A" performing identical functions—common migration blocker causing data reconciliation issues.</div>
@@ -644,7 +647,7 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
 
             <div class="finding-card warning">
               <div class="finding-header">
-                <span class="finding-icon">📊</span>
+                <svg class="finding-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span class="finding-title">GL Structure Misalignment</span>
               </div>
               <div class="finding-body">Fund 250 (Capital Projects) missing required GASB 54 sub-classifications—may require chart restructure before migration.</div>
@@ -652,7 +655,7 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
 
             <div class="finding-card success">
               <div class="finding-header">
-                <span class="finding-icon">✓</span>
+                <svg class="finding-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
                 <span class="finding-title">Compliance: Strong</span>
               </div>
               <div class="finding-body">State pension reporting (PERS/URS) correctly configured. W-2 box mappings validated against IRS Publication 15-A.</div>
