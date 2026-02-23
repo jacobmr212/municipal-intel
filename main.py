@@ -522,6 +522,7 @@ async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db))
 class ResourceDownloadRequest(BaseModel):
     email: str
     name: Optional[str] = None
+    title: Optional[str] = None
     municipality: Optional[str] = None
 
 
@@ -547,6 +548,7 @@ async def download_resource(
                 id TEXT PRIMARY KEY,
                 email TEXT NOT NULL,
                 name TEXT,
+                title TEXT,
                 municipality TEXT,
                 resource_name TEXT NOT NULL,
                 downloaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -576,12 +578,13 @@ async def download_resource(
         # Track download
         db.execute(text("""
             INSERT INTO resource_downloads
-            (id, email, name, municipality, resource_name, user_agent, ip_address)
-            VALUES (:id, :email, :name, :municipality, :resource_name, :user_agent, :ip_address)
+            (id, email, name, title, municipality, resource_name, user_agent, ip_address)
+            VALUES (:id, :email, :name, :title, :municipality, :resource_name, :user_agent, :ip_address)
         """), {
             "id": download_id,
             "email": request.email.lower().strip(),
             "name": request.name,
+            "title": request.title,
             "municipality": request.municipality,
             "resource_name": "ERP Replacement Playbook",
             "user_agent": user_agent,

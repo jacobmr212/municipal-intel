@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS resource_downloads (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL,
     name TEXT,
+    title TEXT,
     municipality TEXT,
     resource_name TEXT NOT NULL,
     downloaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
