@@ -20,6 +20,7 @@ from sqlalchemy import text
 import json
 import os
 import uuid as _uuid
+import base64
 
 from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User, Watchlist, Territory
 from src.discovery import SourceDiscovery
@@ -512,6 +513,165 @@ async def join_waitlist(request: WaitlistRequest, db: Session = Depends(get_db))
     except Exception:
         db.rollback()
     return {"status": "ok"}
+
+
+# ============================================================
+# RESOURCE DOWNLOAD ENDPOINT
+# ============================================================
+
+class ResourceDownloadRequest(BaseModel):
+    email: str
+    name: Optional[str] = None
+    municipality: Optional[str] = None
+
+
+@app.get("/resources", response_class=HTMLResponse)
+async def resources_page(request: Request):
+    """Render the ERP Playbook resource page."""
+    return templates.TemplateResponse("resources.html", {"request": request})
+
+
+@app.post("/api/resources/download")
+async def download_resource(
+    request: ResourceDownloadRequest,
+    fastapi_request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Handle resource download requests. Tracks download in database and sends PDF via email.
+    """
+    try:
+        # Ensure table exists
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS resource_downloads (
+                id TEXT PRIMARY KEY,
+                email TEXT NOT NULL,
+                name TEXT,
+                municipality TEXT,
+                resource_name TEXT NOT NULL,
+                downloaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                user_agent TEXT,
+                ip_address TEXT
+            )
+        """))
+        db.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_resource_downloads_email
+            ON resource_downloads(email)
+        """))
+        db.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_resource_downloads_resource_name
+            ON resource_downloads(resource_name)
+        """))
+
+        # Generate unique ID
+        download_id = str(_uuid.uuid4())
+
+        # Get user agent and IP
+        user_agent = fastapi_request.headers.get("user-agent", "")
+        # Get IP from X-Forwarded-For header (Railway uses this)
+        ip_address = fastapi_request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        if not ip_address:
+            ip_address = fastapi_request.client.host if fastapi_request.client else ""
+
+        # Track download
+        db.execute(text("""
+            INSERT INTO resource_downloads
+            (id, email, name, municipality, resource_name, user_agent, ip_address)
+            VALUES (:id, :email, :name, :municipality, :resource_name, :user_agent, :ip_address)
+        """), {
+            "id": download_id,
+            "email": request.email.lower().strip(),
+            "name": request.name,
+            "municipality": request.municipality,
+            "resource_name": "ERP Replacement Playbook",
+            "user_agent": user_agent,
+            "ip_address": ip_address
+        })
+        db.commit()
+
+        # Send email with PDF
+        resend_api_key = os.getenv("RESEND_API_KEY")
+        app_url = os.getenv("APP_URL", "https://govtechdiagnostic.com")
+
+        if not resend_api_key:
+            raise HTTPException(status_code=500, detail="Email service not configured")
+
+        # Read PDF file
+        pdf_path = "static/ERP-Replacement-Playbook-GovTech-Diagnostic.pdf"
+        if not os.path.exists(pdf_path):
+            raise HTTPException(status_code=500, detail="Resource file not found")
+
+        with open(pdf_path, "rb") as f:
+            pdf_content = f.read()
+            pdf_base64 = base64.b64encode(pdf_content).decode()
+
+        # Compose email
+        recipient_name = request.name or "there"
+        email_html = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="color: #1A1816; font-size: 28px; margin: 0 0 8px 0;">Your ERP Playbook is Here</h1>
+                <p style="color: #7A756D; font-size: 16px; margin: 0;">Thanks for downloading from GovTech Diagnostic</p>
+            </div>
+
+            <div style="background: #F7F5F0; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                    Hi {recipient_name},
+                </p>
+                <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
+                    Thanks for downloading the <strong>Municipal ERP Replacement Playbook</strong>! Your copy is attached to this email.
+                </p>
+                <p style="color: #3D3A35; font-size: 16px; line-height: 1.6; margin: 0;">
+                    This 32-page guide covers everything from recognizing pain points to successful go-live, including real cost benchmarks and 5 ready-to-use templates.
+                </p>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #EDE9E1; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                <h2 style="color: #1A1816; font-size: 20px; margin: 0 0 16px 0;">Ready for a Deeper Dive?</h2>
+                <p style="color: #3D3A35; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Take our <strong>free ERP Readiness Assessment</strong> to get a personalized report on your municipality's current state and improvement opportunities.
+                </p>
+                <a href="{app_url}/app" style="display: inline-block; background: #1E3BC0; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px;">
+                    Take Free Assessment →
+                </a>
+            </div>
+
+            <div style="border-top: 1px solid #EDE9E1; padding-top: 24px; text-align: center;">
+                <p style="color: #7A756D; font-size: 14px; margin: 0 0 8px 0;">
+                    Questions? Reply to this email or visit <a href="{app_url}" style="color: #1E3BC0; text-decoration: none;">govtechdiagnostic.com</a>
+                </p>
+                <p style="color: #7A756D; font-size: 13px; margin: 0;">
+                    © 2026 GovTech Diagnostic. All rights reserved.
+                </p>
+            </div>
+        </div>
+        """
+
+        # Send via Resend
+        resend.api_key = resend_api_key
+        params = {
+            "from": os.getenv("RESEND_FROM_EMAIL", "GovTech Diagnostic <noreply@govtechdiagnostic.com>"),
+            "to": [request.email],
+            "subject": "Your Municipal ERP Replacement Playbook",
+            "html": email_html,
+            "attachments": [
+                {
+                    "filename": "Municipal-ERP-Replacement-Playbook.pdf",
+                    "content": pdf_base64
+                }
+            ]
+        }
+
+        resend.Emails.send(params)
+
+        return {"success": True, "message": "Playbook sent successfully"}
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error processing resource download: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to process download request")
 
 
 # ============================================================
