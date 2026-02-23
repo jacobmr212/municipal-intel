@@ -21,6 +21,7 @@ import json
 import os
 import uuid as _uuid
 import base64
+import resend
 
 from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User, Watchlist, Territory
 from src.discovery import SourceDiscovery
@@ -2011,6 +2012,73 @@ async def assessment_dashboard(
         "total_sections": total_sections,
         "estimated_time": estimated_time
     })
+
+
+@app.get("/api/admin/downloads")
+async def get_admin_downloads(
+    user: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all playbook downloads for admin portal.
+
+    Returns list of downloads with email, name, title, municipality, and download timestamp.
+    """
+    try:
+        # Ensure table exists
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS resource_downloads (
+                id TEXT PRIMARY KEY,
+                email TEXT NOT NULL,
+                name TEXT,
+                title TEXT,
+                municipality TEXT,
+                resource_name TEXT NOT NULL,
+                downloaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                user_agent TEXT,
+                ip_address TEXT
+            )
+        """))
+        db.commit()
+
+        # Get all downloads, most recent first
+        result = db.execute(text("""
+            SELECT
+                id,
+                email,
+                name,
+                title,
+                municipality,
+                resource_name,
+                downloaded_at,
+                ip_address
+            FROM resource_downloads
+            ORDER BY downloaded_at DESC
+        """))
+
+        downloads = []
+        for row in result:
+            downloads.append({
+                "id": row[0],
+                "email": row[1],
+                "name": row[2],
+                "title": row[3],
+                "municipality": row[4],
+                "resource_name": row[5],
+                "downloaded_at": row[6].isoformat() if row[6] else None,
+                "ip_address": row[7]
+            })
+
+        return {
+            "downloads": downloads,
+            "total": len(downloads)
+        }
+    except Exception as e:
+        print(f"Error fetching downloads: {e}")
+        return {
+            "downloads": [],
+            "total": 0
+        }
 
 
 @app.get("/assessment/start", response_class=HTMLResponse)
