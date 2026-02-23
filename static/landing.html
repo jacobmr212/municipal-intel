@@ -619,7 +619,7 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
           <div class="report-dot r"></div>
           <div class="report-dot y"></div>
           <div class="report-dot g"></div>
-          <span class="report-topbar-title">Your ERP Readiness Report</span>
+          <span class="report-topbar-title">ERP Readiness Report</span>
         </div>
         <div class="preview-body">
           <div class="preview-header">
@@ -757,112 +757,40 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
   </div>
 </section>
 
-<!-- ASSESSMENT DETAIL -->
-<section class="assessment-detail" id="assessment">
+<!-- FINAL CTA -->
+<section class="final-cta" id="start">
   <div class="container">
-    <div class="detail-content reveal-left">
-      <div class="section-label">Your report</div>
-      <h2>A diagnostic built for government finance</h2>
-      <p class="section-sub">Not a generic IT survey. Every question, benchmark, and recommendation is designed for municipal financial operations — from fund accounting to state-specific compliance.</p>
-      <ul class="check-list">
-        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Payroll code analysis across all pay types, deductions, and benefits</li>
-        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> GL structure review — chart of accounts, fund hierarchy, department coding</li>
-        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> State-specific compliance validation against current requirements</li>
-        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Integration readiness — API capabilities, data export, third-party connections</li>
-        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Vendor-neutral modernization roadmap with prioritized recommendations</li>
-      </ul>
-      <a href="#start" class="btn-primary">Get notified when it launches <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-    </div>
-    <div class="detail-visual reveal-right">
-      <div class="report-mockup">
-        <div class="report-topbar"><div class="report-dot r"></div><div class="report-dot y"></div><div class="report-dot g"></div><span class="report-topbar-title">ERP Readiness Report</span></div>
-        <div class="report-body">
-          <div class="report-header-row">
-            <div><div class="report-title">Cedar Hills, UT</div><div class="report-meta">Population 10,272 &middot; Utah County &middot; Feb 2026</div></div>
-            <div class="report-overall">
-              <div class="report-overall-score">65</div>
-              <div class="report-overall-label">Readiness Score</div>
-            </div>
-          </div>
-
-          <div class="report-tabs">
-            <span class="report-tab active">Payroll Codes</span>
-            <span class="report-tab">GL Structure</span>
-            <span class="report-tab">Compliance</span>
-            <span class="report-tab">Migration</span>
-          </div>
-
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Description</th>
-                <th style="text-align:right">Amount</th>
-                <th>Type</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="code-col">REG-1</td>
-                <td>Regular Pay</td>
-                <td class="amt-col">Hourly</td>
-                <td class="type-col">Earnings</td>
-                <td><span class="tbl-flag dup">Duplicate</span></td>
-              </tr>
-              <tr>
-                <td class="code-col">REG-1A</td>
-                <td>Regular Pay — Alt</td>
-                <td class="amt-col">Hourly</td>
-                <td class="type-col">Earnings</td>
-                <td><span class="tbl-flag dup">Duplicate</span></td>
-              </tr>
-              <tr>
-                <td class="code-col">OT-COMP</td>
-                <td>Overtime Composite</td>
-                <td class="amt-col">1.5x</td>
-                <td class="type-col">Earnings</td>
-                <td><span class="tbl-flag miss">FICA error</span></td>
-              </tr>
-              <tr>
-                <td class="code-col">HLT-A</td>
-                <td>Health — Employee</td>
-                <td class="amt-col">$284.50</td>
-                <td class="type-col">Deduction</td>
-                <td><span class="tbl-flag review">4 tiers</span></td>
-              </tr>
-              <tr>
-                <td class="code-col">HLT-B</td>
-                <td>Health — Family</td>
-                <td class="amt-col">$612.00</td>
-                <td class="type-col">Deduction</td>
-                <td><span class="tbl-flag review">4 tiers</span></td>
-              </tr>
-              <tr>
-                <td class="code-col">401-DEF</td>
-                <td>Deferred Comp</td>
-                <td class="amt-col">% of Gross</td>
-                <td class="type-col">Deduction</td>
-                <td><span class="tbl-flag ok">Clean</span></td>
-              </tr>
-              <tr>
-                <td class="code-col">PERS-ER</td>
-                <td>URS Employer</td>
-                <td class="amt-col">18.47%</td>
-                <td class="type-col">Benefit</td>
-                <td><span class="tbl-flag ok">Clean</span></td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="report-summary">
-            <div class="summary-stat"><span class="s-val">14</span><span class="s-label">Pay Codes</span></div>
-            <div class="summary-stat"><span class="s-val" style="color:#856404">3</span><span class="s-label">Duplicates</span></div>
-            <div class="summary-stat"><span class="s-val" style="color:#842029">1</span><span class="s-label">Tax Error</span></div>
-            <div class="summary-stat"><span class="s-val" style="color:var(--accent)">2</span><span class="s-label">Table-Level</span></div>
-            <div class="summary-stat"><span class="s-val" style="color:#0F5132">8</span><span class="s-label">Clean</span></div>
-          </div>
+    <div class="cta-layout">
+      <div class="cta-text reveal-left">
+        <div class="section-label">Early access</div>
+        <h2>Be the first to know where your city stands</h2>
+        <p class="cta-sub">We're launching the free ERP readiness assessment soon. Join the waitlist and we'll notify you the moment it's live.</p>
+        <div class="cta-perks">
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Free for all municipalities — always</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Complete at your own pace</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Vendor-neutral — no sales pressure</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Your data stays private unless you choose to share</div>
         </div>
+      </div>
+      <div class="municipality-card reveal-right">
+        <h3>Join the waitlist</h3>
+        <p class="card-sub">Get notified when the assessment launches. Optional details help us tailor your experience.</p>
+        <form id="waitlistForm" onsubmit="return handleWaitlistSubmit(event)">
+          <div class="form-group"><label for="munEmail">Work email <span class="required">*</span></label><input type="email" id="munEmail" placeholder="you@cityof.gov" required></div>
+          <div class="form-row">
+            <div class="form-group"><label for="munName">Your name</label><input type="text" id="munName" placeholder="Jane Smith"></div>
+            <div class="form-group"><label for="munTitle">Title</label><input type="text" id="munTitle" placeholder="Finance Director"></div>
+          </div>
+          <div class="form-group"><label for="munCity">Municipality</label><input type="text" id="munCity" placeholder="City of Cedar Hills"></div>
+          <div class="form-group"><label for="munState">State</label><select id="munState"><option value="">Select state</option><option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option></select></div>
+          <div class="form-group"><label for="munERP">Current ERP system</label><input type="text" id="munERP" placeholder="e.g. Caselle, Tyler, SAP, Excel"></div>
+          <div class="form-check">
+            <input type="checkbox" id="munContact">
+            <label for="munContact">I'm open to hearing from ERP implementation specialists about my results</label>
+          </div>
+          <button type="submit" class="btn-primary">Join the waitlist</button>
+          <p class="form-note">No commitment. No spam. Just a heads-up when we launch.</p>
+        </form>
       </div>
     </div>
   </div>
@@ -900,45 +828,6 @@ footer .container { display:flex; justify-content:space-between; align-items:cen
         <div class="form-group"><label for="conRole">I'm interested in</label><select id="conRole"><option value="leads">Warm leads from assessments</option><option value="scanner">Municipal Intel Scanner</option><option value="both">Both</option></select></div>
         <button type="submit" class="btn-primary">Request access</button>
       </form>
-    </div>
-  </div>
-</section>
-
-<!-- FINAL CTA -->
-<section class="final-cta" id="start">
-  <div class="container">
-    <div class="cta-layout">
-      <div class="cta-text reveal-left">
-        <div class="section-label">Early access</div>
-        <h2>Be the first to know where your city stands</h2>
-        <p class="cta-sub">We're launching the free ERP readiness assessment soon. Join the waitlist and we'll notify you the moment it's live.</p>
-        <div class="cta-perks">
-          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Free for all municipalities — always</div>
-          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Complete at your own pace</div>
-          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Vendor-neutral — no sales pressure</div>
-          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Your data stays private unless you choose to share</div>
-        </div>
-      </div>
-      <div class="municipality-card reveal-right">
-        <h3>Join the waitlist</h3>
-        <p class="card-sub">Get notified when the assessment launches. Optional details help us tailor your experience.</p>
-        <form id="waitlistForm" onsubmit="return handleWaitlistSubmit(event)">
-          <div class="form-group"><label for="munEmail">Work email <span class="required">*</span></label><input type="email" id="munEmail" placeholder="you@cityof.gov" required></div>
-          <div class="form-row">
-            <div class="form-group"><label for="munName">Your name</label><input type="text" id="munName" placeholder="Jane Smith"></div>
-            <div class="form-group"><label for="munTitle">Title</label><input type="text" id="munTitle" placeholder="Finance Director"></div>
-          </div>
-          <div class="form-group"><label for="munCity">Municipality</label><input type="text" id="munCity" placeholder="City of Cedar Hills"></div>
-          <div class="form-group"><label for="munState">State</label><select id="munState"><option value="">Select state</option><option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option></select></div>
-          <div class="form-group"><label for="munERP">Current ERP system</label><input type="text" id="munERP" placeholder="e.g. Caselle, Tyler, SAP, Excel"></div>
-          <div class="form-check">
-            <input type="checkbox" id="munContact">
-            <label for="munContact">I'm open to hearing from ERP implementation specialists about my results</label>
-          </div>
-          <button type="submit" class="btn-primary">Join the waitlist</button>
-          <p class="form-note">No commitment. No spam. Just a heads-up when we launch.</p>
-        </form>
-      </div>
     </div>
   </div>
 </section>
