@@ -97,9 +97,21 @@
 
     .sections-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
       margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .sections-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .sections-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .section-card {
@@ -112,21 +124,49 @@
       position: relative;
     }
 
-    .section-card:hover {
+    .section-card:not(.locked):hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       border-color: var(--blue);
     }
 
     .section-card.locked {
-      opacity: 0.6;
+      opacity: 0.5;
       cursor: not-allowed;
+      background: linear-gradient(135deg, white 0%, #F9FAFB 100%);
+      position: relative;
     }
 
-    .section-card.locked:hover {
-      transform: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      border-color: var(--border);
+    .section-card.locked::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0,0,0,0.02) 10px,
+        rgba(0,0,0,0.02) 20px
+      );
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .section-card.locked .section-title,
+    .section-card.locked .section-description {
+      color: var(--warm-gray);
+    }
+
+    .section-card.locked .lock-icon {
+      font-size: 2rem;
+      position: absolute;
+      top: 50%;
+      right: 1.5rem;
+      transform: translateY(-50%);
+      opacity: 0.3;
     }
 
     .section-header {
@@ -379,6 +419,8 @@
               Complete Section {{ section.requires }} first
             {% elif section.status == 'completed' %}
               Completed
+            {% elif section.progress_text %}
+              {{ section.progress_text }} answered
             {% else %}
               ~{{ section.estimated_minutes }} min
             {% endif %}

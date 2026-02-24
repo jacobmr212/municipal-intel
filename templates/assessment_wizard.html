@@ -96,10 +96,18 @@
     .wizard-main {
       padding-top: 100px; /* Header height */
       padding-bottom: 100px; /* Footer height */
-      min-height: 100vh;
+      min-height: calc(100vh - 200px);
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      padding-top: 120px;
+    }
+
+    @media (min-height: 800px) {
+      .wizard-main {
+        align-items: center;
+        padding-top: 100px;
+      }
     }
 
     .question-container {
@@ -209,19 +217,37 @@
     .select-input {
       width: 100%;
       padding: 0.875rem 1rem;
+      padding-right: 2.5rem;
       border: 2px solid var(--border);
       border-radius: 8px;
       font-size: 1rem;
       font-family: inherit;
       color: var(--navy);
-      background: white;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232E5FA1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 1.25rem;
       cursor: pointer;
-      transition: border-color 0.15s ease;
+      transition: all 0.15s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+
+    .select-input:hover {
+      border-color: var(--blue);
+      background-color: var(--light-blue);
     }
 
     .select-input:focus {
       outline: none;
       border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(46, 95, 161, 0.1);
+    }
+
+    .select-input option {
+      padding: 0.5rem;
+      background: white;
+      color: var(--navy);
     }
 
     /* Multi-select */
@@ -394,16 +420,21 @@
     .btn-continue {
       background: var(--blue);
       color: white;
+      box-shadow: 0 1px 3px rgba(46, 95, 161, 0.3);
     }
 
     .btn-continue:hover:not(:disabled) {
       background: var(--navy);
       transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(27, 42, 74, 0.3);
     }
 
     .btn-continue:disabled {
-      opacity: 0.5;
+      background: var(--border);
+      color: var(--warm-gray);
       cursor: not-allowed;
+      box-shadow: none;
+      opacity: 1;
     }
 
     /* Save indicator */
@@ -803,7 +834,11 @@
       continueBtn.disabled = !hasAnswer && currentQuestion.required !== false;
     }
 
-    // Save progress
+    // Save progress with proper error handling and request deduplication
+    let saveInProgress = false;
+    let lastSaveAttempt = 0;
+    const SAVE_DEBOUNCE_MS = 500; // Don't save more than once per 500ms
+
     async function saveProgress() {
       if (ANONYMOUS) {
         // Save to localStorage
@@ -815,27 +850,89 @@
             lastSaved: new Date().toISOString()
           };
           localStorage.setItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`, JSON.stringify(data));
-          showSaveIndicator();
+          showSaveIndicator('saved');
         } catch (err) {
           console.error('Failed to save to localStorage:', err);
+          showSaveIndicator('error');
         }
       } else {
-        // Save to server
-        try {
-          await fetch(`/api/assessments/${ASSESSMENT_ID}/section`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              section_number: SECTION_NUMBER,
+        // Deduplicate rapid-fire saves
+        const now = Date.now();
+        if (saveInProgress || (now - lastSaveAttempt) < SAVE_DEBOUNCE_MS) {
+          return; // Skip this save, one is already in progress or too soon
+        }
+
+        saveInProgress = true;
+        lastSaveAttempt = now;
+
+        // Save to server with retry logic
+        const success = await fetchWithRetry(`/api/assessments/${ASSESSMENT_ID}/section`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section_number: SECTION_NUMBER,
+            answers,
+            status: 'in-progress'
+          })
+        });
+
+        saveInProgress = false;
+
+        if (success) {
+          showSaveIndicator('saved');
+        } else {
+          showSaveIndicator('error');
+          // Fallback to localStorage if server save fails
+          try {
+            const data = {
               answers,
+              currentQuestionIndex,
+              questionHistory,
+              lastSaved: new Date().toISOString(),
               status: 'in-progress'
-            })
-          });
-          showSaveIndicator();
-        } catch (err) {
-          console.error('Failed to save to server:', err);
+            };
+            localStorage.setItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`, JSON.stringify(data));
+            console.log('Saved to localStorage as fallback');
+          } catch (err) {
+            console.error('Fallback localStorage save failed:', err);
+          }
         }
       }
+    }
+
+    // Fetch with exponential backoff (max 3 retries)
+    async function fetchWithRetry(url, options, maxRetries = 3) {
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, options);
+
+          if (response.ok) {
+            return true;
+          }
+
+          // If server error (5xx), retry with backoff
+          if (response.status >= 500) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 4000); // 1s, 2s, 4s max
+            console.warn(`Server error (${response.status}), retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+
+          // If client error (4xx), don't retry
+          console.error(`Client error (${response.status}):`, await response.text());
+          return false;
+
+        } catch (err) {
+          // Network error - retry with backoff
+          const delay = Math.min(1000 * Math.pow(2, attempt), 4000);
+          console.warn(`Network error, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`, err);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+
+      // All retries failed
+      console.error(`Failed to save after ${maxRetries} attempts`);
+      return false;
     }
 
     // Load progress
@@ -855,13 +952,22 @@
       }
     }
 
-    // Show save indicator
-    function showSaveIndicator() {
+    // Show save indicator with different states
+    function showSaveIndicator(state = 'saved') {
       const indicator = document.getElementById('saveIndicator');
+
+      if (state === 'saved') {
+        indicator.textContent = '✓ Progress saved';
+        indicator.style.background = 'var(--green)';
+      } else if (state === 'error') {
+        indicator.textContent = '⚠ Save failed (saved locally)';
+        indicator.style.background = 'var(--amber)';
+      }
+
       indicator.classList.add('show');
       setTimeout(() => {
         indicator.classList.remove('show');
-      }, 1500);
+      }, state === 'error' ? 3000 : 1500);
     }
 
     // Complete section
@@ -874,24 +980,37 @@
           completedAt: new Date().toISOString()
         };
         localStorage.setItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`, JSON.stringify(data));
+        window.location.href = `/assessment/${ASSESSMENT_ID}`;
       } else {
-        // Save to server
-        try {
-          await fetch(`/api/assessments/${ASSESSMENT_ID}/section`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              section_number: SECTION_NUMBER,
+        // Save to server with retry
+        const success = await fetchWithRetry(`/api/assessments/${ASSESSMENT_ID}/section`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section_number: SECTION_NUMBER,
+            answers,
+            status: 'completed'
+          })
+        });
+
+        if (success) {
+          window.location.href = `/assessment/${ASSESSMENT_ID}`;
+        } else {
+          // Show error message to user
+          if (confirm('Failed to save your completion status. Would you like to retry?')) {
+            await completeSection(); // Retry
+          } else {
+            // Save locally as fallback
+            const data = {
               answers,
-              status: 'completed'
-            })
-          });
-        } catch (err) {
-          console.error('Failed to save section completion:', err);
+              status: 'completed',
+              completedAt: new Date().toISOString()
+            };
+            localStorage.setItem(`assessment_${ASSESSMENT_ID}_section_${SECTION_NUMBER}`, JSON.stringify(data));
+            window.location.href = `/assessment/${ASSESSMENT_ID}`;
+          }
         }
       }
-
-      window.location.href = `/assessment/${ASSESSMENT_ID}`;
     }
 
     // Section-specific question definitions will be injected here

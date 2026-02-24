@@ -1993,45 +1993,74 @@ async def assessment_dashboard(
     if not assessment_row:
         raise HTTPException(status_code=404, detail="Assessment not found")
 
-    # Query section statuses
+    # Query section statuses and answers
     sections_result = db.execute(text("""
-        SELECT "sectionNumber", status
+        SELECT "sectionNumber", status, answers
         FROM "AssessmentSection"
         WHERE "assessmentId" = :assessment_id
         ORDER BY "sectionNumber"
     """), {"assessment_id": assessment_id})
 
-    section_statuses = {row[0]: row[1] for row in sections_result.fetchall()}
+    section_data = {row[0]: {"status": row[1], "answers": json.loads(row[2]) if row[2] else {}} for row in sections_result.fetchall()}
 
-    # Build sections list with metadata
-    sections = [
-        {
-            "number": "1",
-            "title": "Organization Profile",
-            "description": "Tell us about your municipality and current systems",
-            "status": section_statuses.get("1", "not-started"),
-            "locked": False,
-            "estimated_minutes": 10
-        },
-        {
-            "number": "2",
-            "title": "General Ledger & Chart of Accounts",
-            "description": "Assess your GL structure and identify optimization opportunities",
-            "status": section_statuses.get("2", "not-started"),
-            "locked": section_statuses.get("1") != "completed",
-            "requires": "1",
-            "estimated_minutes": 7
-        },
-        {
-            "number": "3a",
-            "title": "Pay Code Inventory",
-            "description": "Document your current pay codes and structure",
-            "status": section_statuses.get("3a", "not-started"),
-            "locked": section_statuses.get("1") != "completed",
-            "requires": "1",
-            "estimated_minutes": 15
+    # Define total questions per section
+    section_question_counts = {
+        "1": 20,
+        "2": 10,
+        "3a": 10
+    }
+
+    # Build sections list with metadata and progress tracking
+    sections = []
+    for section_num in ["1", "2", "3a"]:
+        data = section_data.get(section_num, {"status": "not-started", "answers": {}})
+        status = data["status"]
+        answers = data["answers"]
+
+        # Calculate question-level progress
+        total_questions = section_question_counts.get(section_num, 0)
+        answered_questions = len([v for v in answers.values() if v not in [None, "", []]])
+
+        # Determine effective status (upgrade "not-started" to "in-progress" if answers exist)
+        if status == "not-started" and answered_questions > 0:
+            status = "in-progress"
+
+        section_config = {
+            "1": {
+                "title": "Organization Profile",
+                "description": "Tell us about your municipality and current systems",
+                "estimated_minutes": 10,
+                "locked": False
+            },
+            "2": {
+                "title": "General Ledger & Chart of Accounts",
+                "description": "Assess your GL structure and identify optimization opportunities",
+                "estimated_minutes": 7,
+                "locked": section_data.get("1", {}).get("status") != "completed",
+                "requires": "1"
+            },
+            "3a": {
+                "title": "Payroll & Pay Codes",
+                "description": "Document your current pay codes and structure",
+                "estimated_minutes": 15,
+                "locked": section_data.get("1", {}).get("status") != "completed",
+                "requires": "1"
+            }
         }
-    ]
+
+        config = section_config.get(section_num, {})
+        sections.append({
+            "number": section_num,
+            "title": config.get("title", f"Section {section_num}"),
+            "description": config.get("description", ""),
+            "status": status,
+            "locked": config.get("locked", False),
+            "requires": config.get("requires"),
+            "estimated_minutes": config.get("estimated_minutes", 10),
+            "questions_answered": answered_questions,
+            "questions_total": total_questions,
+            "progress_text": f"{answered_questions} of {total_questions} questions" if answered_questions > 0 and status != "completed" else None
+        })
 
     # Calculate progress
     completed_count = sum(1 for s in sections if s["status"] == "completed")
@@ -2425,12 +2454,19 @@ questions = [
   }},
   {{
     id: 'q3_population',
-    type: 'number',
+    type: 'single-select',
     text: 'What is the approximate population you serve?',
     aiContext: 'Population size is a key driver of system complexity.',
-    placeholder: 'e.g., 15000',
-    help: 'Enter the total population within your jurisdiction. This helps us understand your operational scale and compare you to similar municipalities.',
-    required: false
+    help: 'Select the range that best matches your jurisdiction. This helps us understand your operational scale and compare you to similar municipalities.',
+    options: [
+      {{ value: 'under-5000', label: 'Under 5,000' }},
+      {{ value: '5000-25000', label: '5,000 – 25,000' }},
+      {{ value: '25000-100000', label: '25,000 – 100,000' }},
+      {{ value: '100000-500000', label: '100,000 – 500,000' }},
+      {{ value: 'over-500000', label: 'Over 500,000' }}
+    ],
+    required: false,
+    autoAdvance: true
   }},
   {{
     id: 'q4_governance',
@@ -3762,47 +3798,60 @@ async def save_assessment_section(
 ):
     """Save answers for a specific section."""
     import uuid as _uuid
+    from datetime import datetime
 
-    # Verify assessment belongs to user
-    result = db.execute(text("""
-        SELECT id FROM "Assessment"
-        WHERE id = :id AND "userId" = :user_id
-    """), {"id": assessment_id, "user_id": user["user_id"]})
+    try:
+        # Verify assessment belongs to user
+        result = db.execute(text("""
+            SELECT id FROM "Assessment"
+            WHERE id = :id AND "userId" = :user_id
+        """), {"id": assessment_id, "user_id": user["user_id"]})
 
-    if not result.fetchone():
-        raise HTTPException(status_code=404, detail="Assessment not found")
+        if not result.fetchone():
+            raise HTTPException(status_code=404, detail="Assessment not found")
 
-    # Upsert section
-    section_id = str(_uuid.uuid4())
-    db.execute(text("""
-        INSERT INTO "AssessmentSection" (id, "assessmentId", "sectionNumber", status, answers)
-        VALUES (:id, :assessment_id, :section_number, :status, :answers)
-        ON CONFLICT ("assessmentId", "sectionNumber")
-        DO UPDATE SET
-            status = EXCLUDED.status,
-            answers = EXCLUDED.answers
-    """), {
-        "id": section_id,
-        "assessment_id": assessment_id,
-        "section_number": request.section_number,
-        "status": request.status,
-        "answers": json.dumps(request.answers)
-    })
+        # Upsert section with proper timestamp handling
+        section_id = str(_uuid.uuid4())
+        now = datetime.utcnow()
 
-    # If section 1, also update organizationProfile
-    if request.section_number == "1":
         db.execute(text("""
-            UPDATE "Assessment"
-            SET "organizationProfile" = :profile
-            WHERE id = :assessment_id
+            INSERT INTO "AssessmentSection" (id, "assessmentId", "sectionNumber", status, answers, "createdAt", "updatedAt")
+            VALUES (:id, :assessment_id, :section_number, :status, :answers, :created_at, :updated_at)
+            ON CONFLICT ("assessmentId", "sectionNumber")
+            DO UPDATE SET
+                status = EXCLUDED.status,
+                answers = EXCLUDED.answers,
+                "updatedAt" = :updated_at
         """), {
-            "profile": json.dumps(request.answers),
-            "assessment_id": assessment_id
+            "id": section_id,
+            "assessment_id": assessment_id,
+            "section_number": request.section_number,
+            "status": request.status,
+            "answers": json.dumps(request.answers),
+            "created_at": now,
+            "updated_at": now
         })
 
-    db.commit()
+        # If section 1, also update organizationProfile
+        if request.section_number == "1":
+            db.execute(text("""
+                UPDATE "Assessment"
+                SET "organizationProfile" = :profile, "updatedAt" = :updated_at
+                WHERE id = :assessment_id
+            """), {
+                "profile": json.dumps(request.answers),
+                "assessment_id": assessment_id,
+                "updated_at": now
+            })
 
-    return {"success": True}
+        db.commit()
+
+        return {"success": True, "section_number": request.section_number, "status": request.status}
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error saving assessment section: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to save section: {str(e)}")
 
 
 class AIAnalysisRequest(BaseModel):
