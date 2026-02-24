@@ -289,10 +289,28 @@
       cursor: pointer;
     }
 
+    .multi-select-card .checkmark {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: var(--blue);
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
     .selection-count {
       font-size: 0.875rem;
       color: var(--warm-gray);
       margin-top: 0.5rem;
+      text-align: center;
+      font-weight: 500;
     }
 
     /* Help expander */
@@ -611,7 +629,22 @@
       // Input element
       html += '<div class="input-wrapper">';
 
-      if (q.type === 'single-select') {
+      if (q.type === 'interstitial') {
+        // Interstitial - just shows text and auto-advances
+        html += `
+          <div class="interstitial-content" style="text-align: center; padding: 2rem 0;">
+            <p style="font-size: 1.1rem; color: var(--warm-gray); margin-bottom: 1.5rem;">
+              ${q.aiContext || ''}
+            </p>
+          </div>
+        `;
+        // Auto-enable continue button for interstitials
+        setTimeout(() => {
+          const btn = document.getElementById('continueBtn');
+          if (btn) btn.disabled = false;
+        }, 100);
+      }
+      else if (q.type === 'single-select') {
         html += '<div class="choice-cards">';
         q.options.forEach(opt => {
           const selected = answers[q.id] === opt.value ? 'selected' : '';
@@ -643,15 +676,17 @@
         q.options.forEach(opt => {
           const checked = selectedValues.includes(opt.value) ? 'checked' : '';
           const selectedClass = selectedValues.includes(opt.value) ? 'selected' : '';
+          const checkmark = selectedValues.includes(opt.value) ? '<span class="checkmark">✓</span>' : '';
           html += `
             <div class="multi-select-card ${selectedClass}" onclick="toggleMultiSelect('${q.id}', '${opt.value}')">
-              <input type="checkbox" ${checked} onclick="event.stopPropagation()">
+              ${checkmark}
+              <input type="checkbox" ${checked} onclick="event.stopPropagation()" style="display:none;">
               <span>${opt.label}</span>
             </div>
           `;
         });
         html += '</div>';
-        html += `<div class="selection-count">${selectedValues.length} selected</div>`;
+        html += `<div class="selection-count" style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--warm-gray);">${selectedValues.length} selected</div>`;
       }
 
       html += '</div>';

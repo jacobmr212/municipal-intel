@@ -2394,6 +2394,40 @@ const GOVERNANCE_STRUCTURES = [
   {{ value: 'other', label: 'Other' }}
 ];
 
+const ERP_SYSTEMS = [
+  {{ value: 'caselle_clarity', label: 'Caselle Clarity' }},
+  {{ value: 'caselle_windows', label: 'Caselle Windows' }},
+  {{ value: 'tyler_munis', label: 'Tyler Munis/ERP Pro' }},
+  {{ value: 'tyler_incode', label: 'Tyler Incode' }},
+  {{ value: 'edmunds_govtech', label: 'Edmunds GovTech' }},
+  {{ value: 'bsa', label: 'BS&A' }},
+  {{ value: 'springbrook', label: 'Springbrook' }},
+  {{ value: 'centralsquare', label: 'Central Square (HTE/Superion)' }},
+  {{ value: 'sap', label: 'SAP' }},
+  {{ value: 'oracle', label: 'Oracle' }},
+  {{ value: 'quickbooks', label: 'QuickBooks' }},
+  {{ value: 'sage', label: 'Sage/MAS' }},
+  {{ value: 'accufund', label: 'AccuFund' }},
+  {{ value: 'sungard', label: 'SunGard/Infor' }},
+  {{ value: 'custom', label: 'Custom/Homegrown System' }},
+  {{ value: 'spreadsheets', label: 'Spreadsheets/Manual' }},
+  {{ value: 'other', label: 'Other (please specify in notes)' }}
+];
+
+const PAYROLL_SYSTEMS = [
+  {{ value: 'integrated_erp', label: 'Same as ERP (integrated)' }},
+  {{ value: 'adp', label: 'ADP' }},
+  {{ value: 'paychex', label: 'Paychex' }},
+  {{ value: 'paycom', label: 'Paycom' }},
+  {{ value: 'paylocity', label: 'Paylocity' }},
+  {{ value: 'ukg_kronos', label: 'UKG/Kronos' }},
+  {{ value: 'tyler_standalone', label: 'Tyler (standalone)' }},
+  {{ value: 'ceridian', label: 'Ceridian/Dayforce' }},
+  {{ value: 'custom', label: 'Custom/In-house' }},
+  {{ value: 'outsourced', label: 'Outsourced to county/third party' }},
+  {{ value: 'other', label: 'Other (please specify in notes)' }}
+];
+
 const SERVICES = [
   {{ value: 'water', label: 'Water' }},
   {{ value: 'wastewater', label: 'Wastewater/Sewer' }},
@@ -2465,8 +2499,8 @@ questions = [
       {{ value: '100000-500000', label: '100,000 – 500,000' }},
       {{ value: 'over-500000', label: 'Over 500,000' }}
     ],
-    required: false,
-    autoAdvance: true
+    required: true,
+    autoAdvance: false
   }},
   {{
     id: 'q4_governance',
@@ -2479,30 +2513,56 @@ questions = [
     required: true
   }},
   {{
+    id: 'interstitial_group2',
+    type: 'interstitial',
+    text: 'Now let\\'s understand your operational scale.',
+    aiContext: 'This helps us gauge your organization\\'s size and complexity.',
+    required: false
+  }},
+  {{
     id: 'q5_employee_count',
-    type: 'number',
+    type: 'single-select',
     text: 'How many full-time employees does your organization have?',
     aiContext: 'Staffing levels help us understand your operational capacity.',
-    placeholder: 'e.g., 75',
     help: 'Include all full-time equivalent (FTE) positions. Part-time staff can be counted as 0.5 FTE each.',
+    options: [
+      {{ value: 'under-25', label: 'Under 25' }},
+      {{ value: '25-100', label: '25 – 100' }},
+      {{ value: '100-500', label: '100 – 500' }},
+      {{ value: '500-1000', label: '500 – 1,000' }},
+      {{ value: 'over-1000', label: 'Over 1,000' }}
+    ],
+    autoAdvance: false,
     required: true
   }},
   {{
     id: 'q6_department_count',
-    type: 'number',
+    type: 'single-select',
     text: 'How many departments or divisions does your organization have?',
     aiContext: 'This helps us gauge your organizational complexity.',
-    placeholder: 'e.g., 12',
     help: 'Count major organizational units like Police, Fire, Public Works, Finance, etc.',
+    options: [
+      {{ value: 'under-5', label: 'Under 5' }},
+      {{ value: '5-10', label: '5 – 10' }},
+      {{ value: '10-20', label: '10 – 20' }},
+      {{ value: 'over-20', label: 'Over 20' }}
+    ],
+    autoAdvance: false,
     required: true
   }},
   {{
     id: 'q7_fund_count',
-    type: 'number',
+    type: 'single-select',
     text: 'How many funds does your organization manage?',
     aiContext: 'Fund structure is critical for proper financial reporting.',
-    placeholder: 'e.g., 8',
     help: 'Include all governmental, proprietary, and fiduciary funds (General Fund, Special Revenue, Enterprise, etc.).',
+    options: [
+      {{ value: 'under-5', label: 'Under 5' }},
+      {{ value: '5-10', label: '5 – 10' }},
+      {{ value: '10-20', label: '10 – 20' }},
+      {{ value: 'over-20', label: 'Over 20' }}
+    ],
+    autoAdvance: false,
     required: true
   }},
   {{
@@ -2525,29 +2585,44 @@ questions = [
   }},
   {{
     id: 'q10_annual_budget',
-    type: 'number',
+    type: 'single-select',
     text: 'What is your organization\\'s approximate annual budget?',
     aiContext: 'Budget size helps us understand your financial operations scale.',
-    placeholder: 'e.g., 25000000 (or leave blank to skip)',
-    help: 'Include all appropriations across all funds. You can skip this question if you\\'re not sure.',
+    help: 'Include all appropriations across all funds. Select "Not sure" if you don\\'t know the exact amount.',
+    options: [
+      {{ value: 'under-1m', label: 'Under $1 million' }},
+      {{ value: '1m-10m', label: '$1M – $10M' }},
+      {{ value: '10m-50m', label: '$10M – $50M' }},
+      {{ value: '50m-250m', label: '$50M – $250M' }},
+      {{ value: 'over-250m', label: 'Over $250M' }},
+      {{ value: 'not-sure', label: 'Not sure' }}
+    ],
+    autoAdvance: false,
+    required: false
+  }},
+  {{
+    id: 'interstitial_group3',
+    type: 'interstitial',
+    text: 'Next, we\\'ll look at your current technology stack.',
+    aiContext: 'Understanding your existing systems helps us recommend the right solution.',
     required: false
   }},
   {{
     id: 'q11_current_erp',
-    type: 'text',
+    type: 'dropdown',
     text: 'What ERP or accounting system do you currently use?',
     aiContext: 'Understanding your current system helps us identify migration challenges.',
-    placeholder: 'e.g., Caselle Clarity, Tyler Munis, QuickBooks, etc.',
-    help: 'Enter the name of your primary financial/accounting software. If you use multiple systems, list the main one.',
-    required: false
+    options: ERP_SYSTEMS,
+    help: 'Select your primary financial/accounting software. If you use multiple systems, select the main one. Choose "Other" if your system isn\\'t listed.',
+    required: true
   }},
   {{
     id: 'q12_current_payroll',
-    type: 'text',
+    type: 'dropdown',
     text: 'What payroll system do you currently use?',
     aiContext: 'Payroll integration is a key requirement for most municipalities.',
-    placeholder: 'e.g., ADP, Paychex, built into ERP, etc.',
-    help: 'This could be the same as your ERP system, a separate software, or an outsourced service.',
+    options: PAYROLL_SYSTEMS,
+    help: 'This could be the same as your ERP system, a separate software, or an outsourced service. Choose "Same as ERP (integrated)" if payroll is built into your accounting system.',
     required: false
   }},
   {{
@@ -2588,6 +2663,13 @@ questions = [
     aiContext: 'This helps us prioritize recommendations.',
     placeholder: 'e.g., manual data entry, slow month-end close, poor reporting, etc.',
     help: 'What takes the most time, causes the most frustration, or keeps you up at night?',
+    required: false
+  }},
+  {{
+    id: 'interstitial_group4',
+    type: 'interstitial',
+    text: 'Finally, let\\'s assess your readiness for change.',
+    aiContext: 'These questions help us understand your timeline and organizational readiness.',
     required: false
   }},
   {{
