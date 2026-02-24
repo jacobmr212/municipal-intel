@@ -2247,12 +2247,19 @@ async def assessment_section(
     db: Session = Depends(get_db)
 ):
     """Render a specific assessment section - supports both authenticated and anonymous users."""
+    print(f"=== LOAD SECTION DEBUG ===")
+    print(f"Assessment ID: {assessment_id}")
+    print(f"Section: {section_number}")
+    print(f"User: {user.get('user_id') if user else 'None (anonymous)'}")
+
     # Check if this is an anonymous assessment
     is_anonymous = assessment_id.startswith("anon-")
+    print(f"Is anonymous: {is_anonymous}")
 
     if not is_anonymous:
         # Authenticated assessment - verify user owns it
         if not user:
+            print("ERROR: No user session found for authenticated assessment")
             raise HTTPException(status_code=401, detail="Authentication required")
 
         result = db.execute(text("""
@@ -2260,8 +2267,12 @@ async def assessment_section(
             WHERE id = :id AND "userId" = :user_id
         """), {"id": assessment_id, "user_id": user["user_id"]})
 
-        if not result.fetchone():
+        assessment_row = result.fetchone()
+        if not assessment_row:
+            print(f"ERROR: Assessment not found when loading section. ID={assessment_id}, UserID={user['user_id']}")
             raise HTTPException(status_code=404, detail="Assessment not found")
+
+        print(f"✓ Assessment verified for user")
 
     # Section metadata
     sections_meta = {
@@ -3881,15 +3892,36 @@ async def save_assessment_section(
     """Save answers for a specific section."""
     import uuid as _uuid
     from datetime import datetime
+    import traceback
+
+    print(f"=== SAVE SECTION DEBUG ===")
+    print(f"Assessment ID: {assessment_id}")
+    print(f"Section: {request.section_number}")
+    print(f"User dict: {user}")
+    print(f"User ID: {user.get('user_id')}")
+    print(f"Answers count: {len(request.answers)}")
 
     try:
         # Verify assessment belongs to user
+        user_id = user.get("user_id")
+        if not user_id:
+            print(f"ERROR: No user_id found in user dict. Keys: {list(user.keys())}")
+            raise HTTPException(status_code=401, detail="User ID not found in session")
+
         result = db.execute(text("""
             SELECT id FROM "Assessment"
             WHERE id = :id AND "userId" = :user_id
-        """), {"id": assessment_id, "user_id": user["user_id"]})
+        """), {"id": assessment_id, "user_id": user_id})
 
-        if not result.fetchone():
+        assessment_row = result.fetchone()
+        if not assessment_row:
+            print(f"ERROR: Assessment not found. ID={assessment_id}, UserID={user_id}")
+            # Check if assessment exists at all
+            check = db.execute(text('SELECT id, "userId" FROM "Assessment" WHERE id = :id'), {"id": assessment_id}).fetchone()
+            if check:
+                print(f"  Assessment exists but belongs to different user: {check[1]}")
+            else:
+                print(f"  Assessment does not exist in database")
             raise HTTPException(status_code=404, detail="Assessment not found")
 
         # Upsert section with proper timestamp handling
@@ -3928,11 +3960,16 @@ async def save_assessment_section(
 
         db.commit()
 
+        print(f"✓ Section saved successfully: {request.section_number}")
         return {"success": True, "section_number": request.section_number, "status": request.status}
 
+    except HTTPException:
+        db.rollback()
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
         db.rollback()
-        print(f"Error saving assessment section: {str(e)}")
+        print(f"ERROR saving assessment section: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to save section: {str(e)}")
 
 
