@@ -284,6 +284,39 @@ class Territory(Base):
         return f"<Territory: {self.user.email if self.user else 'Unknown'} → {self.state}>"
 
 
+class CachedDocument(Base):
+    """
+    Document cache for scraped meeting minutes/PDFs.
+
+    Caches document content for 7 days to speed up re-scans and reduce
+    load on municipal servers. Keyed by URL hash to handle long URLs.
+    """
+    __tablename__ = "cached_documents"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    url_hash = Column(String(32), unique=True, index=True, nullable=False)  # MD5 hash of URL
+    url = Column(String(500), nullable=False)  # Original URL
+    content_text = Column(Text, nullable=False)  # Extracted document text
+    content_hash = Column(String(32), index=True, nullable=False)  # MD5 hash of content
+
+    # Cache metadata
+    scraped_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False, index=True)  # Default: 7 days from scrape
+    hit_count = Column(Integer, nullable=False, default=0)  # How many times cache was used
+
+    # Source metadata
+    municipality_name = Column(String(200), nullable=True)  # For debugging/logging
+    state = Column(String(2), nullable=True, index=True)  # For filtering/cleanup
+
+    def __repr__(self):
+        return f"<CachedDocument: {self.municipality_name}, {self.state} - hits: {self.hit_count}>"
+
+    @property
+    def is_expired(self) -> bool:
+        """Check if cache entry has expired."""
+        return datetime.utcnow() > self.expires_at
+
+
 # Database setup
 # pool_pre_ping: test connections before use (handles Neon idle SSL drops)
 # pool_recycle: recycle connections every 5 min (Neon closes idle after ~5 min)

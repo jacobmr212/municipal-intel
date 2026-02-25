@@ -24,7 +24,7 @@ import base64
 import resend
 import hashlib
 
-from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User, Watchlist, Territory
+from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User, Watchlist, Territory, CachedDocument
 from src.discovery import SourceDiscovery
 from src.scraper import MunicipalScraper
 from src.analyzer import DocumentAnalyzer
@@ -168,7 +168,7 @@ def run_scan(scan_id: str, config: dict):
     db = SessionLocal()
 
     # Initialize scraper and analyzer
-    scraper = MunicipalScraper(delay=1.5, timeout=8, max_docs=10)
+    scraper = MunicipalScraper(delay=1.5, timeout=8, max_docs=10, db_session=db, use_cache=True)
     analyzer = DocumentAnalyzer(use_llm=False)  # Disable LLM for speed
     discovery = SourceDiscovery(request_delay=1.0, timeout=8)
 
@@ -1556,6 +1556,92 @@ async def scan_preview(
         "unenriched_cities": unenriched_count,
         "total_sources": total_sources,
         "estimated_seconds": estimated_seconds,
+    }
+
+
+@app.get("/api/cache-stats")
+async def get_cache_stats(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Return cache performance statistics.
+
+    Shows cache size, hit rate, top cached municipalities, and expired entries.
+    Helps monitor cache effectiveness and database health.
+    """
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+
+    # Total cache entries
+    total_cached = db.query(func.count(CachedDocument.id)).scalar()
+
+    # Active (non-expired) cache entries
+    active_cached = db.query(func.count(CachedDocument.id)).filter(
+        CachedDocument.expires_at > datetime.utcnow()
+    ).scalar()
+
+    # Expired cache entries
+    expired_cached = total_cached - active_cached
+
+    # Total cache hits
+    total_hits = db.query(func.sum(CachedDocument.hit_count)).scalar() or 0
+
+    # Average hits per cached document
+    avg_hits = total_hits / total_cached if total_cached > 0 else 0
+
+    # Top cached municipalities (by hit count)
+    top_cached = db.query(
+        CachedDocument.municipality_name,
+        CachedDocument.state,
+        func.sum(CachedDocument.hit_count).label("total_hits")
+    ).group_by(
+        CachedDocument.municipality_name,
+        CachedDocument.state
+    ).order_by(
+        func.sum(CachedDocument.hit_count).desc()
+    ).limit(10).all()
+
+    # Cache by state distribution
+    by_state = db.query(
+        CachedDocument.state,
+        func.count(CachedDocument.id).label("count")
+    ).group_by(
+        CachedDocument.state
+    ).order_by(
+        func.count(CachedDocument.id).desc()
+    ).limit(10).all()
+
+    # Recent cache additions (last 24 hours)
+    recent_cutoff = datetime.utcnow() - timedelta(days=1)
+    recent_additions = db.query(func.count(CachedDocument.id)).filter(
+        CachedDocument.scraped_at >= recent_cutoff
+    ).scalar()
+
+    return {
+        "overview": {
+            "total_cached": total_cached,
+            "active_cached": active_cached,
+            "expired_cached": expired_cached,
+            "total_hits": total_hits,
+            "avg_hits_per_doc": round(avg_hits, 2),
+            "recent_additions_24h": recent_additions
+        },
+        "top_municipalities": [
+            {
+                "municipality": m.municipality_name,
+                "state": m.state,
+                "hits": m.total_hits
+            }
+            for m in top_cached
+        ],
+        "by_state": [
+            {
+                "state": s.state,
+                "cached_count": s.count
+            }
+            for s in by_state
+        ]
     }
 
 

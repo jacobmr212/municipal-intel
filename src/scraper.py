@@ -47,10 +47,12 @@ class ScrapedDocument:
 class MunicipalScraper:
     """Scrapes meeting minutes from discovered municipal sources."""
 
-    def __init__(self, delay: float = 2.0, timeout: int = 30, max_docs: int = 15):
+    def __init__(self, delay: float = 2.0, timeout: int = 30, max_docs: int = 15, db_session=None, use_cache: bool = True):
         self.delay = delay
         self.timeout = timeout
         self.max_docs = max_docs  # Max documents to scrape per source
+        self.db = db_session  # Database session for caching
+        self.use_cache = use_cache  # Enable/disable caching
 
         self.session = requests.Session()
         self.session.headers.update({
@@ -59,6 +61,8 @@ class MunicipalScraper:
         })
 
         self.seen_hashes: set = set()
+        self.cache_hits = 0
+        self.cache_misses = 0
 
     def _fetch(self, url: str) -> Optional[requests.Response]:
         """Fetch a page with polite delay."""
@@ -70,6 +74,84 @@ class MunicipalScraper:
         except requests.exceptions.RequestException as e:
             logger.debug(f"Failed to fetch {url}: {e}")
             return None
+
+    def _get_cached_document(self, url: str, municipality_name: str, state: str):
+        """Check cache for previously scraped document."""
+        if not self.use_cache or not self.db:
+            return None
+
+        try:
+            from src.database import CachedDocument
+            from datetime import datetime
+
+            url_hash = hashlib.md5(url.encode()).hexdigest()
+
+            # Query for cached entry
+            cached = self.db.query(CachedDocument).filter(
+                CachedDocument.url_hash == url_hash,
+                CachedDocument.expires_at > datetime.utcnow()
+            ).first()
+
+            if cached:
+                # Update hit count
+                cached.hit_count += 1
+                self.db.commit()
+                self.cache_hits += 1
+                logger.info(f"    💾 Cache HIT: {municipality_name} (hits: {cached.hit_count})")
+                return cached.content_text
+
+            self.cache_misses += 1
+            return None
+
+        except Exception as e:
+            logger.debug(f"Cache lookup error for {url}: {e}")
+            return None
+
+    def _save_to_cache(self, url: str, content_text: str, municipality_name: str, state: str):
+        """Save scraped document to cache."""
+        if not self.use_cache or not self.db or not content_text:
+            return
+
+        try:
+            from src.database import CachedDocument
+            from datetime import datetime, timedelta
+
+            url_hash = hashlib.md5(url.encode()).hexdigest()
+            content_hash = hashlib.md5(content_text.encode()).hexdigest()
+
+            # Check if entry already exists (avoid duplicates)
+            existing = self.db.query(CachedDocument).filter(
+                CachedDocument.url_hash == url_hash
+            ).first()
+
+            if existing:
+                # Update existing cache entry
+                existing.content_text = content_text
+                existing.content_hash = content_hash
+                existing.scraped_at = datetime.utcnow()
+                existing.expires_at = datetime.utcnow() + timedelta(days=7)
+            else:
+                # Create new cache entry
+                cache_entry = CachedDocument(
+                    url_hash=url_hash,
+                    url=url[:500],  # Truncate long URLs
+                    content_text=content_text,
+                    content_hash=content_hash,
+                    scraped_at=datetime.utcnow(),
+                    expires_at=datetime.utcnow() + timedelta(days=7),
+                    hit_count=0,
+                    municipality_name=municipality_name,
+                    state=state
+                )
+                self.db.add(cache_entry)
+
+            self.db.commit()
+            logger.debug(f"    💾 Cached: {municipality_name} ({len(content_text)} chars)")
+
+        except Exception as e:
+            logger.debug(f"Cache save error for {url}: {e}")
+            # Don't fail the scrape if caching fails
+            pass
 
     def _extract_pdf_text(self, content: bytes) -> str:
         """Extract text from PDF bytes."""
@@ -441,6 +523,20 @@ class MunicipalScraper:
 
         logger.info(f"  Scraping {municipality.name}, {municipality.state}: {source.url}")
 
+        # Check cache first
+        cached_text = self._get_cached_document(source.url, municipality.name, municipality.state)
+        if cached_text:
+            # Return cached document
+            doc = ScrapedDocument(
+                municipality=municipality.name,
+                state=municipality.state,
+                title="Cached Meeting Document",
+                url=source.url,
+                text=cached_text,
+                date=self._parse_date(cached_text),
+            )
+            return [doc]
+
         resp = self._fetch(source.url)
         if not resp:
             logger.warning(f"    Could not reach {source.url}")
@@ -532,6 +628,14 @@ class MunicipalScraper:
                     ))
 
         logger.info(f"    Found {len(docs)} documents")
+
+        # Cache the scraped documents
+        if docs:
+            # Combine all document texts for caching (or just cache the first/primary one)
+            # For simplicity, we'll cache the concatenated text
+            combined_text = "\n\n---\n\n".join([doc.text for doc in docs])
+            self._save_to_cache(source.url, combined_text, municipality.name, municipality.state)
+
         return docs
 
     def scrape_all(self, sources: list, progress_callback=None) -> list[ScrapedDocument]:
