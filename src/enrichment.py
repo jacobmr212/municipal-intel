@@ -18,9 +18,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from sqlalchemy.orm import Session
 
-from .database import SessionLocal, Municipality, MunicipalSource
+from .database import SessionLocal, Municipality, MunicipalSource, GovernmentEntity
 from .signals import URL_PATTERNS, PROCUREMENT_PATTERNS
 from .discovery import SourceDiscovery
+from .entity_discovery import EntityDiscovery
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +307,50 @@ class EnrichmentEngine:
             if stats["sources_found"] == 0:
                 logger.warning(f"    ✗ No sources found for {municipality.name}, {municipality.state}")
 
+            # Step 3: Discover related government entities (school districts, fire districts, etc.)
+            # Only for municipalities with population > 2,500 (smaller towns less likely to have separate entities)
+            if municipality.population and municipality.population >= 2500:
+                logger.info(f"  Discovering entities for {municipality.name}, {municipality.state}...")
+                entity_discovery = EntityDiscovery(request_delay=self.delay, timeout=self.timeout)
+
+                # Check if we already discovered entities for this municipality
+                existing_entities_count = db.query(GovernmentEntity).filter_by(
+                    municipality_id=municipality.id
+                ).count()
+
+                if existing_entities_count > 0:
+                    logger.info(f"    Already have {existing_entities_count} entities — skipping")
+                else:
+                    # Discover entities
+                    entities = entity_discovery.discover_entities(
+                        municipality_name=municipality.name,
+                        state=municipality.state,
+                        main_domain=domain,
+                        county_name=None  # TODO: Add county names to Municipality model
+                    )
+
+                    # Save entities to database
+                    for entity in entities:
+                        gov_entity = GovernmentEntity(
+                            municipality_id=municipality.id,
+                            entity_type=entity.entity_type,
+                            name=entity.name,
+                            domain=entity.domain,
+                            url=entity.url,
+                            confidence=entity.confidence,
+                            notes=entity.notes,
+                            sources_discovered=0,  # Will be populated later when we discover sources for entities
+                        )
+                        db.add(gov_entity)
+                        db.commit()
+                        logger.info(f"    ✓ Entity found: {entity.name} ({entity.entity_type}) — {entity.confidence:.0%} confidence")
+
+                    if entities:
+                        stats["entities_found"] = len(entities)
+                        logger.info(f"  Discovered {len(entities)} entities for {municipality.name}")
+                    else:
+                        logger.info(f"    No additional entities discovered")
+
         return stats
 
     def enrich_state(self, state_abbr: str, progress_callback: Optional[Callable] = None,
@@ -346,6 +391,7 @@ class EnrichmentEngine:
             "domains_verified": 0,
             "domains_dead": 0,
             "sources_found": 0,
+            "entities_found": 0,
             "already_verified": 0,
         }
 
@@ -380,6 +426,7 @@ class EnrichmentEngine:
                     stats["domains_dead"] += 1
 
                 stats["sources_found"] += result["sources_found"]
+                stats["entities_found"] += result.get("entities_found", 0)
 
             except Exception as e:
                 logger.error(f"[{i + 1}/{total}] Error enriching {muni_id}: {e}")
@@ -394,9 +441,15 @@ class EnrichmentEngine:
         logger.info(f"  Domains verified: {stats['domains_verified']}")
         logger.info(f"  Domains dead: {stats['domains_dead']}")
         logger.info(f"  Sources discovered: {stats['sources_found']}")
+        logger.info(f"  Government entities discovered: {stats['entities_found']}")
 
         hit_rate = (stats['sources_found'] / stats['total'] * 100) if stats['total'] > 0 else 0
         logger.info(f"  Discovery rate: {hit_rate:.1f}%")
+
+        if stats['entities_found'] > 0:
+            entity_multiplier = (stats['entities_found'] + stats['total']) / stats['total']
+            logger.info(f"  Sales opportunity multiplier: {entity_multiplier:.2f}x (entities add {stats['entities_found']} more opportunities!)")
+
         logger.info("=" * 70)
 
         return stats
