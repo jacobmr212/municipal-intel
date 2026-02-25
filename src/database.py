@@ -120,6 +120,13 @@ class User(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
 
+    # Notification preferences
+    email_alerts_enabled = Column(Integer, nullable=False, default=1)  # 1=enabled, 0=disabled
+    alert_on_hot_leads = Column(Integer, nullable=False, default=1)  # Immediate alerts for hot leads
+    alert_on_urgent_leads = Column(Integer, nullable=False, default=1)  # Immediate alerts for urgent leads (urgency >= 60)
+    daily_digest_enabled = Column(Integer, nullable=False, default=0)  # Daily summary email
+    min_urgency_for_alert = Column(Integer, nullable=False, default=60)  # Minimum urgency score to trigger alert
+
     # Relationships
     scans = relationship("Scan", back_populates="user")
     magic_links = relationship("MagicLink", back_populates="user", cascade="all, delete-orphan")

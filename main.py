@@ -342,6 +342,64 @@ def run_scan(scan_id: str, config: dict):
         }
         db.commit()
 
+        # Send email alerts for hot/urgent leads
+        try:
+            from src.notifications import send_hot_lead_alert
+            import asyncio
+
+            # Get user info
+            user = db.query(User).filter(User.id == scan.user_id).first()
+
+            if user and user.email_alerts_enabled:
+                # Get user's territories
+                territories = db.query(Territory).filter(Territory.user_id == user.id).all()
+                territory_states = [t.state for t in territories] if territories else None
+
+                # Get hot/urgent leads from this scan
+                alert_criteria = []
+                if user.alert_on_hot_leads:
+                    alert_criteria.append(Lead.lead_type == "hot")
+                if user.alert_on_urgent_leads:
+                    alert_criteria.append(Lead.urgency_score >= user.min_urgency_for_alert)
+
+                if alert_criteria:
+                    from sqlalchemy import or_
+                    alert_leads = db.query(Lead).filter(
+                        Lead.scan_id == scan_id,
+                        Lead.times_seen == 1,  # Only NEW leads
+                        or_(*alert_criteria)
+                    ).all()
+
+                    if alert_leads:
+                        # Format leads for email
+                        leads_data = []
+                        for lead in alert_leads[:10]:  # Max 10 in immediate alert
+                            leads_data.append({
+                                "id": lead.id,
+                                "municipality": lead.municipality,
+                                "state": lead.state,
+                                "population": lead.population,
+                                "title": lead.title,
+                                "url": lead.url,
+                                "date": lead.date,
+                                "source_type": lead.source_type,
+                                "relevance_score": lead.relevance_score,
+                                "lead_type": lead.lead_type,
+                                "urgency_score": lead.urgency_score,
+                                "deadline_date": lead.deadline_date.isoformat() if lead.deadline_date else None,
+                                "days_until_deadline": lead.days_until_deadline,
+                                "decision_stage": lead.decision_stage,
+                                "signal_matches": lead.signal_matches_json
+                            })
+
+                        # Send alert (async)
+                        asyncio.create_task(send_hot_lead_alert(user.email, leads_data, territory_states))
+                        logger.info(f"Triggered email alert for {len(alert_leads)} leads to {user.email}")
+
+        except Exception as e:
+            logger.error(f"Failed to send email alerts: {e}")
+            # Don't fail the scan if email fails
+
     except Exception as e:
         # Mark scan as failed
         scan = db.query(Scan).filter(Scan.id == scan_id).first()
@@ -1673,6 +1731,79 @@ async def get_cache_stats(
             }
             for s in by_state
         ]
+    }
+
+
+@app.get("/api/notifications/settings")
+async def get_notification_settings(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get current user's notification preferences."""
+    user_record = db.query(User).filter(User.id == user["user_id"]).first()
+
+    if not user_record:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "email_alerts_enabled": bool(user_record.email_alerts_enabled),
+        "alert_on_hot_leads": bool(user_record.alert_on_hot_leads),
+        "alert_on_urgent_leads": bool(user_record.alert_on_urgent_leads),
+        "daily_digest_enabled": bool(user_record.daily_digest_enabled),
+        "min_urgency_for_alert": user_record.min_urgency_for_alert
+    }
+
+
+@app.patch("/api/notifications/settings")
+async def update_notification_settings(
+    settings: dict,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update notification preferences.
+
+    Body params (all optional):
+    - email_alerts_enabled: bool
+    - alert_on_hot_leads: bool
+    - alert_on_urgent_leads: bool
+    - daily_digest_enabled: bool
+    - min_urgency_for_alert: int (0-100)
+    """
+    user_record = db.query(User).filter(User.id == user["user_id"]).first()
+
+    if not user_record:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update settings
+    if "email_alerts_enabled" in settings:
+        user_record.email_alerts_enabled = 1 if settings["email_alerts_enabled"] else 0
+
+    if "alert_on_hot_leads" in settings:
+        user_record.alert_on_hot_leads = 1 if settings["alert_on_hot_leads"] else 0
+
+    if "alert_on_urgent_leads" in settings:
+        user_record.alert_on_urgent_leads = 1 if settings["alert_on_urgent_leads"] else 0
+
+    if "daily_digest_enabled" in settings:
+        user_record.daily_digest_enabled = 1 if settings["daily_digest_enabled"] else 0
+
+    if "min_urgency_for_alert" in settings:
+        urgency = int(settings["min_urgency_for_alert"])
+        if 0 <= urgency <= 100:
+            user_record.min_urgency_for_alert = urgency
+
+    db.commit()
+
+    return {
+        "success": True,
+        "settings": {
+            "email_alerts_enabled": bool(user_record.email_alerts_enabled),
+            "alert_on_hot_leads": bool(user_record.alert_on_hot_leads),
+            "alert_on_urgent_leads": bool(user_record.alert_on_urgent_leads),
+            "daily_digest_enabled": bool(user_record.daily_digest_enabled),
+            "min_urgency_for_alert": user_record.min_urgency_for_alert
+        }
     }
 
 
