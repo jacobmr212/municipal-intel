@@ -810,7 +810,7 @@
             const notes = document.getElementById('lead-notes').value;
 
             try {
-                const response = await fetch(`/api/leads/${leadId}/notes`, {
+                const response = await fetch(`/api/leads/${leadId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ notes })
@@ -818,12 +818,15 @@
 
                 if (response.ok) {
                     alert('Notes saved successfully!');
+                    // Reload feed to reflect updated notes
+                    loadFeed();
                 } else {
-                    alert('Failed to save notes');
+                    const error = await response.json();
+                    alert(`Failed to save notes: ${error.detail || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Failed to save notes:', error);
-                alert('Failed to save notes');
+                alert('Failed to save notes: ' + error.message);
             }
         }
 
