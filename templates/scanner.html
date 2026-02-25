@@ -672,6 +672,11 @@
                             ${lead.population ? `<span class="text-xs text-gray-500">(Pop. ${lead.population.toLocaleString()})</span>` : ''}
                         </div>
                         <p class="text-sm text-gray-700 mb-2">${summary}</p>
+                        ${lead.document_count && lead.document_count > 1 ? `
+                            <div class="text-xs text-blue-600 font-medium mb-2">
+                                📄 ${lead.document_count} documents found • Click to view all
+                            </div>
+                        ` : ''}
                         ${deadlineDisplay}
                         <div class="flex items-center gap-1 mt-1 flex-wrap">
                             ${signalKeys.map(key => `

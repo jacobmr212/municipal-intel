@@ -1100,6 +1100,8 @@ async def get_feed(
     sort_order: Optional[str] = "desc",  # asc | desc
     # Search
     search: Optional[str] = None,
+    # Grouping
+    group_by_municipality: bool = True,  # Group duplicate municipalities (default: true)
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -1250,7 +1252,7 @@ async def get_feed(
             (Lead.title.ilike(search_term))
         )
 
-    # Get total count for pagination metadata
+    # Get total count for pagination metadata (before grouping)
     total_count = query.count()
 
     # Apply sorting
@@ -1270,8 +1272,44 @@ async def get_feed(
     else:
         query = query.order_by(order_col.desc())
 
-    # Apply pagination
-    leads = query.limit(limit).offset(offset).all()
+    # Group by municipality if requested
+    if group_by_municipality:
+        # Get all leads first, then group in Python (simpler than SQL window functions)
+        all_leads = query.all()
+
+        # Group by municipality+state
+        from collections import defaultdict
+        grouped = defaultdict(list)
+        for lead in all_leads:
+            key = (lead.municipality, lead.state)
+            grouped[key].append(lead)
+
+        # For each municipality, pick the best lead and count others
+        leads = []
+        for (muni, state), muni_leads in grouped.items():
+            # Sort by urgency (desc), then score (desc)
+            muni_leads.sort(key=lambda l: (l.urgency_score or 0, l.relevance_score), reverse=True)
+            best_lead = muni_leads[0]
+
+            # Add document count as metadata
+            best_lead._document_count = len(muni_leads)
+            best_lead._all_urls = [l.url for l in muni_leads]
+
+            leads.append(best_lead)
+
+        # Re-sort the grouped leads
+        leads.sort(key=lambda l: getattr(l, order_col.key, 0) if hasattr(order_col, 'key') else l.relevance_score, reverse=(sort_order == "desc"))
+
+        # Apply pagination after grouping
+        total_count = len(leads)
+        leads = leads[offset:offset + limit]
+    else:
+        # Apply pagination without grouping
+        leads = query.limit(limit).offset(offset).all()
+        # Add document count = 1 for consistency
+        for lead in leads:
+            lead._document_count = 1
+            lead._all_urls = [lead.url]
 
     # Format response
     results = []
@@ -1311,7 +1349,10 @@ async def get_feed(
             # Competitor intelligence
             "competitors_mentioned": lead.competitors_mentioned if hasattr(lead, 'competitors_mentioned') else [],
             "competitive_context": lead.competitive_context if hasattr(lead, 'competitive_context') else "",
-            "existing_vendor": lead.existing_vendor if hasattr(lead, 'existing_vendor') else None
+            "existing_vendor": lead.existing_vendor if hasattr(lead, 'existing_vendor') else None,
+            # Grouping metadata
+            "document_count": getattr(lead, '_document_count', 1),
+            "all_urls": getattr(lead, '_all_urls', [lead.url])
         })
 
     return {
