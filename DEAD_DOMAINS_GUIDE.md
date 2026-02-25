@@ -229,40 +229,68 @@ curl "https://your-app.railway.app/api/dead-domains/stats" \
 
 ## Recommended Workflow
 
-### Phase 1: High-Priority Cities (Pop > 100K)
+**IMPORTANT**: Small towns (2.5K-25K population) are often the **most valuable** targets:
+- Less competition (big vendors ignore them)
+- Easier to win (simpler RFP processes)
+- Higher close rates (personal relationships)
+- Better margins (less price pressure)
+- Longer retention (fewer alternatives)
 
-These have the highest lead potential:
+**Don't skip small towns!** They're gold mines that competitors overlook.
+
+---
+
+### Strategy 1: State-by-State (Recommended)
+
+Focus on your target states, **all municipalities regardless of size**:
 
 ```bash
-# Export to CSV
-python3 scripts/manage_dead_domains.py --export priority_100k.csv --min-pop 100000
+# Export all dead domains in target state
+python3 scripts/manage_dead_domains.py --export utah_dead.csv --state UT
 
-# Opens ~50-100 cities
-# Research correct domains manually
+# Research correct domains for ALL cities (small towns matter!)
 # Fill in "Corrected Domain" column
-# Save as priority_100k_corrected.csv
+# Save as utah_dead_corrected.csv
 
 # Batch update
-python3 scripts/manage_dead_domains.py --batch-update priority_100k_corrected.csv --reenrich
+python3 scripts/manage_dead_domains.py --batch-update utah_dead_corrected.csv --reenrich
 ```
 
-### Phase 2: Mid-Size Cities (Pop 50K-100K)
+**Why this works**:
+- You know the local domain patterns (e.g., Utah uses `.ut.us`)
+- Small towns in your territory = warm leads
+- Complete coverage in your sales region
+
+---
+
+### Strategy 2: Tier-Based (Match Your Sales Focus)
+
+Focus on the tier that matches your current sales pipeline:
 
 ```bash
-python3 scripts/manage_dead_domains.py --export priority_50k.csv --min-pop 50000
-# ... research and correct ...
-python3 scripts/manage_dead_domains.py --batch-update priority_50k_corrected.csv --reenrich
+# Small towns (2.5K-10K) - Often MOST valuable!
+python3 scripts/manage_dead_domains.py --export small_towns.csv --min-pop 2500 --max-pop 10000
+
+# Small-Mid tier (10K-25K)
+python3 scripts/manage_dead_domains.py --export small_mid.csv --min-pop 10000 --max-pop 25000
+
+# Mid-market (25K-50K)
+python3 scripts/manage_dead_domains.py --export mid_market.csv --min-pop 25000 --max-pop 50000
 ```
 
-### Phase 3: State-by-State (Focus on high-count states)
+**Pro tip**: Start with small towns in states where you already have customers. They're more likely to trust a vendor their neighbors use.
 
-From stats, focus on states with most dead domains:
+---
+
+### Strategy 3: Quick Wins (CDPs can be skipped)
+
+CDPs (Census Designated Places) are unincorporated areas without official governments. Skip these to focus on actual municipalities:
 
 ```bash
-# Florida has 310 dead domains
-python3 scripts/manage_dead_domains.py --export fl_dead.csv --state FL
-# ... research and correct ...
-python3 scripts/manage_dead_domains.py --batch-update fl_dead_corrected.csv --reenrich
+# Export all non-CDP dead domains
+python3 scripts/manage_dead_domains.py --export real_cities.csv --exclude-cdp
+
+# Much smaller list, all actual municipalities
 ```
 
 ---
@@ -393,11 +421,13 @@ for muni_id, new_domain in corrections.items():
 
 **Total dead domains**: ~2,195 (expected from enrichment)
 
-**Recommended priority**:
-1. ✅ Pop > 100K (50-100 cities) - Highest lead potential
-2. ✅ Pop 50K-100K (~150 cities) - High lead potential
-3. ⚠️ Pop 25K-50K (~500 cities) - Medium lead potential
-4. ❌ CDPs and pop < 25K (~1,500 cities) - Low priority
+**Recommended priority** (Focus on small towns!):
+1. 🎯 **Pop 2.5K-10K** (~600 cities) - **HIGHEST VALUE** (less competition, easier wins)
+2. 🎯 **Pop 10K-25K** (~400 cities) - **HIGH VALUE** (still overlooked by big vendors)
+3. ✅ Pop 25K-50K (~500 cities) - Good lead potential
+4. ✅ Pop 50K-100K (~150 cities) - Good lead potential
+5. ⚠️ Pop > 100K (50-100 cities) - Competitive but high profile
+6. ❌ CDPs (~500 cities) - Unincorporated areas, often no official government website
 
 **Tools available**:
 - ✅ CLI tool for viewing, updating, exporting
@@ -405,9 +435,18 @@ for muni_id, new_domain in corrections.items():
 - ✅ CSV export for batch research
 - ✅ Batch update from corrected CSV
 
-**Estimated time**:
-- Phase 1 (100K+): 2-4 hours research + instant update
-- Phase 2 (50K-100K): 4-6 hours research + instant update
-- Phase 3 (State focus): Ongoing as needed
+**Estimated time** (State-by-State Approach):
+- Small state (UT, ID): 1-2 hours per state
+- Medium state (CO, WA): 3-4 hours per state
+- Large state (CA, TX, FL): 6-8 hours per state
 
-This will significantly improve coverage quality for high-value municipalities! 🎯
+**Workflow**:
+```bash
+# Focus on YOUR sales territories first!
+# Example: Utah (all municipalities, prioritize small towns)
+python3 scripts/manage_dead_domains.py --export utah_all.csv --state UT
+# Fix domains, then:
+python3 scripts/manage_dead_domains.py --batch-update utah_all_corrected.csv --reenrich
+```
+
+This will significantly improve coverage quality for the **small towns competitors miss**! 🎯

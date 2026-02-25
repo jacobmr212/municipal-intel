@@ -5687,6 +5687,8 @@ class DomainUpdateRequest(BaseModel):
 async def get_dead_domains(
     state: Optional[str] = None,
     min_population: Optional[int] = None,
+    max_population: Optional[int] = None,
+    exclude_cdp: bool = False,
     limit: Optional[int] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -5697,9 +5699,13 @@ async def get_dead_domains(
     Query params:
     - state: Filter by state code (e.g., CA, TX)
     - min_population: Minimum population filter
+    - max_population: Maximum population filter (useful for targeting small towns)
+    - exclude_cdp: Exclude CDPs (Census Designated Places) - unincorporated areas
     - limit: Maximum number of results
 
     Returns list of municipalities with dead domains for manual correction.
+
+    Pro tip: Small towns (2.5K-25K) are often the most valuable targets!
     """
     query = db.query(Municipality).filter(Municipality.domain_status == 'dead')
 
@@ -5708,6 +5714,12 @@ async def get_dead_domains(
 
     if min_population:
         query = query.filter(Municipality.population >= min_population)
+
+    if max_population:
+        query = query.filter(Municipality.population <= max_population)
+
+    if exclude_cdp:
+        query = query.filter(~Municipality.name.like('%CDP%'))
 
     query = query.order_by(Municipality.population.desc())
 
@@ -5814,11 +5826,19 @@ async def update_municipality_domain(
 async def export_dead_domains_csv(
     state: Optional[str] = None,
     min_population: Optional[int] = None,
+    max_population: Optional[int] = None,
+    exclude_cdp: bool = False,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Export dead domains to CSV for batch research.
+
+    Query params:
+    - state: Filter by state
+    - min_population: Minimum population
+    - max_population: Maximum population (for targeting small towns)
+    - exclude_cdp: Exclude CDPs (Census Designated Places)
 
     Returns CSV file with columns: Municipality, State, Population, Dead Domain, Corrected Domain, Notes
     """
@@ -5832,6 +5852,12 @@ async def export_dead_domains_csv(
 
     if min_population:
         query = query.filter(Municipality.population >= min_population)
+
+    if max_population:
+        query = query.filter(Municipality.population <= max_population)
+
+    if exclude_cdp:
+        query = query.filter(~Municipality.name.like('%CDP%'))
 
     query = query.order_by(Municipality.state, Municipality.population.desc())
     results = query.all()

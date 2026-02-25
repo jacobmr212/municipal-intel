@@ -62,7 +62,8 @@ def get_db_session():
     return Session()
 
 
-def list_dead_domains(state: str = None, min_pop: int = 0, limit: int = None):
+def list_dead_domains(state: str = None, min_pop: int = 0, max_pop: int = None,
+                     exclude_cdp: bool = False, limit: int = None):
     """List all municipalities with dead domains."""
     db = get_db_session()
 
@@ -73,6 +74,12 @@ def list_dead_domains(state: str = None, min_pop: int = 0, limit: int = None):
 
     if min_pop:
         query = query.filter(Municipality.population >= min_pop)
+
+    if max_pop:
+        query = query.filter(Municipality.population <= max_pop)
+
+    if exclude_cdp:
+        query = query.filter(~Municipality.name.like('%CDP%'))
 
     query = query.order_by(Municipality.population.desc())
 
@@ -162,7 +169,8 @@ def update_domain(city_name: str, state: str, new_domain: str, reenrich: bool = 
     return True
 
 
-def export_to_csv(filename: str, state: str = None, min_pop: int = 0):
+def export_to_csv(filename: str, state: str = None, min_pop: int = 0,
+                 max_pop: int = None, exclude_cdp: bool = False):
     """Export dead domains to CSV for batch research."""
     db = get_db_session()
 
@@ -173,6 +181,12 @@ def export_to_csv(filename: str, state: str = None, min_pop: int = 0):
 
     if min_pop:
         query = query.filter(Municipality.population >= min_pop)
+
+    if max_pop:
+        query = query.filter(Municipality.population <= max_pop)
+
+    if exclude_cdp:
+        query = query.filter(~Municipality.name.like('%CDP%'))
 
     query = query.order_by(Municipality.state, Municipality.population.desc())
     results = query.all()
@@ -259,6 +273,10 @@ def main():
                        help='Filter by state (e.g., CA, TX)')
     parser.add_argument('--min-pop', type=int, default=0,
                        help='Minimum population filter')
+    parser.add_argument('--max-pop', type=int,
+                       help='Maximum population filter (useful for targeting small towns)')
+    parser.add_argument('--exclude-cdp', action='store_true',
+                       help='Exclude CDPs (Census Designated Places) - unincorporated areas')
     parser.add_argument('--limit', type=int,
                        help='Limit number of results')
 
@@ -272,7 +290,7 @@ def main():
 
     # Execute command
     if args.list:
-        list_dead_domains(args.state, args.min_pop, args.limit)
+        list_dead_domains(args.state, args.min_pop, args.max_pop, args.exclude_cdp, args.limit)
 
     elif args.update:
         if not args.domain:
@@ -285,7 +303,7 @@ def main():
         update_domain(args.update, args.state, args.domain, args.reenrich)
 
     elif args.export:
-        export_to_csv(args.export, args.state, args.min_pop)
+        export_to_csv(args.export, args.state, args.min_pop, args.max_pop, args.exclude_cdp)
 
     elif args.batch_update:
         batch_update_from_csv(args.batch_update, args.reenrich)
