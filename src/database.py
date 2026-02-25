@@ -61,9 +61,51 @@ class Municipality(Base):
 
     # Relationships
     sources = relationship("MunicipalSource", back_populates="municipality", cascade="all, delete-orphan")
+    entities = relationship("GovernmentEntity", back_populates="municipality", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Municipality: {self.name}, {self.state} (pop: {self.population:,}, status: {self.domain_status})>"
+
+
+class GovernmentEntity(Base):
+    """
+    Government Entity within a municipality.
+
+    Represents separate government organizations that may use independent ERP systems:
+    - School Districts (separate budgets!)
+    - Fire Districts
+    - Library Districts
+    - Water/Sewer Districts
+    - Parks & Recreation Districts
+    - County Government
+
+    Each entity is a separate sales opportunity with its own procurement budget.
+    """
+    __tablename__ = "government_entities"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(_uuid.uuid4()))
+    municipality_id = Column(Integer, ForeignKey("municipalities.id"), nullable=False, index=True)
+    entity_type = Column(String(50), nullable=False, index=True)  # school_district, fire_district, etc.
+    name = Column(String(200), nullable=False)
+    domain = Column(String(200), nullable=True)
+    url = Column(String(500), nullable=True)
+    confidence = Column(Float, nullable=True, index=True)  # 0.0 - 1.0
+    notes = Column(Text, nullable=True)
+
+    # Enrichment tracking
+    sources_discovered = Column(Integer, nullable=False, default=0)
+    last_enriched_at = Column(DateTime, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    municipality = relationship("Municipality", back_populates="entities")
+    sources = relationship("MunicipalSource", back_populates="entity", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<GovernmentEntity: {self.name} ({self.entity_type}) - {self.confidence:.0%} confidence>"
 
 
 class MunicipalSource(Base):
@@ -82,6 +124,7 @@ class MunicipalSource(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     municipality_id = Column(Integer, ForeignKey("municipalities.id"), nullable=False, index=True)
+    entity_id = Column(String(36), ForeignKey("government_entities.id"), nullable=True, index=True)  # NEW: Link to specific entity
 
     # Source details
     url = Column(String(500), nullable=False, unique=True)  # The discovered source page URL
@@ -100,6 +143,7 @@ class MunicipalSource(Base):
 
     # Relationships
     municipality = relationship("Municipality", back_populates="sources")
+    entity = relationship("GovernmentEntity", back_populates="sources")
 
     def __repr__(self):
         return f"<Source: {self.municipality.name if self.municipality else 'Unknown'} - {self.source_type} ({self.platform})>"
