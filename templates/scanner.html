@@ -20,6 +20,31 @@
         .tab-button.active {
             @apply text-blue-600 border-blue-600;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.active {
+            display: block;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -88,17 +113,40 @@
                 </div>
 
                 <!-- Feed Filters -->
-                <div class="mb-4 flex items-center space-x-4">
-                    <select id="feed-type-filter" onchange="loadFeed()" class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="all">All Types</option>
-                        <option value="hot">HOT Only</option>
-                        <option value="warm">WARM Only</option>
-                    </select>
-                    <select id="feed-days-filter" onchange="loadFeed()" class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="7">Last 7 days</option>
-                        <option value="30" selected>Last 30 days</option>
-                        <option value="90">Last 90 days</option>
-                    </select>
+                <div class="mb-4 space-y-3">
+                    <div class="flex items-center flex-wrap gap-3">
+                        <select id="feed-type-filter" onchange="loadFeed()" class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="all">All Types</option>
+                            <option value="hot">HOT Only</option>
+                            <option value="warm">WARM Only</option>
+                        </select>
+                        <select id="feed-days-filter" onchange="loadFeed()" class="text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                        <label class="flex items-center text-sm text-gray-700">
+                            <input type="checkbox" id="feed-urgent-only" onchange="loadFeed()" class="rounded text-blue-600 focus:ring-blue-500 mr-2">
+                            Urgent Only (60+)
+                        </label>
+                        <label class="flex items-center text-sm text-gray-700">
+                            <input type="checkbox" id="feed-has-deadline" onchange="loadFeed()" class="rounded text-blue-600 focus:ring-blue-500 mr-2">
+                            Has Deadline
+                        </label>
+                        <label class="flex items-center text-sm text-gray-700">
+                            <input type="checkbox" id="feed-has-competitors" onchange="loadFeed()" class="rounded text-blue-600 focus:ring-blue-500 mr-2">
+                            Has Competitors
+                        </label>
+                    </div>
+
+                    <!-- Urgency Slider -->
+                    <div class="flex items-center space-x-3">
+                        <label class="text-sm text-gray-700 whitespace-nowrap">Min Urgency:</label>
+                        <input type="range" id="feed-urgency-slider" min="0" max="100" value="0" step="10"
+                               onchange="updateUrgencyLabel(); loadFeed()"
+                               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="feed-urgency-label" class="text-sm font-semibold text-gray-900 w-8">0</span>
+                    </div>
                 </div>
 
                 <!-- Feed Results -->
@@ -358,6 +406,26 @@
         </div>
     </div>
 
+    <!-- Lead Detail Modal -->
+    <div id="lead-detail-modal" class="modal">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <h2 class="text-xl font-semibold text-gray-900">Lead Details</h2>
+                <button onclick="closeLeadDetail()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div id="modal-body" class="px-6 py-4">
+                <!-- Content populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global state
         let currentTab = 'feed';
@@ -401,12 +469,41 @@
         // FEED TAB FUNCTIONS
         // =============================================================================
 
+        function updateUrgencyLabel() {
+            const slider = document.getElementById('feed-urgency-slider');
+            const label = document.getElementById('feed-urgency-label');
+            label.textContent = slider.value;
+        }
+
         async function loadFeed() {
             const typeFilter = document.getElementById('feed-type-filter').value;
             const daysFilter = document.getElementById('feed-days-filter').value;
+            const urgentOnly = document.getElementById('feed-urgent-only').checked;
+            const hasDeadline = document.getElementById('feed-has-deadline').checked;
+            const hasCompetitors = document.getElementById('feed-has-competitors').checked;
+            const minUrgency = document.getElementById('feed-urgency-slider').value;
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            params.append('days', daysFilter);
+            if (typeFilter !== 'all') {
+                params.append('lead_type', typeFilter);
+            }
+            if (urgentOnly) {
+                params.append('urgent_only', 'true');
+            }
+            if (hasDeadline) {
+                params.append('has_deadline', 'true');
+            }
+            if (hasCompetitors) {
+                params.append('has_competitors', 'true');
+            }
+            if (minUrgency > 0) {
+                params.append('min_urgency', minUrgency);
+            }
 
             try {
-                const response = await fetch(`/api/feed?days=${daysFilter}&lead_type=${typeFilter}`);
+                const response = await fetch(`/api/feed?${params.toString()}`);
 
                 if (!response.ok) {
                     throw new Error(`API error: ${response.status}`);
@@ -463,22 +560,60 @@
 
         function createLeadCard(lead) {
             const card = document.createElement('div');
-            card.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50';
+            card.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-shadow hover:shadow-md';
 
             const typeColor = lead.lead_type === 'hot' ? 'text-blue-800 bg-blue-100'
                 : lead.lead_type === 'warm' ? 'text-orange-800 bg-orange-100'
                 : 'text-gray-800 bg-gray-100';
 
             const signals = Object.keys(lead.signal_matches || {}).slice(0, 3).join(', ');
-            const date = new Date(lead.created_at).toLocaleDateString();
+            const date = new Date(lead.first_seen || lead.created_at).toLocaleDateString();
+
+            // Format urgency badge
+            const urgency = lead.urgency_score || 0;
+            let urgencyBadge = '';
+            if (urgency >= 70) {
+                urgencyBadge = '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full" title="High urgency">🔥 URGENT</span>';
+            } else if (urgency >= 40) {
+                urgencyBadge = `<span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full" title="Urgency: ${urgency}/100">⚡ ${urgency}</span>`;
+            }
+
+            // Format deadline display
+            let deadlineDisplay = '';
+            if (lead.deadline_date && lead.days_until_deadline !== null) {
+                const deadlineDate = new Date(lead.deadline_date).toLocaleDateString();
+                const days = lead.days_until_deadline;
+                if (days <= 0) {
+                    deadlineDisplay = `<span class="text-xs text-red-600 font-semibold">⏰ Deadline passed: ${deadlineDate}</span>`;
+                } else if (days <= 7) {
+                    deadlineDisplay = `<span class="text-xs text-red-600 font-semibold">⏰ ${days} days: ${deadlineDate}</span>`;
+                } else if (days <= 30) {
+                    deadlineDisplay = `<span class="text-xs text-orange-600 font-semibold">📅 ${days} days: ${deadlineDate}</span>`;
+                } else {
+                    deadlineDisplay = `<span class="text-xs text-gray-600">📅 ${deadlineDate}</span>`;
+                }
+            }
+
+            // Format competitor mentions
+            let competitorsDisplay = '';
+            if (lead.competitors_mentioned && lead.competitors_mentioned.length > 0) {
+                const competitorsList = lead.competitors_mentioned.slice(0, 2).join(', ');
+                const remaining = lead.competitors_mentioned.length - 2;
+                competitorsDisplay = `
+                    <div class="text-xs text-gray-600 mt-1">
+                        <span class="font-semibold">🎯 Competitors:</span> ${competitorsList}${remaining > 0 ? ` +${remaining} more` : ''}
+                    </div>
+                `;
+            }
 
             card.innerHTML = `
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
-                        <div class="flex items-center space-x-2 mb-2">
+                        <div class="flex items-center flex-wrap gap-2 mb-2">
                             <span class="px-2 py-1 text-xs font-semibold rounded-full ${typeColor}">
                                 ${lead.lead_type.toUpperCase()}
                             </span>
+                            ${urgencyBadge}
                             <span class="text-xs text-gray-500">${date}</span>
                             ${lead.customer_status === 'existing_customer' ?
                                 '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">EXISTING CUSTOMER</span>' :
@@ -488,18 +623,216 @@
                             ${lead.municipality}, ${lead.state}
                         </h3>
                         <p class="text-sm text-gray-700 mb-2">${lead.title}</p>
-                        <p class="text-xs text-gray-500">Signals: ${signals}</p>
+                        ${deadlineDisplay}
+                        <p class="text-xs text-gray-500 mt-1">Signals: ${signals}</p>
+                        ${competitorsDisplay}
                     </div>
-                    <div class="ml-4 flex items-center space-x-2">
+                    <div class="ml-4 flex flex-col items-end space-y-2">
                         <span class="text-sm font-semibold text-gray-900">${Math.round(lead.relevance_score)}</span>
-                        <a href="${lead.url}" target="_blank" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded">
+                        <a href="${lead.url}" target="_blank" class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded" onclick="event.stopPropagation()">
                             View
                         </a>
                     </div>
                 </div>
             `;
 
+            // Add click handler to open detail modal
+            card.addEventListener('click', () => {
+                showLeadDetail(lead);
+            });
+
             return card;
+        }
+
+        // =============================================================================
+        // LEAD DETAIL MODAL
+        // =============================================================================
+
+        function showLeadDetail(lead) {
+            const modal = document.getElementById('lead-detail-modal');
+            const modalBody = document.getElementById('modal-body');
+
+            // Build modal content with 8 sections
+            const urgencyColor = (lead.urgency_score >= 70) ? 'red' :
+                                 (lead.urgency_score >= 40) ? 'yellow' : 'gray';
+
+            const deadlineText = lead.deadline_date ?
+                `${new Date(lead.deadline_date).toLocaleDateString()} (${lead.days_until_deadline} days)` :
+                'No deadline detected';
+
+            const signalsHtml = Object.entries(lead.signal_matches || {})
+                .map(([signal, data]) => `
+                    <div class="border-l-4 border-blue-500 pl-3 py-2">
+                        <div class="font-semibold text-gray-900">${signal.replace(/_/g, ' ')}</div>
+                        <div class="text-sm text-gray-600">Weight: ${data.weight || 'N/A'}</div>
+                    </div>
+                `).join('');
+
+            const competitorsHtml = (lead.competitors_mentioned && lead.competitors_mentioned.length > 0) ?
+                lead.competitors_mentioned.map(c => `<span class="inline-block px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full mr-2 mb-2">${c}</span>`).join('') :
+                '<p class="text-gray-500">No competitors mentioned</p>';
+
+            modalBody.innerHTML = `
+                <!-- Section 1: Overview -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">${lead.municipality}, ${lead.state}</h3>
+                            <p class="text-sm text-gray-600">Population: ${(lead.population || 0).toLocaleString()}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full ${
+                                lead.lead_type === 'hot' ? 'text-blue-800 bg-blue-100' :
+                                lead.lead_type === 'warm' ? 'text-orange-800 bg-orange-100' :
+                                'text-gray-800 bg-gray-100'
+                            }">${lead.lead_type.toUpperCase()}</span>
+                            <span class="text-2xl font-bold text-gray-900">${Math.round(lead.relevance_score)}</span>
+                        </div>
+                    </div>
+                    <p class="text-lg text-gray-700 mb-3">${lead.title}</p>
+                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                        <span>📅 ${new Date(lead.first_seen || lead.date).toLocaleDateString()}</span>
+                        <span>📄 ${lead.source_type || 'Unknown'}</span>
+                        ${lead.customer_status === 'existing_customer' ?
+                            '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">EXISTING CUSTOMER</span>' :
+                            '<span class="px-2 py-1 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">NEW OPPORTUNITY</span>'}
+                    </div>
+                </div>
+
+                <!-- Section 2: Temporal Intelligence -->
+                <div class="mb-6 p-4 bg-${urgencyColor}-50 border border-${urgencyColor}-200 rounded-lg">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">⏰ Temporal Intelligence</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-sm text-gray-600">Urgency Score</div>
+                            <div class="text-2xl font-bold text-${urgencyColor}-600">${lead.urgency_score || 0}/100</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">Deadline</div>
+                            <div class="text-lg font-semibold text-gray-900">${deadlineText}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">Decision Stage</div>
+                            <div class="text-lg font-semibold text-gray-900">${(lead.decision_stage || 'unknown').toUpperCase()}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">Fiscal Year</div>
+                            <div class="text-lg font-semibold text-gray-900">${lead.fiscal_year || 'Unknown'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Signal Analysis -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">🎯 Signals Detected</h4>
+                    <div class="space-y-2">
+                        ${signalsHtml || '<p class="text-gray-500">No signals detected</p>'}
+                    </div>
+                </div>
+
+                <!-- Section 4: Competitor Intelligence -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">🏢 Competitor Intelligence</h4>
+                    <div class="mb-3">
+                        ${competitorsHtml}
+                    </div>
+                    ${lead.competitive_context ? `
+                        <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                            <span class="font-semibold">Context:</span> ${lead.competitive_context}
+                        </div>
+                    ` : ''}
+                    ${lead.existing_vendor ? `
+                        <div class="mt-2 text-sm">
+                            <span class="font-semibold text-gray-700">Current Vendor:</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">${lead.existing_vendor}</span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Section 5: Recommended Action -->
+                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2">💡 Recommended Action</h4>
+                    <p class="text-gray-700">${lead.recommended_action || 'No specific recommendation available'}</p>
+                </div>
+
+                <!-- Section 6: Document Link -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">📄 Source Document</h4>
+                    <a href="${lead.url}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                        Open Document
+                    </a>
+                </div>
+
+                <!-- Section 7: Lead Status & ROI Tracking -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">📊 Status & ROI</h4>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <div class="text-sm text-gray-600">Status</div>
+                            <div class="text-lg font-semibold text-gray-900">${(lead.status || 'new').toUpperCase()}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">Deal Value</div>
+                            <div class="text-lg font-semibold text-gray-900">${lead.deal_value ? '$' + lead.deal_value.toLocaleString() : 'Not set'}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">Times Seen</div>
+                            <div class="text-lg font-semibold text-gray-900">${lead.times_seen || 1}</div>
+                        </div>
+                    </div>
+                    ${lead.contacted_date ? `<div class="mt-3 text-sm text-gray-600">Contacted: ${new Date(lead.contacted_date).toLocaleDateString()}</div>` : ''}
+                    ${lead.won_date ? `<div class="text-sm text-green-600">Won: ${new Date(lead.won_date).toLocaleDateString()}</div>` : ''}
+                    ${lead.lost_reason ? `<div class="text-sm text-red-600">Lost: ${lead.lost_reason}</div>` : ''}
+                </div>
+
+                <!-- Section 8: Notes -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">📝 Notes</h4>
+                    <textarea id="lead-notes" class="w-full border border-gray-300 rounded-lg p-3 text-sm" rows="4" placeholder="Add notes about this lead...">${lead.notes || ''}</textarea>
+                    <button onclick="saveLeadNotes('${lead.id}')" class="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        Save Notes
+                    </button>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeLeadDetail() {
+            const modal = document.getElementById('lead-detail-modal');
+            modal.classList.remove('active');
+        }
+
+        async function saveLeadNotes(leadId) {
+            const notes = document.getElementById('lead-notes').value;
+
+            try {
+                const response = await fetch(`/api/leads/${leadId}/notes`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes })
+                });
+
+                if (response.ok) {
+                    alert('Notes saved successfully!');
+                } else {
+                    alert('Failed to save notes');
+                }
+            } catch (error) {
+                console.error('Failed to save notes:', error);
+                alert('Failed to save notes');
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('lead-detail-modal');
+            if (event.target == modal) {
+                closeLeadDetail();
+            }
         }
 
         // =============================================================================
