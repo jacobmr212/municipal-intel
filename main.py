@@ -102,6 +102,11 @@ class ScanConfig(BaseModel):
 
 class LeadUpdate(BaseModel):
     notes: Optional[str] = None
+    status: Optional[str] = None  # new | contacted | qualified | proposal | won | lost
+    deal_value: Optional[int] = None  # Deal value in USD
+    contacted_date: Optional[str] = None  # ISO timestamp
+    won_date: Optional[str] = None  # ISO timestamp
+    lost_reason: Optional[str] = None
 
 
 class AdminApproveRequest(BaseModel):
@@ -1131,7 +1136,13 @@ async def get_feed(
             "deadline_date": lead.deadline_date.isoformat() if lead.deadline_date else None,
             "days_until_deadline": lead.days_until_deadline,
             "decision_stage": lead.decision_stage if lead.decision_stage else "unknown",
-            "fiscal_year": lead.fiscal_year
+            "fiscal_year": lead.fiscal_year,
+            # ROI tracking
+            "status": lead.status if hasattr(lead, 'status') else "new",
+            "deal_value": lead.deal_value if hasattr(lead, 'deal_value') else None,
+            "contacted_date": lead.contacted_date.isoformat() if hasattr(lead, 'contacted_date') and lead.contacted_date else None,
+            "won_date": lead.won_date.isoformat() if hasattr(lead, 'won_date') and lead.won_date else None,
+            "lost_reason": lead.lost_reason if hasattr(lead, 'lost_reason') else None
         })
 
     return {
@@ -1498,7 +1509,11 @@ async def get_leads(
                 "lead_type": lead.lead_type,
                 "recommended_action": lead.recommended_action,
                 "signal_matches": lead.signal_matches_json,
-                "notes": lead.notes
+                "notes": lead.notes,
+                "status": lead.status if hasattr(lead, 'status') else "new",
+                "deal_value": lead.deal_value if hasattr(lead, 'deal_value') else None,
+                "contacted_date": lead.contacted_date.isoformat() if hasattr(lead, 'contacted_date') and lead.contacted_date else None,
+                "won_date": lead.won_date.isoformat() if hasattr(lead, 'won_date') and lead.won_date else None
             }
             for lead in leads
         ]
@@ -1542,7 +1557,19 @@ async def update_lead(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update lead notes. Requires authentication and scan ownership."""
+    """
+    Update lead notes and status tracking fields.
+
+    Supports updating:
+    - notes: User notes
+    - status: Pipeline stage (new | contacted | qualified | proposal | won | lost)
+    - deal_value: Deal value in USD (if won)
+    - contacted_date: ISO timestamp of first contact
+    - won_date: ISO timestamp of deal close
+    - lost_reason: Explanation if deal was lost
+
+    Requires authentication and scan ownership.
+    """
     # Get lead and verify it exists
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:
@@ -1557,11 +1584,131 @@ async def update_lead(
     if not scan:
         raise HTTPException(status_code=403, detail="Access denied")
 
+    # Update fields
     if update.notes is not None:
         lead.notes = update.notes
+
+    if update.status is not None:
+        valid_statuses = ["new", "contacted", "qualified", "proposal", "won", "lost"]
+        if update.status not in valid_statuses:
+            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
+        lead.status = update.status
+
+    if update.deal_value is not None:
+        lead.deal_value = update.deal_value
+
+    if update.contacted_date is not None:
+        from datetime import datetime
+        lead.contacted_date = datetime.fromisoformat(update.contacted_date.replace('Z', '+00:00'))
+
+    if update.won_date is not None:
+        from datetime import datetime
+        lead.won_date = datetime.fromisoformat(update.won_date.replace('Z', '+00:00'))
+
+    if update.lost_reason is not None:
+        lead.lost_reason = update.lost_reason
+
     db.commit()
 
     return {"success": True}
+
+
+@app.get("/api/roi-analytics")
+async def get_roi_analytics(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get ROI analytics: conversion rates, total revenue, and pipeline metrics.
+
+    Shows:
+    - Total leads by status (new, contacted, qualified, proposal, won, lost)
+    - Conversion rates (new → contacted → qualified → proposal → won)
+    - Total revenue attributed to the tool (sum of won deal values)
+    - Average deal size
+    - Average time from discovery to close (for won deals)
+
+    Requires authentication. Users only see analytics for their own leads.
+    """
+    from datetime import datetime
+    from sqlalchemy import func
+
+    # Get all leads for user's scans
+    leads_query = (
+        db.query(Lead)
+        .join(Scan, Lead.scan_id == Scan.id)
+        .filter(Scan.user_id == user["user_id"])
+    )
+
+    # Total leads
+    total_leads = leads_query.count()
+
+    # Leads by status
+    status_counts = {}
+    for status in ["new", "contacted", "qualified", "proposal", "won", "lost"]:
+        count = leads_query.filter(Lead.status == status).count()
+        status_counts[status] = count
+
+    # Calculate conversion rates
+    conversion_rates = {}
+    if status_counts["new"] > 0:
+        conversion_rates["new_to_contacted"] = round((status_counts["contacted"] / status_counts["new"]) * 100, 1) if status_counts["new"] > 0 else 0
+    if status_counts["contacted"] > 0:
+        conversion_rates["contacted_to_qualified"] = round((status_counts["qualified"] / status_counts["contacted"]) * 100, 1)
+    if status_counts["qualified"] > 0:
+        conversion_rates["qualified_to_proposal"] = round((status_counts["proposal"] / status_counts["qualified"]) * 100, 1)
+    if status_counts["proposal"] > 0:
+        conversion_rates["proposal_to_won"] = round((status_counts["won"] / status_counts["proposal"]) * 100, 1)
+
+    # Overall win rate (won / total leads)
+    win_rate = round((status_counts["won"] / total_leads) * 100, 1) if total_leads > 0 else 0
+
+    # Won deals
+    won_leads = leads_query.filter(Lead.status == "won").all()
+
+    # Total revenue
+    total_revenue = sum([lead.deal_value for lead in won_leads if lead.deal_value])
+
+    # Average deal size
+    deal_values = [lead.deal_value for lead in won_leads if lead.deal_value]
+    avg_deal_size = round(sum(deal_values) / len(deal_values)) if deal_values else 0
+
+    # Average time to close (first_seen → won_date)
+    time_to_close_days = []
+    for lead in won_leads:
+        if lead.won_date and lead.first_seen:
+            delta = lead.won_date - lead.first_seen
+            time_to_close_days.append(delta.days)
+
+    avg_time_to_close = round(sum(time_to_close_days) / len(time_to_close_days)) if time_to_close_days else None
+
+    # Pipeline value (sum of proposal stage deal values)
+    proposal_leads = leads_query.filter(Lead.status == "proposal").all()
+    pipeline_value = sum([lead.deal_value for lead in proposal_leads if lead.deal_value])
+
+    return {
+        "summary": {
+            "total_leads": total_leads,
+            "total_revenue": total_revenue,
+            "avg_deal_size": avg_deal_size,
+            "win_rate_pct": win_rate,
+            "avg_time_to_close_days": avg_time_to_close,
+            "pipeline_value": pipeline_value
+        },
+        "status_breakdown": status_counts,
+        "conversion_rates": conversion_rates,
+        "recent_wins": [
+            {
+                "id": lead.id,
+                "municipality": lead.municipality,
+                "state": lead.state,
+                "deal_value": lead.deal_value,
+                "won_date": lead.won_date.isoformat() if lead.won_date else None,
+                "days_to_close": (lead.won_date - lead.first_seen).days if lead.won_date and lead.first_seen else None
+            }
+            for lead in sorted(won_leads, key=lambda l: l.won_date if l.won_date else datetime.min, reverse=True)[:10]
+        ]
+    }
 
 
 @app.get("/api/scan-preview")

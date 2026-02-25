@@ -241,6 +241,13 @@ class Lead(Base):
     # User notes
     notes = Column(Text, nullable=True)
 
+    # ROI Tracking / Lead Status Pipeline
+    status = Column(String(20), nullable=False, default="new", index=True)  # new | contacted | qualified | proposal | won | lost
+    deal_value = Column(Integer, nullable=True)  # Deal value in USD (if won)
+    contacted_date = Column(DateTime, nullable=True)  # When sales first reached out
+    won_date = Column(DateTime, nullable=True)  # When deal closed (if won)
+    lost_reason = Column(Text, nullable=True)  # Why deal was lost (if applicable)
+
     # Relationships
     scan = relationship("Scan", back_populates="leads")
 
