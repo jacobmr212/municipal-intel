@@ -700,9 +700,9 @@
                 </div>
             `;
 
-            // Add click handler to open detail modal
+            // Add click handler to navigate to detail page
             card.addEventListener('click', () => {
-                showLeadDetail(lead);
+                window.location.href = `/lead/${lead.id}`;
             });
 
             return card;

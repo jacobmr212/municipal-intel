@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lead.municipality }}, {{ lead.state }} — Lead Detail</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/static/govtech-logo-dark.svg">
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="/scanner" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to Scanner
+                    </a>
+                    <span class="text-gray-300">|</span>
+                    <h1 class="text-lg font-semibold text-gray-900">Lead Detail</h1>
+                </div>
+                <div class="text-sm text-gray-600">
+                    {{ user.email }}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Section 1: Overview -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">{{ lead.municipality }}, {{ lead.state }}</h2>
+                    <p class="text-sm text-gray-600 mt-1">Population: {{ "{:,}".format(lead.population or 0) }}</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full
+                        {% if lead.lead_type == 'hot' %}text-blue-800 bg-blue-100
+                        {% elif lead.lead_type == 'warm' %}text-orange-800 bg-orange-100
+                        {% else %}text-gray-800 bg-gray-100{% endif %}">
+                        {{ lead.lead_type.upper() }}
+                    </span>
+                    <span class="text-3xl font-bold text-gray-900">{{ lead.relevance_score|round|int }}</span>
+                </div>
+            </div>
+            <p class="text-lg text-gray-700 mb-3">{{ lead.title }}</p>
+            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                <span>📅 {{ lead.first_seen.strftime('%m/%d/%Y') if lead.first_seen else lead.created_at.strftime('%m/%d/%Y') }}</span>
+                <span>📄 {{ lead.source_type or 'Unknown' }}</span>
+                {% if lead.customer_status == 'existing_customer' %}
+                <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">EXISTING CUSTOMER</span>
+                {% else %}
+                <span class="px-2 py-1 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">NEW OPPORTUNITY</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section 2: Temporal Intelligence -->
+        {% set urgency = lead.urgency_score or 0 %}
+        {% set urgency_color = 'red' if urgency >= 70 else ('yellow' if urgency >= 40 else 'gray') %}
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4
+            {% if urgency >= 70 %}border-red-500
+            {% elif urgency >= 40 %}border-yellow-500
+            {% else %}border-gray-300{% endif %}">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">⏰ Temporal Intelligence</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Urgency Score</div>
+                    <div class="text-2xl font-bold
+                        {% if urgency >= 70 %}text-red-600
+                        {% elif urgency >= 40 %}text-yellow-600
+                        {% else %}text-gray-600{% endif %}">
+                        {{ urgency }}/100
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Deadline</div>
+                    <div class="text-lg font-semibold text-gray-900">
+                        {% if lead.deadline_date %}
+                            {{ lead.deadline_date.strftime('%m/%d/%Y') }}
+                            <span class="text-sm text-gray-500">({{ lead.days_until_deadline }} days)</span>
+                        {% else %}
+                            <span class="text-gray-400">No deadline</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Decision Stage</div>
+                    <div class="text-lg font-semibold text-gray-900">{{ (lead.decision_stage or 'unknown').upper() }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Fiscal Year</div>
+                    <div class="text-lg font-semibold text-gray-900">{{ lead.fiscal_year or 'Unknown' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Signal Analysis -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">🎯 Signals Detected</h3>
+            <div class="space-y-3">
+                {% if lead.signal_matches_json %}
+                    {% for signal, data in lead.signal_matches_json.items() %}
+                    <div class="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50">
+                        <div class="font-semibold text-gray-900">{{ signal.replace('_', ' ').title() }}</div>
+                        <div class="text-sm text-gray-600">Weight: {{ data.weight if data.weight else 'N/A' }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500">No signals detected</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section 4: Competitor Intelligence -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">🏢 Competitor Intelligence</h3>
+            <div class="mb-3">
+                {% if lead.competitors_mentioned and lead.competitors_mentioned|length > 0 %}
+                    {% for competitor in lead.competitors_mentioned %}
+                    <span class="inline-block px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full mr-2 mb-2">{{ competitor }}</span>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500">No competitors mentioned</p>
+                {% endif %}
+            </div>
+            {% if lead.competitive_context %}
+            <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200 mb-2">
+                <span class="font-semibold">Context:</span> {{ lead.competitive_context }}
+            </div>
+            {% endif %}
+            {% if lead.existing_vendor %}
+            <div class="mt-2 text-sm">
+                <span class="font-semibold text-gray-700">Current Vendor:</span>
+                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">{{ lead.existing_vendor }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 5: Recommended Action -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">💡 Recommended Action</h3>
+            <p class="text-gray-700">{{ lead.recommended_action or 'No specific recommendation available' }}</p>
+        </div>
+
+        <!-- Section 6: Source Documents -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">📄 Source Documents</h3>
+            <a href="{{ lead.url }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+                Open Document
+            </a>
+        </div>
+
+        <!-- Section 7: Status & ROI Tracking -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">📊 Status & ROI</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Status</div>
+                    <div class="text-lg font-semibold text-gray-900">{{ (lead.status or 'new').upper() }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Deal Value</div>
+                    <div class="text-lg font-semibold text-gray-900">
+                        {% if lead.deal_value %}
+                            ${{ "{:,}".format(lead.deal_value|int) }}
+                        {% else %}
+                            <span class="text-gray-400">Not set</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Times Seen</div>
+                    <div class="text-lg font-semibold text-gray-900">{{ lead.times_seen or 1 }}</div>
+                </div>
+            </div>
+            <div class="text-sm space-y-1">
+                {% if lead.contacted_date %}
+                <div class="text-gray-600">Contacted: {{ lead.contacted_date.strftime('%m/%d/%Y') }}</div>
+                {% endif %}
+                {% if lead.won_date %}
+                <div class="text-green-600 font-medium">Won: {{ lead.won_date.strftime('%m/%d/%Y') }}</div>
+                {% endif %}
+                {% if lead.lost_reason %}
+                <div class="text-red-600">Lost: {{ lead.lost_reason }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section 8: Notes -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">📝 Notes</h3>
+            <form id="notes-form" class="space-y-3">
+                <textarea id="lead-notes" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="5" placeholder="Add notes about this lead...">{{ lead.notes or '' }}</textarea>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    Save Notes
+                </button>
+                <div id="save-status" class="text-sm"></div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Save notes functionality
+        document.getElementById('notes-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const notes = document.getElementById('lead-notes').value;
+            const statusDiv = document.getElementById('save-status');
+
+            statusDiv.textContent = 'Saving...';
+            statusDiv.className = 'text-sm text-gray-600';
+
+            try {
+                const response = await fetch(`/api/leads/{{ lead.id }}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes })
+                });
+
+                if (response.ok) {
+                    statusDiv.textContent = '✓ Notes saved successfully';
+                    statusDiv.className = 'text-sm text-green-600';
+                    setTimeout(() => {
+                        statusDiv.textContent = '';
+                    }, 3000);
+                } else {
+                    const errorData = await response.json();
+                    statusDiv.textContent = `Error: ${errorData.detail || 'Failed to save notes'}`;
+                    statusDiv.className = 'text-sm text-red-600';
+                }
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                statusDiv.className = 'text-sm text-red-600';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -969,6 +969,26 @@ async def scanner(request: Request, user: dict = Depends(require_role(["consulta
     })
 
 
+@app.get("/lead/{lead_id}", response_class=HTMLResponse)
+async def lead_detail(request: Request, lead_id: int, user: dict = Depends(require_role(["consultant", "admin"])), db: Session = Depends(get_db)):
+    """
+    Lead detail page showing full intelligence for a specific lead.
+
+    Displays all analyzed signals, temporal intelligence, competitor data,
+    recommended actions, and source documents.
+    """
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    return templates.TemplateResponse("lead_detail.html", {
+        "request": request,
+        "user": user,
+        "lead": lead
+    })
+
+
 @app.get("/test-assessment")
 async def test_assessment(user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """Quick test route to create assessment and redirect - bypasses JavaScript."""
