@@ -573,12 +573,16 @@
             let summary = lead.title;
 
             // If title is a generic document name or filename, use recommended_action instead
-            if (lead.title && (
+            const isGenericTitle = lead.title && (
                 lead.title.includes('.pdf') ||
+                lead.title === 'PDF' ||  // Catch literal "PDF" title
+                lead.title === 'Document' ||
                 lead.title.includes('Meeting Document') ||
                 lead.title.includes('Agenda') ||
                 lead.title.length > 80
-            )) {
+            );
+
+            if (isGenericTitle) {
                 // Use first sentence of recommended_action as summary
                 if (lead.recommended_action) {
                     summary = lead.recommended_action.split('.')[0] + '.';
