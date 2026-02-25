@@ -2018,6 +2018,240 @@ async def get_roi_analytics(
     }
 
 
+@app.get("/api/analytics/dashboard")
+async def get_analytics_dashboard(
+    days: Optional[int] = 30,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Comprehensive analytics dashboard data.
+
+    Returns key metrics, trends, and visualizations for the specified time period.
+
+    Query params:
+    - days: Time period for analytics (default 30, options: 7, 30, 90, 365)
+
+    **Requires authentication.**
+    """
+    from datetime import datetime, timedelta
+    from sqlalchemy import func
+    from collections import Counter
+
+    try:
+        # Calculate date range
+        now = datetime.utcnow()
+        start_date = now - timedelta(days=days)
+
+        # Get user's territories
+        territories = db.query(Territory).filter(Territory.user_id == user["user_id"]).all()
+        territory_states = [t.state for t in territories] if territories else None
+
+        # Base query for user's leads
+        base_query = (
+            db.query(Lead)
+            .join(Scan, Lead.scan_id == Scan.id)
+            .filter(
+                Scan.user_id == user["user_id"],
+                Lead.first_seen >= start_date
+            )
+        )
+
+        # Filter by territories
+        if territory_states:
+            base_query = base_query.filter(Lead.state.in_(territory_states))
+
+        all_leads = base_query.all()
+
+        # === OVERVIEW METRICS ===
+        total_leads = len(all_leads)
+        hot_leads = sum(1 for l in all_leads if l.lead_type == "hot")
+        warm_leads = sum(1 for l in all_leads if l.lead_type == "warm")
+        cold_leads = sum(1 for l in all_leads if l.lead_type == "cold")
+        urgent_leads = sum(1 for l in all_leads if l.urgency_score >= 60)
+
+        # === LEAD TYPE DISTRIBUTION ===
+        lead_distribution = {
+            "hot": hot_leads,
+            "warm": warm_leads,
+            "cold": cold_leads,
+        }
+
+        # === CUSTOMER STATUS BREAKDOWN ===
+        existing_customers = sum(1 for l in all_leads if l.customer_status == "existing_customer")
+        new_opportunities = sum(1 for l in all_leads if l.customer_status == "new_opportunity")
+
+        # === SOURCE TYPE BREAKDOWN ===
+        source_counts = Counter(l.source_type for l in all_leads)
+        source_distribution = dict(source_counts.most_common())
+
+        # === TERRITORY BREAKDOWN ===
+        territory_counts = Counter(l.state for l in all_leads)
+        territory_distribution = [
+            {"state": state, "count": count}
+            for state, count in territory_counts.most_common(10)
+        ]
+
+        # === URGENCY DISTRIBUTION ===
+        urgency_buckets = {
+            "critical": sum(1 for l in all_leads if l.urgency_score >= 80),
+            "high": sum(1 for l in all_leads if 60 <= l.urgency_score < 80),
+            "medium": sum(1 for l in all_leads if 40 <= l.urgency_score < 60),
+            "low": sum(1 for l in all_leads if l.urgency_score < 40),
+        }
+
+        # === DECISION STAGE DISTRIBUTION ===
+        decision_stage_counts = Counter(l.decision_stage for l in all_leads if l.decision_stage and l.decision_stage != "unknown")
+        decision_stages = dict(decision_stage_counts)
+
+        # === COMPETITOR INTELLIGENCE ===
+        all_competitors = []
+        for lead in all_leads:
+            if lead.competitors_mentioned:
+                all_competitors.extend(lead.competitors_mentioned)
+        competitor_counts = Counter(all_competitors)
+        top_competitors = [
+            {"name": comp, "count": count}
+            for comp, count in competitor_counts.most_common(10)
+        ]
+
+        existing_vendor_counts = Counter(l.existing_vendor for l in all_leads if l.existing_vendor)
+        existing_vendors = [
+            {"name": vendor, "count": count}
+            for vendor, count in existing_vendor_counts.most_common(10)
+        ]
+
+        # === TIME SERIES DATA (daily aggregation) ===
+        # Group leads by date
+        from datetime import date
+        leads_by_date = {}
+        for lead in all_leads:
+            lead_date = lead.first_seen.date() if lead.first_seen else date.today()
+            date_str = lead_date.isoformat()
+            if date_str not in leads_by_date:
+                leads_by_date[date_str] = {"hot": 0, "warm": 0, "cold": 0, "total": 0}
+            leads_by_date[date_str][lead.lead_type] += 1
+            leads_by_date[date_str]["total"] += 1
+
+        # Fill in missing dates with zeros
+        time_series = []
+        current_date = start_date.date()
+        end_date = now.date()
+        while current_date <= end_date:
+            date_str = current_date.isoformat()
+            time_series.append({
+                "date": date_str,
+                "hot": leads_by_date.get(date_str, {}).get("hot", 0),
+                "warm": leads_by_date.get(date_str, {}).get("warm", 0),
+                "cold": leads_by_date.get(date_str, {}).get("cold", 0),
+                "total": leads_by_date.get(date_str, {}).get("total", 0),
+            })
+            current_date += timedelta(days=1)
+
+        # === PIPELINE METRICS (ROI) ===
+        pipeline_counts = Counter(l.status for l in all_leads if hasattr(l, 'status'))
+        pipeline_distribution = dict(pipeline_counts)
+
+        # Total revenue from won deals
+        total_revenue = sum(l.deal_value for l in all_leads if hasattr(l, 'deal_value') and l.deal_value)
+
+        # Average deal size
+        won_deals = [l.deal_value for l in all_leads if hasattr(l, 'status') and l.status == "won" and hasattr(l, 'deal_value') and l.deal_value]
+        avg_deal_size = round(sum(won_deals) / len(won_deals)) if won_deals else 0
+
+        # === POPULATION DISTRIBUTION ===
+        population_buckets = {
+            "small": sum(1 for l in all_leads if l.population < 10000),
+            "small_mid": sum(1 for l in all_leads if 10000 <= l.population < 25000),
+            "mid": sum(1 for l in all_leads if 25000 <= l.population < 50000),
+            "large": sum(1 for l in all_leads if l.population >= 50000),
+        }
+
+        # === SCORE DISTRIBUTION ===
+        score_buckets = {
+            "excellent": sum(1 for l in all_leads if l.relevance_score >= 80),
+            "good": sum(1 for l in all_leads if 60 <= l.relevance_score < 80),
+            "fair": sum(1 for l in all_leads if 40 <= l.relevance_score < 60),
+            "low": sum(1 for l in all_leads if l.relevance_score < 40),
+        }
+
+        # === DEADLINE ANALYSIS ===
+        critical_deadlines = sum(1 for l in all_leads if l.days_until_deadline and l.days_until_deadline < 7)
+        approaching_deadlines = sum(1 for l in all_leads if l.days_until_deadline and 7 <= l.days_until_deadline <= 30)
+        future_deadlines = sum(1 for l in all_leads if l.days_until_deadline and l.days_until_deadline > 30)
+
+        # === SCAN HISTORY ===
+        recent_scans = (
+            db.query(Scan)
+            .filter(
+                Scan.user_id == user["user_id"],
+                Scan.created_at >= start_date
+            )
+            .order_by(Scan.created_at.desc())
+            .limit(10)
+            .all()
+        )
+
+        scan_history = [
+            {
+                "id": scan.id,
+                "created_at": scan.created_at.isoformat(),
+                "completed_at": scan.completed_at.isoformat() if scan.completed_at else None,
+                "status": scan.status,
+                "stats": scan.stats_json,
+            }
+            for scan in recent_scans
+        ]
+
+        return {
+            "period": {
+                "days": days,
+                "start_date": start_date.isoformat(),
+                "end_date": now.isoformat(),
+            },
+            "overview": {
+                "total_leads": total_leads,
+                "hot_leads": hot_leads,
+                "warm_leads": warm_leads,
+                "cold_leads": cold_leads,
+                "urgent_leads": urgent_leads,
+                "existing_customers": existing_customers,
+                "new_opportunities": new_opportunities,
+            },
+            "distributions": {
+                "lead_types": lead_distribution,
+                "source_types": source_distribution,
+                "urgency_levels": urgency_buckets,
+                "decision_stages": decision_stages,
+                "population_sizes": population_buckets,
+                "relevance_scores": score_buckets,
+            },
+            "competitors": {
+                "top_competitors": top_competitors,
+                "existing_vendors": existing_vendors,
+                "total_competitive_situations": len(all_competitors),
+            },
+            "territories": territory_distribution,
+            "deadlines": {
+                "critical": critical_deadlines,
+                "approaching": approaching_deadlines,
+                "future": future_deadlines,
+            },
+            "pipeline": {
+                "distribution": pipeline_distribution,
+                "total_revenue": total_revenue,
+                "avg_deal_size": avg_deal_size,
+                "won_count": pipeline_distribution.get("won", 0),
+            },
+            "time_series": time_series,
+            "recent_scans": scan_history,
+        }
+
+    except Exception as e:
+        logger.error(f"Error generating analytics dashboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/scan-preview")
 async def scan_preview(
     states: List[str] = Query(default=[]),
