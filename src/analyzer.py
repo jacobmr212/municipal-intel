@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from .signals import SIGNALS, classify_lead
+from .temporal import TemporalAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,13 @@ class AnalysisResult:
     llm_analysis: str = ""
     document_text: str = ""  # Full document text for deduplication hashing
 
+    # Temporal intelligence
+    urgency_score: int = 0  # 0-100
+    deadline_date: Optional[str] = None  # ISO format date string
+    days_until_deadline: Optional[int] = None
+    decision_stage: str = "unknown"
+    fiscal_year: Optional[str] = None
+
     @property
     def match_count(self) -> int:
         return len(self.signal_matches)
@@ -94,6 +102,9 @@ class DocumentAnalyzer:
     def __init__(self, use_llm: bool = False, llm_model: str = "claude-sonnet-4-20250514"):
         self.use_llm = use_llm
         self.llm_model = llm_model
+
+        # Initialize temporal analyzer
+        self.temporal_analyzer = TemporalAnalyzer()
 
         # Pre-compile patterns
         self._compiled = {}
@@ -274,6 +285,13 @@ Reply with ONLY the sales brief."""
         if self.use_llm and lead_type in ("hot", "warm"):
             llm_text = self._llm_enhance(doc.text, matches, doc.municipality)
 
+        # Temporal analysis
+        temporal = self.temporal_analyzer.analyze(doc.text)
+
+        # Boost relevance score based on urgency
+        if temporal.urgency_score > 50:
+            score = min(score + (temporal.urgency_score * 0.2), 100)
+
         return AnalysisResult(
             municipality=doc.municipality,
             state=doc.state,
@@ -290,6 +308,11 @@ Reply with ONLY the sales brief."""
             recommended_action=action,
             llm_analysis=llm_text,
             document_text=doc.text,  # Store for deduplication
+            urgency_score=temporal.urgency_score,
+            deadline_date=temporal.deadline_date.isoformat() if temporal.deadline_date else None,
+            days_until_deadline=temporal.days_until_deadline,
+            decision_stage=temporal.decision_stage,
+            fiscal_year=temporal.fiscal_year
         )
 
     def analyze_all(self, documents: list, population_map: dict = None,

@@ -265,6 +265,15 @@ def run_scan(scan_id: str, config: dict):
                                     else:
                                         leads_cold += 1
                                 else:
+                                    # Parse deadline date if present
+                                    from dateutil import parser as dateparser
+                                    deadline_dt = None
+                                    if result.deadline_date:
+                                        try:
+                                            deadline_dt = dateparser.parse(result.deadline_date)
+                                        except:
+                                            pass
+
                                     # Create new lead record
                                     lead = Lead(
                                         scan_id=scan_id,
@@ -290,7 +299,13 @@ def run_scan(scan_id: str, config: dict):
                                         document_hash=doc_hash,
                                         first_seen=datetime.utcnow(),
                                         last_seen=datetime.utcnow(),
-                                        times_seen=1
+                                        times_seen=1,
+                                        # Temporal intelligence fields
+                                        urgency_score=result.urgency_score,
+                                        deadline_date=deadline_dt,
+                                        days_until_deadline=result.days_until_deadline,
+                                        decision_stage=result.decision_stage,
+                                        fiscal_year=result.fiscal_year
                                     )
                                     db.add(lead)
                                     db.commit()
@@ -957,6 +972,8 @@ async def get_feed(
     customer_status: Optional[str] = None,
     days: Optional[int] = None,
     new_only: bool = False,
+    urgent_only: bool = False,
+    min_urgency: Optional[int] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -973,6 +990,8 @@ async def get_feed(
     - lead_type: Filter by lead_type: hot | warm | cold (optional)
     - customer_status: Filter by customer_status: existing_customer | new_opportunity (optional)
     - new_only: If true, only show leads seen once (newly discovered, default false)
+    - urgent_only: If true, only show leads with urgency_score >= 60 (default false)
+    - min_urgency: Minimum urgency score (0-100, optional)
 
     **Requires authentication.**
     """
@@ -1007,6 +1026,12 @@ async def get_feed(
     if new_only:
         # Only show leads discovered once (not duplicates)
         query = query.filter(Lead.times_seen == 1)
+    if urgent_only:
+        # Only show leads with high urgency (60+)
+        query = query.filter(Lead.urgency_score >= 60)
+    if min_urgency is not None:
+        # Filter by minimum urgency score
+        query = query.filter(Lead.urgency_score >= min_urgency)
 
     # Get total count for pagination metadata
     total_count = query.count()
@@ -1042,7 +1067,13 @@ async def get_feed(
             "first_seen": lead.first_seen.isoformat() if lead.first_seen else None,
             "last_seen": lead.last_seen.isoformat() if lead.last_seen else None,
             "times_seen": lead.times_seen if lead.times_seen else 1,
-            "is_new": lead.times_seen == 1 if lead.times_seen else True
+            "is_new": lead.times_seen == 1 if lead.times_seen else True,
+            # Temporal intelligence
+            "urgency_score": lead.urgency_score if lead.urgency_score else 0,
+            "deadline_date": lead.deadline_date.isoformat() if lead.deadline_date else None,
+            "days_until_deadline": lead.days_until_deadline,
+            "decision_stage": lead.decision_stage if lead.decision_stage else "unknown",
+            "fiscal_year": lead.fiscal_year
         })
 
     return {

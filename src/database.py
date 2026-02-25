@@ -224,6 +224,13 @@ class Lead(Base):
     last_seen = Column(DateTime, nullable=False, default=datetime.utcnow)
     times_seen = Column(Integer, nullable=False, default=1)  # How many scans found this lead
 
+    # Temporal intelligence (urgency/deadline detection)
+    urgency_score = Column(Integer, nullable=False, default=0, index=True)  # 0-100
+    deadline_date = Column(DateTime, nullable=True, index=True)  # Extracted deadline date
+    days_until_deadline = Column(Integer, nullable=True)  # Days from now to deadline
+    decision_stage = Column(String(20), nullable=True)  # exploration | evaluation | procurement | implementation
+    fiscal_year = Column(String(10), nullable=True)  # e.g., "FY2025"
+
     # User notes
     notes = Column(Text, nullable=True)
 
