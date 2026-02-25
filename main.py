@@ -5674,6 +5674,237 @@ async def get_crm_sync_status(
     }
 
 
+# ============================================================
+# DEAD DOMAIN MANAGEMENT
+# ============================================================
+
+class DomainUpdateRequest(BaseModel):
+    new_domain: str
+    reenrich: bool = False
+
+
+@app.get("/api/dead-domains")
+async def get_dead_domains(
+    state: Optional[str] = None,
+    min_population: Optional[int] = None,
+    limit: Optional[int] = None,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get list of municipalities with dead domains.
+
+    Query params:
+    - state: Filter by state code (e.g., CA, TX)
+    - min_population: Minimum population filter
+    - limit: Maximum number of results
+
+    Returns list of municipalities with dead domains for manual correction.
+    """
+    query = db.query(Municipality).filter(Municipality.domain_status == 'dead')
+
+    if state:
+        query = query.filter(Municipality.state == state.upper())
+
+    if min_population:
+        query = query.filter(Municipality.population >= min_population)
+
+    query = query.order_by(Municipality.population.desc())
+
+    if limit:
+        query = query.limit(limit)
+
+    results = query.all()
+
+    return {
+        "total": len(results),
+        "municipalities": [
+            {
+                "id": m.id,
+                "name": m.name,
+                "state": m.state,
+                "population": m.population,
+                "dead_domain": m.domain,
+                "resolved_url": m.resolved_url
+            }
+            for m in results
+        ]
+    }
+
+
+@app.patch("/api/municipalities/{municipality_id}/domain")
+async def update_municipality_domain(
+    municipality_id: str,
+    request: DomainUpdateRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update domain for a municipality.
+
+    If reenrich=true, will clear existing sources and re-run enrichment.
+    """
+    # Find municipality
+    muni = db.query(Municipality).filter(Municipality.id == municipality_id).first()
+
+    if not muni:
+        raise HTTPException(status_code=404, detail="Municipality not found")
+
+    # Store old values
+    old_domain = muni.domain
+    old_status = muni.domain_status
+
+    # Update domain
+    muni.domain = request.new_domain
+    muni.domain_status = 'unverified'  # Will be verified during enrichment
+    muni.resolved_url = None  # Clear cached URL
+
+    db.commit()
+
+    result = {
+        "success": True,
+        "municipality": {
+            "id": muni.id,
+            "name": muni.name,
+            "state": muni.state,
+            "old_domain": old_domain,
+            "new_domain": request.new_domain,
+            "old_status": old_status,
+            "new_status": muni.domain_status
+        },
+        "reenrichment": None
+    }
+
+    # Re-enrich if requested
+    if request.reenrich:
+        # Clear existing sources
+        db.execute(text("""
+            DELETE FROM municipal_sources
+            WHERE municipality_id = :muni_id
+        """), {"muni_id": muni.id})
+        db.commit()
+
+        # Run enrichment in background
+        def reenrich_municipality():
+            try:
+                from src.discovery import SourceDiscovery
+                discovery = SourceDiscovery()
+
+                # Refresh municipality from database
+                db_session = next(get_db())
+                fresh_muni = db_session.query(Municipality).filter(
+                    Municipality.id == municipality_id
+                ).first()
+
+                if fresh_muni:
+                    enrichment_results = discovery.discover_municipality(fresh_muni)
+                    logger.info(f"Re-enrichment complete for {fresh_muni.name}, {fresh_muni.state}: {enrichment_results}")
+                    db_session.close()
+            except Exception as e:
+                logger.error(f"Re-enrichment failed for {municipality_id}: {e}")
+
+        background_tasks.add_task(reenrich_municipality)
+        result["reenrichment"] = "started"
+
+    return result
+
+
+@app.get("/api/dead-domains/export")
+async def export_dead_domains_csv(
+    state: Optional[str] = None,
+    min_population: Optional[int] = None,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Export dead domains to CSV for batch research.
+
+    Returns CSV file with columns: Municipality, State, Population, Dead Domain, Corrected Domain, Notes
+    """
+    import csv
+    from io import StringIO
+
+    query = db.query(Municipality).filter(Municipality.domain_status == 'dead')
+
+    if state:
+        query = query.filter(Municipality.state == state.upper())
+
+    if min_population:
+        query = query.filter(Municipality.population >= min_population)
+
+    query = query.order_by(Municipality.state, Municipality.population.desc())
+    results = query.all()
+
+    # Create CSV in memory
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Write header
+    writer.writerow([
+        'Municipality ID', 'Municipality', 'State', 'Population',
+        'Dead Domain', 'Corrected Domain', 'Notes'
+    ])
+
+    # Write data
+    for muni in results:
+        writer.writerow([
+            muni.id,
+            muni.name,
+            muni.state,
+            muni.population or 0,
+            muni.domain or '',
+            '',  # Empty column for manual correction
+            ''   # Empty column for notes
+        ])
+
+    # Return as downloadable file
+    csv_content = output.getvalue()
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=dead_domains_{datetime.now().strftime('%Y%m%d')}.csv"
+        }
+    )
+
+
+@app.get("/api/dead-domains/stats")
+async def get_dead_domain_stats(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get statistics about dead domains by state.
+    """
+    from sqlalchemy import func
+
+    stats = db.query(
+        Municipality.state,
+        func.count(Municipality.id).label('dead_count')
+    ).filter(
+        Municipality.domain_status == 'dead'
+    ).group_by(Municipality.state).order_by(func.count(Municipality.id).desc()).all()
+
+    total_dead = sum(s.dead_count for s in stats)
+
+    # Get high-priority (pop > 50K)
+    high_priority = db.query(func.count(Municipality.id)).filter(
+        Municipality.domain_status == 'dead',
+        Municipality.population >= 50000
+    ).scalar()
+
+    return {
+        "total_dead": total_dead,
+        "high_priority": high_priority,
+        "by_state": [
+            {"state": s.state, "count": s.dead_count}
+            for s in stats
+        ]
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
