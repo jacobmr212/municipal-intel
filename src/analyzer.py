@@ -206,17 +206,71 @@ class DocumentAnalyzer:
                     ))
         return matches
 
-    def _calculate_score(self, matches: list[SignalMatch]) -> float:
-        """Calculate relevance score (0-100)."""
+    def _calculate_score(self, matches: list[SignalMatch],
+                         population: int = 0,
+                         source_type: str = "meeting_minutes",
+                         temporal_urgency: int = 0) -> float:
+        """
+        Calculate multi-factor relevance score (0-100).
+
+        Factors:
+        - Signal weights: Base score from keyword matches
+        - Signal diversity: More signal types = higher confidence
+        - Direct mentions: Caselle/Clarity = existing customer
+        - Source quality: Procurement > Budget > Meeting Minutes
+        - Population factor: Larger cities = potentially larger deals
+        - Temporal urgency: Deadlines boost priority
+        """
         if not matches:
             return 0.0
 
+        # Base score from signal weights
         base = sum(m.weight for m in matches)
+
+        # Signal diversity bonus (max 20 points)
         unique_types = len({m.signal_type for m in matches})
         diversity_bonus = min(unique_types * 5, 20)
+
+        # Direct mention bonus (existing customer = high priority)
         direct_bonus = 25 if any(m.signal_type == "direct_mentions" for m in matches) else 0
 
-        return min(round(base + diversity_bonus + direct_bonus, 1), 100)
+        # Source quality multiplier
+        source_multipliers = {
+            "procurement": 1.3,      # Procurement docs = high intent
+            "budget": 1.2,           # Budget docs = planning stage
+            "job_posting": 1.15,     # Hiring = growth signal
+            "agenda_packet": 1.1,    # Formal agendas = structured process
+            "meeting_minutes": 1.0,  # Default baseline
+            "audit": 1.1            # Audit findings = need for improvement
+        }
+        source_multiplier = source_multipliers.get(source_type, 1.0)
+
+        # Population factor (max 10 points boost for cities > 100K)
+        if population >= 100000:
+            population_bonus = 10
+        elif population >= 50000:
+            population_bonus = 7
+        elif population >= 25000:
+            population_bonus = 5
+        elif population >= 10000:
+            population_bonus = 3
+        else:
+            population_bonus = 0
+
+        # Temporal urgency factor (max 15 points for critical deadlines)
+        if temporal_urgency >= 80:
+            urgency_bonus = 15
+        elif temporal_urgency >= 60:
+            urgency_bonus = 10
+        elif temporal_urgency >= 40:
+            urgency_bonus = 5
+        else:
+            urgency_bonus = 0
+
+        # Calculate final score
+        score = (base + diversity_bonus + direct_bonus + population_bonus + urgency_bonus) * source_multiplier
+
+        return min(round(score, 1), 100)
 
     def _llm_enhance(self, text: str, matches: list[SignalMatch], municipality: str) -> str:
         """Use Claude for deeper contextual analysis."""
@@ -265,13 +319,23 @@ Reply with ONLY the sales brief."""
         if not matches:
             return None
 
-        score = self._calculate_score(matches)
+        # Temporal analysis (needed for scoring)
+        temporal = self.temporal_analyzer.analyze(doc.text)
+
+        # Calculate multi-factor score
+        score = self._calculate_score(
+            matches=matches,
+            population=population,
+            source_type=source_type,
+            temporal_urgency=temporal.urgency_score
+        )
+
         if score < min_score:
             return None
 
         signal_types = {m.signal_type for m in matches}
         high_confidence_signals = {m.signal_type for m in matches if m.confidence == "high"}
-        lead_type, action = classify_lead(score, signal_types, source_type, high_confidence_signals)
+        lead_type, action = classify_lead(score, signal_types, source_type, high_confidence_signals, temporal.urgency_score)
 
         # Determine customer status based on direct mentions
         customer_status = "existing_customer" if "direct_mentions" in signal_types else "new_opportunity"
@@ -284,13 +348,6 @@ Reply with ONLY the sales brief."""
         llm_text = ""
         if self.use_llm and lead_type in ("hot", "warm"):
             llm_text = self._llm_enhance(doc.text, matches, doc.municipality)
-
-        # Temporal analysis
-        temporal = self.temporal_analyzer.analyze(doc.text)
-
-        # Boost relevance score based on urgency
-        if temporal.urgency_score > 50:
-            score = min(score + (temporal.urgency_score * 0.2), 100)
 
         return AnalysisResult(
             municipality=doc.municipality,

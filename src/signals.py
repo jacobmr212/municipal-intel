@@ -442,22 +442,36 @@ URL_PATTERNS = [
 # ============================================================
 
 def classify_lead(score: float, signal_types: set, source_type: str = "meeting_minutes",
-                  high_confidence_signals: set = None) -> tuple[str, str]:
+                  high_confidence_signals: set = None, urgency_score: int = 0) -> tuple[str, str]:
     """
-    Classify a lead based on score, signal types, source type, and signal confidence.
+    Classify a lead based on score, signal types, source type, signal confidence, and urgency.
     Returns (lead_type, recommended_action).
 
-    high_confidence_signals: set of signal_types that had high-confidence matches
+    Args:
+        score: Relevance score (0-100)
+        signal_types: Set of detected signal types
+        source_type: Document source type
+        high_confidence_signals: Set of signal_types that had high-confidence matches
+        urgency_score: Temporal urgency score (0-100, with 80+ = critical deadline)
     """
     # Default to treating all signals as high confidence if not specified
     if high_confidence_signals is None:
         high_confidence_signals = signal_types
+
+    # CRITICAL URGENCY: Deadline within 7 days + ERP/Budget signals
+    if urgency_score >= 80:
+        if "erp_signals" in signal_types or "budget_signals" in signal_types or "active_rfp_signals" in signal_types:
+            return "hot", "🚨 CRITICAL: Deadline within 7 days — IMMEDIATE response required. Drop everything and engage now"
 
     # HOT: Active RFP with deadline (HIGHEST PRIORITY) - but only if HIGH confidence
     if "active_rfp_signals" in high_confidence_signals:
         if "erp_signals" in signal_types or "budget_signals" in signal_types:
             return "hot", "URGENT: Active RFP with deadline detected — review immediately and prepare response. Time-sensitive opportunity"
         return "hot", "HIGH PRIORITY: Active procurement with deadline — review to determine if ERP-related"
+
+    # HOT: High urgency + procurement or budget signals
+    if urgency_score >= 60 and ("budget_signals" in signal_types or source_type == "procurement"):
+        return "hot", "URGENT: Deadline approaching (30 days or less) — prioritize immediate outreach"
 
     # HOT: Direct Caselle mention
     if "direct_mentions" in signal_types:
