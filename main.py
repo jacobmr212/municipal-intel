@@ -2252,6 +2252,219 @@ async def get_analytics_dashboard(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/leads/{lead_id}/details")
+async def get_lead_details(
+    lead_id: str,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get comprehensive details for a single lead.
+
+    Returns everything needed for a detailed lead view:
+    - Full lead information
+    - Signal analysis breakdown
+    - Temporal intelligence
+    - Competitor intelligence
+    - Municipality context
+    - Related leads from same municipality
+    - Activity timeline
+    - Recommended actions
+
+    **Requires authentication and scan ownership.**
+    """
+    # Get lead and verify it exists
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    # Verify lead belongs to user's scan
+    scan = db.query(Scan).filter(
+        Scan.id == lead.scan_id,
+        Scan.user_id == user["user_id"]
+    ).first()
+
+    if not scan:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Get municipality info
+    municipality = db.query(Municipality).filter(
+        Municipality.name == lead.municipality,
+        Municipality.state == lead.state
+    ).first()
+
+    # Get related leads from same municipality (last 90 days)
+    from datetime import datetime, timedelta
+    ninety_days_ago = datetime.utcnow() - timedelta(days=90)
+
+    related_leads = (
+        db.query(Lead)
+        .join(Scan, Lead.scan_id == Scan.id)
+        .filter(
+            Scan.user_id == user["user_id"],
+            Lead.municipality == lead.municipality,
+            Lead.state == lead.state,
+            Lead.id != lead_id,
+            Lead.first_seen >= ninety_days_ago
+        )
+        .order_by(Lead.first_seen.desc())
+        .limit(5)
+        .all()
+    )
+
+    # Get scan details
+    scan_info = {
+        "id": scan.id,
+        "created_at": scan.created_at.isoformat(),
+        "completed_at": scan.completed_at.isoformat() if scan.completed_at else None,
+        "config": scan.config_json,
+    }
+
+    # Parse signal matches for detailed breakdown
+    signal_breakdown = []
+    if lead.signal_matches_json:
+        for signal_type, signal_data in lead.signal_matches_json.items():
+            signal_breakdown.append({
+                "type": signal_type,
+                "keyword": signal_data.get("keyword", ""),
+                "context": signal_data.get("context", ""),
+                "weight": signal_data.get("weight", 0),
+            })
+
+    # Build competitive analysis
+    competitive_analysis = None
+    if lead.competitors_mentioned or lead.existing_vendor:
+        competitive_analysis = {
+            "competitors_mentioned": lead.competitors_mentioned if hasattr(lead, 'competitors_mentioned') else [],
+            "existing_vendor": lead.existing_vendor if hasattr(lead, 'existing_vendor') else None,
+            "competitive_context": lead.competitive_context if hasattr(lead, 'competitive_context') else "",
+            "is_displacement_opportunity": bool(lead.existing_vendor),
+        }
+
+    # Build temporal intelligence
+    temporal_intel = {
+        "urgency_score": lead.urgency_score if lead.urgency_score else 0,
+        "urgency_label": (
+            "Critical" if lead.urgency_score >= 80 else
+            "High" if lead.urgency_score >= 60 else
+            "Medium" if lead.urgency_score >= 40 else
+            "Low"
+        ),
+        "deadline_date": lead.deadline_date.isoformat() if lead.deadline_date else None,
+        "days_until_deadline": lead.days_until_deadline,
+        "deadline_status": (
+            "Urgent - Action Required" if lead.days_until_deadline and lead.days_until_deadline < 7 else
+            "Approaching - Plan Now" if lead.days_until_deadline and lead.days_until_deadline < 30 else
+            "Future - Monitor" if lead.days_until_deadline else
+            "No Deadline"
+        ),
+        "decision_stage": lead.decision_stage if lead.decision_stage else "unknown",
+        "fiscal_year": lead.fiscal_year,
+    }
+
+    # Build ROI/status info
+    roi_info = {
+        "status": lead.status if hasattr(lead, 'status') else "new",
+        "deal_value": lead.deal_value if hasattr(lead, 'deal_value') else None,
+        "contacted_date": lead.contacted_date.isoformat() if hasattr(lead, 'contacted_date') and lead.contacted_date else None,
+        "won_date": lead.won_date.isoformat() if hasattr(lead, 'won_date') and lead.won_date else None,
+        "lost_reason": lead.lost_reason if hasattr(lead, 'lost_reason') else None,
+    }
+
+    # Build activity timeline
+    timeline = [
+        {
+            "date": lead.first_seen.isoformat() if lead.first_seen else None,
+            "event": "Lead Discovered",
+            "description": f"Found via {lead.source_type.replace('_', ' ').title()}",
+        }
+    ]
+
+    if lead.times_seen > 1:
+        timeline.append({
+            "date": lead.last_seen.isoformat() if lead.last_seen else None,
+            "event": "Lead Re-discovered",
+            "description": f"Seen {lead.times_seen} times total",
+        })
+
+    if hasattr(lead, 'contacted_date') and lead.contacted_date:
+        timeline.append({
+            "date": lead.contacted_date.isoformat(),
+            "event": "First Contact",
+            "description": "Sales outreach initiated",
+        })
+
+    if hasattr(lead, 'won_date') and lead.won_date:
+        timeline.append({
+            "date": lead.won_date.isoformat(),
+            "event": "Deal Won",
+            "description": f"${lead.deal_value:,}" if lead.deal_value else "Deal closed",
+        })
+
+    # Sort timeline by date
+    timeline.sort(key=lambda x: x["date"] if x["date"] else "", reverse=True)
+
+    # Build municipality context
+    municipality_context = None
+    if municipality:
+        municipality_context = {
+            "name": municipality.name,
+            "state": municipality.state,
+            "population": municipality.population,
+            "domain": municipality.resolved_url or municipality.domain,
+            "domain_status": municipality.domain_status,
+        }
+
+    # Format related leads
+    related_leads_formatted = [
+        {
+            "id": rl.id,
+            "title": rl.title,
+            "date": rl.date,
+            "lead_type": rl.lead_type,
+            "relevance_score": rl.relevance_score,
+            "urgency_score": rl.urgency_score if rl.urgency_score else 0,
+            "first_seen": rl.first_seen.isoformat() if rl.first_seen else None,
+        }
+        for rl in related_leads
+    ]
+
+    return {
+        "lead": {
+            "id": lead.id,
+            "municipality": lead.municipality,
+            "state": lead.state,
+            "population": lead.population,
+            "title": lead.title,
+            "url": lead.url,
+            "date": lead.date,
+            "source_type": lead.source_type,
+            "relevance_score": lead.relevance_score,
+            "lead_type": lead.lead_type,
+            "customer_status": lead.customer_status,
+            "recommended_action": lead.recommended_action,
+            "notes": lead.notes,
+            "first_seen": lead.first_seen.isoformat() if lead.first_seen else None,
+            "last_seen": lead.last_seen.isoformat() if lead.last_seen else None,
+            "times_seen": lead.times_seen if lead.times_seen else 1,
+        },
+        "scan": scan_info,
+        "signal_analysis": {
+            "total_signals": len(signal_breakdown),
+            "signals": signal_breakdown,
+        },
+        "temporal_intelligence": temporal_intel,
+        "competitive_analysis": competitive_analysis,
+        "roi_tracking": roi_info,
+        "timeline": timeline,
+        "municipality": municipality_context,
+        "related_leads": {
+            "count": len(related_leads_formatted),
+            "leads": related_leads_formatted,
+        },
+    }
+
+
 @app.get("/api/scan-preview")
 async def scan_preview(
     states: List[str] = Query(default=[]),
