@@ -241,6 +241,11 @@ class Lead(Base):
     # User notes
     notes = Column(Text, nullable=True)
 
+    # Competitor Intelligence
+    competitors_mentioned = Column(JSON, nullable=True)  # ["Tyler Technologies", "CentralSquare"]
+    competitive_context = Column(Text, nullable=True)  # Strategic context summary
+    existing_vendor = Column(String(100), nullable=True, index=True)  # Current vendor if detected
+
     # ROI Tracking / Lead Status Pipeline
     status = Column(String(20), nullable=False, default="new", index=True)  # new | contacted | qualified | proposal | won | lost
     deal_value = Column(Integer, nullable=True)  # Deal value in USD (if won)

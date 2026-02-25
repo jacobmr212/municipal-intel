@@ -310,7 +310,11 @@ def run_scan(scan_id: str, config: dict):
                                         deadline_date=deadline_dt,
                                         days_until_deadline=result.days_until_deadline,
                                         decision_stage=result.decision_stage,
-                                        fiscal_year=result.fiscal_year
+                                        fiscal_year=result.fiscal_year,
+                                        # Competitor intelligence
+                                        competitors_mentioned=result.competitors_mentioned,
+                                        competitive_context=result.competitive_context,
+                                        existing_vendor=result.existing_vendor
                                     )
                                     db.add(lead)
                                     db.commit()
@@ -1142,7 +1146,11 @@ async def get_feed(
             "deal_value": lead.deal_value if hasattr(lead, 'deal_value') else None,
             "contacted_date": lead.contacted_date.isoformat() if hasattr(lead, 'contacted_date') and lead.contacted_date else None,
             "won_date": lead.won_date.isoformat() if hasattr(lead, 'won_date') and lead.won_date else None,
-            "lost_reason": lead.lost_reason if hasattr(lead, 'lost_reason') else None
+            "lost_reason": lead.lost_reason if hasattr(lead, 'lost_reason') else None,
+            # Competitor intelligence
+            "competitors_mentioned": lead.competitors_mentioned if hasattr(lead, 'competitors_mentioned') else [],
+            "competitive_context": lead.competitive_context if hasattr(lead, 'competitive_context') else "",
+            "existing_vendor": lead.existing_vendor if hasattr(lead, 'existing_vendor') else None
         })
 
     return {

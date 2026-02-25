@@ -77,6 +77,11 @@ class AnalysisResult:
     decision_stage: str = "unknown"
     fiscal_year: Optional[str] = None
 
+    # Competitor intelligence
+    competitors_mentioned: list[str] = field(default_factory=list)  # ["Tyler Technologies", "CentralSquare"]
+    competitive_context: str = ""  # Human-readable competitive summary
+    existing_vendor: Optional[str] = None  # Current vendor if detected
+
     @property
     def match_count(self) -> int:
         return len(self.signal_matches)
@@ -103,8 +108,10 @@ class DocumentAnalyzer:
         self.use_llm = use_llm
         self.llm_model = llm_model
 
-        # Initialize temporal analyzer
+        # Initialize analyzers
         self.temporal_analyzer = TemporalAnalyzer()
+        from .competitor import CompetitorAnalyzer
+        self.competitor_analyzer = CompetitorAnalyzer()
 
         # Pre-compile patterns
         self._compiled = {}
@@ -349,6 +356,11 @@ Reply with ONLY the sales brief."""
         if self.use_llm and lead_type in ("hot", "warm"):
             llm_text = self._llm_enhance(doc.text, matches, doc.municipality)
 
+        # Competitor analysis
+        competitor_intel = self.competitor_analyzer.analyze(doc.text)
+        competitive_context = self.competitor_analyzer.get_strategic_context(competitor_intel)
+        existing_vendor = competitor_intel["competitive_summary"]["existing_vendors"][0] if competitor_intel["competitive_summary"]["existing_vendors"] else None
+
         return AnalysisResult(
             municipality=doc.municipality,
             state=doc.state,
@@ -369,7 +381,10 @@ Reply with ONLY the sales brief."""
             deadline_date=temporal.deadline_date.isoformat() if temporal.deadline_date else None,
             days_until_deadline=temporal.days_until_deadline,
             decision_stage=temporal.decision_stage,
-            fiscal_year=temporal.fiscal_year
+            fiscal_year=temporal.fiscal_year,
+            competitors_mentioned=competitor_intel["competitors_mentioned"],
+            competitive_context=competitive_context,
+            existing_vendor=existing_vendor
         )
 
     def analyze_all(self, documents: list, population_map: dict = None,
