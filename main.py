@@ -5363,6 +5363,317 @@ async def analyze_with_ai(
     return {"analysis": analysis}
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# CRM Integration Endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class CRMConfigRequest(BaseModel):
+    """Request model for CRM configuration."""
+    provider: str  # 'salesforce' or 'hubspot'
+    enabled: bool = True
+    credentials: dict  # Provider-specific credentials
+    field_mapping: Optional[dict] = None
+    default_owner_id: Optional[str] = None
+    auto_sync_hot_leads: bool = True
+    auto_sync_warm_leads: bool = False
+
+
+class CRMSyncRequest(BaseModel):
+    """Request model for syncing leads to CRM."""
+    lead_ids: List[str]  # List of lead IDs to sync
+    provider: str  # 'salesforce' or 'hubspot'
+    update_existing: bool = True  # Update if lead already exists in CRM
+
+
+@app.post("/api/crm/config")
+async def create_crm_config(
+    config_request: CRMConfigRequest,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create or update CRM configuration for user.
+
+    Stores encrypted credentials and sync preferences.
+    """
+    from src.database import CRMConfig
+    import json
+    from cryptography.fernet import Fernet
+    import base64
+
+    try:
+        # Check if config already exists for this user/provider
+        existing = db.query(CRMConfig).filter(
+            CRMConfig.user_id == user["user_id"],
+            CRMConfig.provider == config_request.provider
+        ).first()
+
+        # Simple encryption using Fernet (in production, use user-specific key from env)
+        # For MVP, use a shared key (should move to user-specific keys later)
+        encryption_key = os.getenv("CRM_ENCRYPTION_KEY")
+        if not encryption_key:
+            # Generate a key if not set (not ideal for production)
+            encryption_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
+            logger.warning("No CRM_ENCRYPTION_KEY set - using temp key (credentials won't persist across restarts)")
+
+        fernet = Fernet(encryption_key.encode() if isinstance(encryption_key, str) else encryption_key)
+        credentials_encrypted = fernet.encrypt(json.dumps(config_request.credentials).encode()).decode()
+
+        if existing:
+            # Update existing config
+            existing.enabled = 1 if config_request.enabled else 0
+            existing.credentials_encrypted = credentials_encrypted
+            existing.field_mapping = config_request.field_mapping
+            existing.default_owner_id = config_request.default_owner_id
+            existing.auto_sync_hot_leads = 1 if config_request.auto_sync_hot_leads else 0
+            existing.auto_sync_warm_leads = 1 if config_request.auto_sync_warm_leads else 0
+            existing.updated_at = datetime.utcnow()
+
+            db.commit()
+            config_id = existing.id
+
+        else:
+            # Create new config
+            new_config = CRMConfig(
+                user_id=user["user_id"],
+                provider=config_request.provider,
+                enabled=1 if config_request.enabled else 0,
+                credentials_encrypted=credentials_encrypted,
+                field_mapping=config_request.field_mapping,
+                default_owner_id=config_request.default_owner_id,
+                auto_sync_hot_leads=1 if config_request.auto_sync_hot_leads else 0,
+                auto_sync_warm_leads=1 if config_request.auto_sync_warm_leads else 0
+            )
+
+            db.add(new_config)
+            db.commit()
+            config_id = new_config.id
+
+        return {
+            "success": True,
+            "config_id": config_id,
+            "provider": config_request.provider,
+            "message": f"{config_request.provider.title()} CRM configured successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to save CRM config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/crm/config")
+async def get_crm_configs(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all CRM configurations for current user (credentials excluded)."""
+    from src.database import CRMConfig
+
+    configs = db.query(CRMConfig).filter(
+        CRMConfig.user_id == user["user_id"]
+    ).all()
+
+    return {
+        "configs": [
+            {
+                "id": config.id,
+                "provider": config.provider,
+                "enabled": bool(config.enabled),
+                "auto_sync_hot_leads": bool(config.auto_sync_hot_leads),
+                "auto_sync_warm_leads": bool(config.auto_sync_warm_leads),
+                "created_at": config.created_at.isoformat(),
+                "updated_at": config.updated_at.isoformat()
+            }
+            for config in configs
+        ]
+    }
+
+
+@app.delete("/api/crm/config/{config_id}")
+async def delete_crm_config(
+    config_id: str,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a CRM configuration."""
+    from src.database import CRMConfig
+
+    config = db.query(CRMConfig).filter(
+        CRMConfig.id == config_id,
+        CRMConfig.user_id == user["user_id"]
+    ).first()
+
+    if not config:
+        raise HTTPException(status_code=404, detail="CRM config not found")
+
+    db.delete(config)
+    db.commit()
+
+    return {"success": True, "message": "CRM config deleted"}
+
+
+@app.post("/api/crm/sync")
+async def sync_leads_to_crm(
+    sync_request: CRMSyncRequest,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Sync selected leads to CRM system.
+
+    Returns sync results for each lead.
+    """
+    from src.database import CRMConfig, Lead
+    from src.crm import get_crm_provider
+    from cryptography.fernet import Fernet
+    import json
+
+    try:
+        # Get CRM config
+        crm_config = db.query(CRMConfig).filter(
+            CRMConfig.user_id == user["user_id"],
+            CRMConfig.provider == sync_request.provider,
+            CRMConfig.enabled == 1
+        ).first()
+
+        if not crm_config:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No active {sync_request.provider} configuration found"
+            )
+
+        # Decrypt credentials
+        encryption_key = os.getenv("CRM_ENCRYPTION_KEY")
+        if not encryption_key:
+            raise HTTPException(
+                status_code=500,
+                detail="CRM encryption key not configured"
+            )
+
+        fernet = Fernet(encryption_key.encode() if isinstance(encryption_key, str) else encryption_key)
+        credentials = json.loads(fernet.decrypt(crm_config.credentials_encrypted.encode()).decode())
+
+        # Initialize CRM provider
+        provider = get_crm_provider(sync_request.provider, credentials)
+
+        # Authenticate
+        if not provider.authenticate():
+            raise HTTPException(
+                status_code=401,
+                detail=f"Failed to authenticate with {sync_request.provider}"
+            )
+
+        # Sync each lead
+        results = []
+        for lead_id in sync_request.lead_ids:
+            lead = db.query(Lead).filter(Lead.id == lead_id).first()
+
+            if not lead:
+                results.append({
+                    "lead_id": lead_id,
+                    "success": False,
+                    "error": "Lead not found"
+                })
+                continue
+
+            # Map lead data to CRM format
+            lead_data = provider.map_lead_data(lead)
+
+            # Sync to CRM
+            sync_result = provider.sync_lead(lead_data, update_existing=sync_request.update_existing)
+
+            # Update lead with sync status
+            if sync_result.success:
+                lead.crm_synced = 1
+                lead.crm_provider = sync_request.provider
+                lead.crm_lead_id = sync_result.crm_lead_id
+                lead.crm_url = sync_result.crm_url
+                lead.crm_synced_at = sync_result.synced_at
+                lead.crm_sync_error = None
+            else:
+                lead.crm_sync_error = sync_result.error_message
+
+            db.commit()
+
+            results.append({
+                "lead_id": lead_id,
+                "municipality": f"{lead.municipality}, {lead.state}",
+                "success": sync_result.success,
+                "crm_lead_id": sync_result.crm_lead_id,
+                "crm_url": sync_result.crm_url,
+                "error": sync_result.error_message
+            })
+
+        # Summary
+        successful = sum(1 for r in results if r["success"])
+        failed = len(results) - successful
+
+        return {
+            "success": True,
+            "summary": {
+                "total": len(results),
+                "successful": successful,
+                "failed": failed
+            },
+            "results": results
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"CRM sync failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/crm/sync-status")
+async def get_crm_sync_status(
+    scan_id: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get CRM sync status summary.
+
+    Optionally filter by scan_id.
+    """
+    from src.database import Lead, Scan
+    from sqlalchemy import func
+
+    # Build base query
+    query = db.query(Lead).join(Scan).filter(Scan.user_id == user["user_id"])
+
+    if scan_id:
+        query = query.filter(Lead.scan_id == scan_id)
+
+    # Get counts
+    total_leads = query.count()
+    synced_leads = query.filter(Lead.crm_synced == 1).count()
+    failed_syncs = query.filter(Lead.crm_sync_error.isnot(None)).count()
+
+    # Get breakdown by provider
+    provider_breakdown = db.query(
+        Lead.crm_provider,
+        func.count(Lead.id).label('count')
+    ).join(Scan).filter(
+        Scan.user_id == user["user_id"],
+        Lead.crm_synced == 1
+    ).group_by(Lead.crm_provider).all()
+
+    return {
+        "total_leads": total_leads,
+        "synced": synced_leads,
+        "not_synced": total_leads - synced_leads,
+        "failed": failed_syncs,
+        "sync_rate": round((synced_leads / total_leads * 100), 1) if total_leads > 0 else 0,
+        "by_provider": {
+            row.crm_provider: row.count
+            for row in provider_breakdown
+            if row.crm_provider
+        }
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -253,6 +253,14 @@ class Lead(Base):
     won_date = Column(DateTime, nullable=True)  # When deal closed (if won)
     lost_reason = Column(Text, nullable=True)  # Why deal was lost (if applicable)
 
+    # CRM Sync Tracking
+    crm_synced = Column(Integer, nullable=False, default=0, index=True)  # 0 = not synced, 1 = synced
+    crm_provider = Column(String(50), nullable=True, index=True)  # salesforce | hubspot
+    crm_lead_id = Column(String(100), nullable=True)  # Lead ID in CRM system
+    crm_url = Column(String(500), nullable=True)  # Direct URL to view lead in CRM
+    crm_synced_at = Column(DateTime, nullable=True)  # Timestamp of last sync
+    crm_sync_error = Column(Text, nullable=True)  # Error message if sync failed
+
     # Relationships
     scan = relationship("Scan", back_populates="leads")
 
@@ -341,6 +349,44 @@ class CachedDocument(Base):
     def is_expired(self) -> bool:
         """Check if cache entry has expired."""
         return datetime.utcnow() > self.expires_at
+
+
+class CRMConfig(Base):
+    """
+    CRM configuration for user accounts.
+
+    Stores encrypted CRM credentials and sync preferences.
+    Each user can configure multiple CRM providers (Salesforce, HubSpot, etc.)
+    """
+    __tablename__ = "crm_configs"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    provider = Column(String(50), nullable=False)  # salesforce | hubspot
+    enabled = Column(Integer, nullable=False, default=1)  # 1=enabled, 0=disabled
+
+    # Encrypted credentials (encrypted with user-specific key)
+    credentials_encrypted = Column(Text, nullable=False)
+
+    # Field mapping (JSON) - maps Lead model fields to CRM fields
+    field_mapping = Column(JSON, nullable=True)
+
+    # Default owner ID in CRM system for assigning leads
+    default_owner_id = Column(String(100), nullable=True)
+
+    # Auto-sync preferences
+    auto_sync_hot_leads = Column(Integer, nullable=False, default=1)  # Auto-sync hot leads
+    auto_sync_warm_leads = Column(Integer, nullable=False, default=0)  # Don't auto-sync warm by default
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User")
+
+    def __repr__(self):
+        return f"<CRMConfig: {self.provider} for {self.user.email if self.user else 'Unknown'}>"
 
 
 # Database setup
