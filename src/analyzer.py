@@ -67,6 +67,7 @@ class AnalysisResult:
     customer_status: str = "unknown"  # existing_customer | new_opportunity | unknown
     recommended_action: str = ""
     llm_analysis: str = ""
+    document_text: str = ""  # Full document text for deduplication hashing
 
     @property
     def match_count(self) -> int:
@@ -288,6 +289,7 @@ Reply with ONLY the sales brief."""
             customer_status=customer_status,
             recommended_action=action,
             llm_analysis=llm_text,
+            document_text=doc.text,  # Store for deduplication
         )
 
     def analyze_all(self, documents: list, population_map: dict = None,

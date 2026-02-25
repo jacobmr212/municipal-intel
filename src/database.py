@@ -15,6 +15,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import os
 import uuid
+import hashlib
 
 # Database configuration
 # For Vercel: Use PostgreSQL via DATABASE_URL environment variable
@@ -216,6 +217,12 @@ class Lead(Base):
 
     # Signal details (stored as JSON)
     signal_matches_json = Column(JSON, nullable=True)  # Full keyword match data with contexts
+
+    # Deduplication tracking
+    document_hash = Column(String(32), nullable=True, index=True)  # MD5 hash of document content
+    first_seen = Column(DateTime, nullable=False, default=datetime.utcnow)
+    last_seen = Column(DateTime, nullable=False, default=datetime.utcnow)
+    times_seen = Column(Integer, nullable=False, default=1)  # How many scans found this lead
 
     # User notes
     notes = Column(Text, nullable=True)

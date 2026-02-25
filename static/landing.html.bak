@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GovTech Diagnostic — Free ERP Readiness Assessment for Municipalities</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/static/govtech-logo-dark.svg">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --ink: #1A1816;
+  --ink-light: #3D3A35;
+  --ink-muted: #7A756D;
+  --sand: #F7F5F0;
+  --sand-dark: #EDE9E1;
+  --cream: #FDFCFA;
+  --white: #FFFFFF;
+  --accent: #1E3BC0;
+  --accent-hover: #162D99;
+  --accent-light: #E8ECFA;
+  --warm: #C4713B;
+  --warm-light: #FDF0E6;
+  --success: #1B7A4E;
+  --success-light: #E6F5ED;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--cream);
+  line-height: 1.6;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width:768px) {
+  .container {
+    padding: 0 20px;
+    max-width: 100%;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+.reveal { opacity:0; transform:translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+.reveal-left { opacity:0; transform:translateX(-60px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+.reveal-right { opacity:0; transform:translateX(60px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+.reveal.visible, .reveal-left.visible, .reveal-right.visible { opacity:1; transform:translate(0); }
+.stagger-1 { transition-delay:0.1s; } .stagger-2 { transition-delay:0.2s; } .stagger-3 { transition-delay:0.3s; }
+.stagger-4 { transition-delay:0.4s; } .stagger-5 { transition-delay:0.5s; }
+
+/* ===== NAV ===== */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(253,252,250,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(26,24,22,0.06); transition:all 0.3s; }
+nav.scrolled { box-shadow:0 1px 20px rgba(0,0,0,0.06); }
+nav .container { display:flex; align-items:center; justify-content:space-between; height:72px; }
+.nav-logo { display:flex; align-items:center; text-decoration:none; }
+.nav-links { display:flex; align-items:center; gap:28px; }
+.nav-links a { font-size:0.85rem; font-weight:500; color:var(--ink-muted); text-decoration:none; transition:color 0.2s; white-space:nowrap; }
+.nav-links a:hover { color:var(--ink); }
+.nav-cta { display:inline-flex; align-items:center; gap:6px; padding:9px 20px; background:var(--accent); color:var(--white) !important; border-radius:8px; font-weight:600 !important; transition:background 0.2s, transform 0.2s; }
+.nav-cta:hover { background:var(--accent-hover) !important; transform:translateY(-1px); }
+.nav-consultant { display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border:1.5px solid var(--sand-dark); border-radius:8px; color:var(--warm) !important; font-weight:600 !important; transition:all 0.2s; }
+.nav-consultant:hover { border-color:var(--warm); background:var(--warm-light); }
+.nav-consultant svg { transition:transform 0.2s; }
+.nav-consultant:hover svg { transform:translate(2px,-2px); }
+
+/* Intermediate breakpoint to tighten nav further */
+@media (max-width:1150px) {
+  .nav-links { gap:20px; }
+  .nav-links a { font-size:0.82rem; }
+  .nav-cta { padding:8px 18px; font-size:0.9rem; }
+  .nav-consultant { padding:6px 12px; font-size:0.82rem; }
+}
+
+/* Hide "For consultants" link at tablet and below - it's behind hamburger menu */
+@media (max-width:1024px) {
+  .nav-consultant { display:none; }
+  .nav-links { gap:24px; }
+}
+
+/* Mobile menu toggle */
+.menu-toggle { display:none; width:40px; height:40px; flex-direction:column; justify-content:center; align-items:center; gap:5px; cursor:pointer; padding:8px; border:none; background:transparent; border-radius:6px; transition:background 0.2s; }
+.menu-toggle:hover { background:var(--sand); }
+.menu-toggle span { display:block; width:22px; height:2.5px; background:var(--ink); border-radius:2px; transition:all 0.3s cubic-bezier(0.16,1,0.3,1); }
+.menu-toggle.active span:nth-child(1) { transform:translateY(7.5px) rotate(45deg); }
+.menu-toggle.active span:nth-child(2) { opacity:0; transform:scaleX(0); }
+.menu-toggle.active span:nth-child(3) { transform:translateY(-7.5px) rotate(-45deg); }
+
+/* Mobile menu backdrop */
+.menu-backdrop { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:98; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+.menu-backdrop.active { opacity:1; pointer-events:auto; }
+
+/* Mobile menu panel */
+.mobile-menu { display:none; position:fixed; top:73px; left:0; right:0; bottom:0; background:var(--cream); z-index:99; opacity:0; transform:translateY(-20px); transition:opacity 0.3s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1); pointer-events:none; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
+.mobile-menu.active { opacity:1; transform:translateY(0); pointer-events:auto; }
+.mobile-menu-content { padding:16px 20px; display:flex; flex-direction:column; gap:0; }
+.mobile-menu-content a { display:block; padding:18px 0; font-size:1.05rem; font-weight:500; color:var(--ink-light); text-decoration:none; border-bottom:1px solid var(--sand-dark); transition:color 0.2s; }
+.mobile-menu-content a:hover { color:var(--ink); }
+.mobile-menu-content a:last-child { border-bottom:none; }
+.mobile-menu-content a.nav-consultant { margin-top:8px; padding:14px 20px; text-align:center; border:1.5px solid var(--warm); border-radius:8px; color:var(--warm); background:var(--warm-light); display:flex; align-items:center; justify-content:center; gap:6px; }
+.mobile-menu-content a.nav-consultant:hover { border-color:var(--warm); background:var(--warm-light); }
+.mobile-menu-content a.nav-cta { margin-top:12px; padding:16px 24px; text-align:center; border:none; border-radius:8px; background:var(--accent); color:var(--white); display:flex; align-items:center; justify-content:center; gap:8px; }
+.mobile-menu-content a.nav-cta:hover { background:var(--accent-hover); }
+
+/* ===== HERO ===== */
+.hero { padding:160px 0 100px; position:relative; overflow:hidden; text-align:center; }
+.hero::before { content:''; position:absolute; top:-200px; right:-200px; width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(30,59,192,0.04) 0%, transparent 70%); pointer-events:none; }
+.hero .container { max-width:800px; margin:0 auto; }
+.hero-badge { display:inline-flex; align-items:center; gap:8px; padding:6px 16px; background:var(--success-light); color:var(--success); border-radius:100px; font-size:0.82rem; font-weight:600; letter-spacing:0.03em; margin-bottom:28px; animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+.hero-badge::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--success); animation:pulse 2s infinite; }
+.hero h1 { font-family:var(--serif); font-size:clamp(2.8rem,4.5vw,3.8rem); line-height:1.12; color:var(--ink); letter-spacing:-0.02em; margin-bottom:24px; animation:fadeUp 0.6s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
+.hero h1 em { font-style:italic; color:var(--accent); }
+.hero-sub { font-size:1.15rem; line-height:1.7; color:var(--ink-light); max-width:520px; margin:0 auto 40px auto; animation:fadeUp 0.6s 0.2s cubic-bezier(0.16,1,0.3,1) both; }
+.hero-actions { display:flex; align-items:center; justify-content:center; gap:20px; animation:fadeUp 0.6s 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+
+.btn-primary { display:inline-flex; align-items:center; gap:10px; padding:16px 32px; background:var(--accent); color:var(--white); border:none; border-radius:10px; font-family:var(--sans); font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); text-decoration:none; box-shadow:0 4px 20px rgba(30,59,192,0.25); }
+.btn-primary:hover { background:var(--accent-hover); transform:translateY(-2px); box-shadow:0 8px 30px rgba(30,59,192,0.3); }
+.btn-primary svg { transition:transform 0.2s; }
+.btn-primary:hover svg { transform:translateX(3px); }
+.btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:16px 28px; background:transparent; color:var(--ink-light); border:1.5px solid var(--sand-dark); border-radius:10px; font-family:var(--sans); font-size:1rem; font-weight:500; cursor:pointer; transition:all 0.25s; text-decoration:none; }
+.btn-secondary:hover { border-color:var(--ink-muted); color:var(--ink); background:var(--sand); }
+
+/* Hero card */
+.hero-card { animation: fadeUp 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) both; max-width:100%; }
+.playbook-preview { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:32px; box-shadow:0 16px 48px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04); max-width:100%; }
+.playbook-stats { display:flex; align-items:center; justify-content:space-around; padding:24px 0; }
+.stat-item { text-align:center; }
+.stat-number { font-family:var(--serif); font-size:2.5rem; color:var(--accent); line-height:1; margin-bottom:6px; font-weight:400; }
+.stat-label { font-size:0.85rem; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:500; }
+.stat-divider { width:1px; height:40px; background:var(--sand-dark); }
+
+/* ===== TRUST STRIP ===== */
+.trust-strip { padding:48px 0; background:var(--sand); border-top:1px solid var(--sand-dark); border-bottom:1px solid var(--sand-dark); }
+.trust-content { display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap; }
+.trust-item { display:flex; align-items:center; gap:10px; font-size:0.92rem; color:var(--ink-muted); font-weight:500; }
+.trust-icon { width:20px; height:20px; color:var(--success); }
+.trust-divider { width:1px; height:24px; background:var(--sand-dark); }
+
+/* ===== COMING SOON ===== */
+.section-label { font-size:0.82rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:16px; }
+.coming-soon { padding:120px 0; background:var(--sand); }
+.coming-soon h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; margin-bottom:16px; }
+.coming-soon-sub { text-align:center; color:var(--ink-muted); font-size:1.05rem; max-width:760px; margin:0 auto 64px; line-height:1.7; }
+
+/* Assessment preview */
+.assessment-preview-full { display:grid; grid-template-columns:1.2fr 1fr; gap:56px; align-items:start; max-width:1200px; margin:0 auto; }
+.preview-mockup { position:relative; }
+.preview-body { background:var(--white); border:1px solid rgba(0,0,0,0.08); padding:32px; border-radius:0 0 16px 16px; box-shadow:0 20px 60px rgba(0,0,0,0.12); }
+.preview-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid var(--sand-dark); }
+.preview-muni-name { font-size:1.25rem; font-weight:600; color:var(--ink); margin-bottom:4px; }
+.preview-muni-meta { font-size:0.875rem; color:var(--ink-muted); }
+.preview-overall-score { text-align:right; }
+.preview-score-num { font-family:var(--serif); font-size:3rem; line-height:1; color:var(--accent); font-weight:400; }
+.preview-score-label { font-size:0.875rem; color:var(--ink-muted); margin-top:4px; }
+
+/* Finding cards */
+.preview-findings { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; }
+.finding-card { border-radius:10px; padding:16px; border-left:4px solid; }
+.finding-card.critical { background:#FEF3C7; border-color:#F59E0B; }
+.finding-card.warning { background:#DBEAFE; border-color:#3B82F6; }
+.finding-card.success { background:#D1FAE5; border-color:#10B981; }
+.finding-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.finding-icon { font-size:1.125rem; }
+.finding-title { font-weight:600; font-size:0.9375rem; color:var(--ink); }
+.finding-body { font-size:0.875rem; color:var(--ink-light); line-height:1.6; }
+
+/* Category summary bars */
+.preview-categories-summary { display:flex; flex-direction:column; gap:12px; }
+.cat-sum-item { display:flex; align-items:center; gap:12px; }
+.cat-sum-label { font-size:0.875rem; font-weight:500; color:var(--ink); width:120px; flex-shrink:0; }
+.cat-sum-bar { flex:1; height:8px; background:var(--sand); border-radius:10px; overflow:hidden; }
+.cat-sum-fill { height:100%; border-radius:10px; transition:width 0.8s ease; }
+.cat-sum-score { font-size:0.875rem; font-weight:600; color:var(--ink); width:36px; text-align:right; }
+
+/* Benefits list */
+.preview-benefits h3 { font-size:1.4rem; font-weight:600; margin-bottom:24px; color:var(--ink); }
+.preview-checklist { list-style:none; display:flex; flex-direction:column; gap:16px; }
+.preview-checklist li { display:flex; gap:12px; align-items:flex-start; }
+.preview-checklist li svg { flex-shrink:0; color:var(--success); margin-top:2px; }
+.preview-checklist li div { font-size:0.9375rem; line-height:1.6; color:var(--ink-light); }
+.preview-checklist li strong { color:var(--ink); font-weight:600; }
+
+.demo-badge { position:absolute; top:20px; right:20px; background:var(--accent); color:var(--white); padding:6px 14px; border-radius:6px; font-size:0.75rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; z-index:10; }
+
+@media(max-width:968px){
+  .assessment-preview-full { grid-template-columns:1fr; gap:40px; }
+  .preview-body { padding:24px; }
+  .preview-header { flex-direction:column; gap:16px; }
+  .preview-overall-score { text-align:left; }
+}
+
+/* ===== PLAYBOOK CTA ===== */
+.playbook-cta {
+  padding:100px 0;
+  background:#f0f5f2;
+  border-top:1px solid #dce5df;
+  border-bottom:1px solid #dce5df;
+  position:relative;
+  overflow:hidden;
+}
+.playbook-cta::before {
+  content:'';
+  position:absolute;
+  top:-50%;
+  right:-20%;
+  width:600px;
+  height:600px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(27,122,78,0.04) 0%, transparent 70%);
+  pointer-events:none;
+}
+.playbook-cta .container {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:80px;
+  align-items:center;
+  position:relative;
+  z-index:1;
+}
+.playbook-content .section-label {
+  color:var(--success);
+  font-weight:600;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  font-size:0.82rem;
+  margin-bottom:16px;
+}
+.playbook-content h2 {
+  font-family:var(--serif);
+  font-size:clamp(2rem,3vw,2.6rem);
+  line-height:1.15;
+  color:var(--ink);
+  margin-bottom:16px;
+}
+.playbook-content .playbook-sub {
+  font-size:1.08rem;
+  color:var(--ink-light);
+  line-height:1.7;
+  margin-bottom:32px;
+}
+.playbook-stats {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+  margin-bottom:36px;
+}
+.playbook-stat {
+  text-align:left;
+}
+.playbook-stat-number {
+  font-family:var(--serif);
+  font-size:2rem;
+  color:var(--warm);
+  margin-bottom:4px;
+  line-height:1;
+}
+.playbook-stat-label {
+  font-size:0.88rem;
+  color:var(--ink-muted);
+  line-height:1.4;
+}
+.btn-playbook {
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:16px 32px;
+  background:var(--success);
+  color:var(--white);
+  border:none;
+  border-radius:10px;
+  font-family:var(--sans);
+  font-size:1rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+  text-decoration:none;
+  box-shadow:0 4px 20px rgba(27,122,78,0.2);
+}
+.btn-playbook:hover {
+  background:#156240;
+  transform:translateY(-2px);
+  box-shadow:0 8px 30px rgba(27,122,78,0.3);
+}
+.btn-playbook svg {
+  transition:transform 0.2s;
+}
+.btn-playbook:hover svg {
+  transform:translateX(3px);
+}
+.playbook-visual {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.playbook-cover {
+  max-width:400px;
+  width:100%;
+  height:auto;
+  border-radius:8px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.2);
+  transform:perspective(1000px) rotateY(-5deg);
+  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.playbook-cover:hover {
+  transform:perspective(1000px) rotateY(0deg) translateY(-8px);
+}
+
+/* ===== ASSESSMENT DETAIL ===== */
+.assessment-detail { padding:120px 0; }
+.assessment-detail .container { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+.detail-content h2 { font-family:var(--serif); font-size:clamp(2rem,3vw,2.5rem); line-height:1.2; margin-bottom:20px; }
+.detail-content .section-sub { font-size:1.05rem; color:var(--ink-muted); line-height:1.7; margin-bottom:36px; }
+.check-list { list-style:none; display:flex; flex-direction:column; gap:16px; margin-bottom:36px; }
+.check-list li { display:flex; align-items:flex-start; gap:14px; font-size:0.98rem; color:var(--ink-light); line-height:1.6; }
+.check-list li svg { flex-shrink:0; margin-top:3px; color:var(--success); }
+
+/* Report mockup */
+.report-mockup { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.08); }
+.report-topbar { display:flex; align-items:center; gap:8px; padding:14px 24px; background:var(--sand); border-bottom:1px solid var(--sand-dark); }
+.report-topbar-title { margin-left:8px; font-size:0.78rem; font-weight:600; color:var(--ink-muted); letter-spacing:0.03em; }
+.report-dot { width:10px; height:10px; border-radius:50%; }
+.report-dot.r { background:#FCA5A5; } .report-dot.y { background:#FCD34D; } .report-dot.g { background:#86EFAC; }
+.report-body { padding:24px; }
+.report-header-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--sand); }
+.report-title { font-family:var(--serif); font-size:1.15rem; }
+.report-meta { font-size:0.8rem; color:var(--ink-muted); margin-top:4px; }
+.report-overall { text-align:center; }
+.report-overall-score { font-family:var(--serif); font-size:2rem; color:var(--accent); line-height:1; }
+.report-overall-label { font-size:0.68rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--ink-muted); margin-top:4px; }
+
+/* Report data table */
+.report-tabs { display:flex; gap:0; border-bottom:2px solid var(--sand-dark); margin-bottom:16px; }
+.report-tab { font-size:0.72rem; font-weight:600; padding:8px 14px; color:var(--ink-muted); cursor:default; border-bottom:2px solid transparent; margin-bottom:-2px; letter-spacing:0.02em; }
+.report-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.report-table { width:100%; border-collapse:collapse; font-size:0.74rem; }
+.report-table th { text-align:left; font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-muted); padding:6px 8px 8px; border-bottom:1px solid var(--sand-dark); }
+.report-table td { padding:8px 8px; border-bottom:1px solid var(--sand); color:var(--ink-light); vertical-align:middle; }
+.report-table tr:last-child td { border-bottom:none; }
+.report-table .code-col { font-family:'SF Mono',Consolas,monospace; font-size:0.72rem; font-weight:600; color:var(--ink); white-space:nowrap; }
+.report-table .amt-col { font-family:'SF Mono',Consolas,monospace; font-size:0.72rem; text-align:right; white-space:nowrap; }
+.report-table .type-col { white-space:nowrap; }
+.tbl-flag { display:inline-flex; align-items:center; gap:4px; font-size:0.62rem; font-weight:600; padding:2px 7px; border-radius:100px; white-space:nowrap; }
+.tbl-flag.dup { background:#FEF3CD; color:#856404; }
+.tbl-flag.miss { background:#F8D7DA; color:#842029; }
+.tbl-flag.ok { background:#D1E7DD; color:#0F5132; }
+.tbl-flag.review { background:#E8ECFA; color:var(--accent); }
+.report-summary { margin-top:14px; padding:12px 14px; background:var(--sand); border-radius:10px; display:flex; gap:20px; flex-wrap:wrap; }
+.summary-stat { display:flex; flex-direction:column; }
+.summary-stat .s-val { font-size:0.88rem; font-weight:700; color:var(--ink); }
+.summary-stat .s-label { font-size:0.62rem; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em; }
+
+/* ===== SOCIAL PROOF ===== */
+.social-proof { padding:100px 0; background:var(--ink); color:var(--white); position:relative; overflow:hidden; }
+.social-proof::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 50%, rgba(30,59,192,0.15) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(196,113,59,0.1) 0%, transparent 50%); pointer-events:none; }
+.social-proof .container { position:relative; z-index:1; }
+.proof-header { text-align:center; margin-bottom:64px; }
+.proof-header .section-label { color:rgba(255,255,255,0.5); }
+.proof-header h2 { font-family:var(--serif); font-size:clamp(2rem,3.5vw,2.8rem); line-height:1.2; color:var(--white); }
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:40px; text-align:center; }
+.stat-number { font-family:var(--serif); font-size:clamp(2.5rem,4vw,3.5rem); color:var(--white); margin-bottom:8px; }
+.stat-label { font-size:0.92rem; color:rgba(255,255,255,0.5); line-height:1.5; }
+
+/* ===== FOR CONSULTANTS ===== */
+.consultant-cta { padding:100px 0; background:var(--sand); }
+.consultant-cta .container { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+.consultant-content .section-label { color:var(--warm); }
+.consultant-content h2 { font-family:var(--serif); font-size:clamp(1.8rem,3vw,2.4rem); line-height:1.2; margin-bottom:16px; }
+.consultant-content > p { font-size:1.05rem; color:var(--ink-muted); line-height:1.7; margin-bottom:32px; }
+.consultant-features { display:flex; flex-direction:column; gap:20px; }
+.con-feature { display:flex; gap:16px; }
+.con-feature-icon { width:40px; height:40px; border-radius:10px; background:var(--warm-light); color:var(--warm); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.con-feature h4 { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
+.con-feature p { font-size:0.88rem; color:var(--ink-muted); margin-bottom:0; }
+.consultant-card { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:40px; box-shadow:0 20px 60px rgba(0,0,0,0.04); }
+.consultant-card h3 { font-family:var(--serif); font-size:1.4rem; margin-bottom:8px; }
+.consultant-card .card-sub { font-size:0.95rem; color:var(--ink-muted); margin-bottom:28px; }
+.consultant-card .form-group { margin-bottom:16px; }
+.consultant-card label { display:block; font-size:0.85rem; font-weight:500; color:var(--ink-light); margin-bottom:6px; }
+.consultant-card input, .consultant-card select { width:100%; padding:12px 16px; border:1.5px solid var(--sand-dark); border-radius:8px; font-family:var(--sans); font-size:0.95rem; color:var(--ink); background:var(--cream); transition:border-color 0.2s; outline:none; }
+.consultant-card input:focus, .consultant-card select:focus { border-color:var(--accent); }
+.consultant-card .btn-primary { width:100%; justify-content:center; margin-top:8px; }
+
+/* ===== FINAL CTA ===== */
+.final-cta { padding:120px 0; }
+.cta-layout { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; }
+.cta-text h2 { font-family:var(--serif); font-size:clamp(2rem,3vw,2.5rem); line-height:1.2; margin-bottom:16px; }
+.cta-text .cta-sub { font-size:1.05rem; color:var(--ink-muted); line-height:1.7; margin-bottom:32px; }
+.cta-perks { display:flex; flex-direction:column; gap:14px; }
+.cta-perk { display:flex; align-items:center; gap:12px; font-size:0.95rem; color:var(--ink-light); }
+.cta-perk svg { color:var(--success); flex-shrink:0; }
+.municipality-card { background:var(--white); border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:40px; box-shadow:0 20px 60px rgba(0,0,0,0.04); }
+.municipality-card h3 { font-family:var(--serif); font-size:1.4rem; margin-bottom:8px; }
+.municipality-card .card-sub { font-size:0.95rem; color:var(--ink-muted); margin-bottom:28px; }
+.municipality-card .form-group { margin-bottom:16px; }
+.municipality-card label { display:block; font-size:0.85rem; font-weight:500; color:var(--ink-light); margin-bottom:6px; }
+.municipality-card .required { color:#DC2626; }
+.municipality-card input, .municipality-card select { width:100%; padding:12px 16px; border:1.5px solid var(--sand-dark); border-radius:8px; font-family:var(--sans); font-size:0.95rem; color:var(--ink); background:var(--cream); transition:border-color 0.2s; outline:none; }
+.municipality-card input:focus, .municipality-card select:focus { border-color:var(--accent); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-check { display:flex; align-items:flex-start; gap:10px; margin:20px 0 24px; padding:16px; background:var(--accent-light); border-radius:10px; border:1px solid rgba(30,59,192,0.1); }
+.form-check input[type="checkbox"] { width:18px; height:18px; margin-top:2px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; }
+.form-check label { font-size:0.88rem; color:var(--ink-light); line-height:1.5; cursor:pointer; }
+.municipality-card .btn-primary { width:100%; justify-content:center; margin-top:0; }
+.municipality-card .form-note { font-size:0.82rem; color:var(--ink-muted); margin-top:14px; text-align:center; }
+
+/* ===== FOOTER ===== */
+footer { padding:48px 0; border-top:1px solid var(--sand-dark); }
+footer .container { display:flex; justify-content:space-between; align-items:center; }
+.footer-left { font-size:0.88rem; color:var(--ink-muted); }
+.footer-links { display:flex; gap:28px; }
+.footer-links a { font-size:0.88rem; color:var(--ink-muted); text-decoration:none; transition:color 0.2s; }
+.footer-links a:hover { color:var(--ink); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:768px) {
+  /* Global mobile constraints */
+  * { max-width:100%; box-sizing:border-box; }
+  img, svg, video { max-width:100%; height:auto; }
+
+  /* Nav */
+  nav .container { height:64px; padding:0 20px; }
+  .nav-logo img { height:32px; }
+  .nav-links { display:none !important; }
+  .menu-toggle { display:flex !important; }
+  .mobile-menu { display:block; }
+  .menu-backdrop { display:block; }
+
+  /* Hero */
+  .hero { padding:140px 0 80px; overflow:hidden; }
+  .hero::before { display:none; }
+  .hero .container { grid-template-columns:1fr; gap:40px; max-width:100%; }
+  .hero h1 { font-size:clamp(2rem,8vw,2.8rem); line-height:1.25; margin-bottom:28px; max-width:100%; }
+  .hero-sub { font-size:1.05rem; line-height:1.65; margin-bottom:36px; max-width:100%; }
+  .hero-badge { font-size:0.78rem; padding:5px 14px; margin-bottom:28px; }
+  .hero-actions { flex-direction:column; gap:14px; width:100%; max-width:100%; }
+  .hero-actions .btn-primary, .hero-actions .btn-secondary { width:100%; justify-content:center; box-sizing:border-box; }
+  .btn-primary { font-size:0.95rem; padding:14px 28px; }
+  .btn-secondary { font-size:0.95rem; padding:14px 24px; }
+
+  /* Hero card */
+  .playbook-preview { padding:24px; }
+
+  /* Sections */
+  .coming-soon { padding:80px 0; }
+  .coming-soon h2 { font-size:clamp(1.6rem,7vw,2rem); }
+  .coming-soon-sub { font-size:1rem; margin-bottom:48px; }
+  .assessment-demo { grid-template-columns:1fr; gap:48px; }
+  .demo-screen { padding:24px; }
+  .demo-header { flex-direction:column; align-items:flex-start; gap:12px; }
+  .demo-cat-label { width:90px; font-size:0.8rem; }
+  .benefit-grid { grid-template-columns:1fr; gap:12px; }
+  .benefit-card { padding:18px; }
+
+  .assessment-detail { padding:80px 0; }
+  .playbook-cta { padding:80px 0; }
+  .playbook-cta .container { grid-template-columns:1fr; gap:40px; }
+  .playbook-content { order:2; text-align:center; }
+  .playbook-visual { order:1; }
+  .playbook-stats { grid-template-columns:1fr; gap:20px; }
+  .playbook-stat { text-align:center; }
+  .playbook-cover { max-width:300px; transform:perspective(1000px) rotateY(0deg); }
+
+  .assessment-detail .container { grid-template-columns:1fr; gap:40px; }
+  .detail-content h2 { font-size:clamp(1.6rem,7vw,2rem); }
+  .detail-content .section-sub { font-size:1rem; }
+
+  .social-proof { padding:80px 0; }
+  .proof-header h2 { font-size:clamp(1.6rem,7vw,2rem); }
+  .stats-row { grid-template-columns:repeat(2,1fr); gap:24px; }
+
+  .consultant-cta { padding:80px 0; }
+  .consultant-cta .container { grid-template-columns:1fr; gap:48px; }
+  .consultant-content h2 { font-size:clamp(1.5rem,7vw,1.8rem); }
+  .consultant-card { padding:32px 24px; }
+
+  .final-cta { padding:80px 0; }
+  .cta-layout { grid-template-columns:1fr; gap:40px; }
+  .cta-text h2 { font-size:clamp(1.6rem,7vw,2rem); }
+  .cta-text .cta-sub { font-size:1rem; }
+  .municipality-card { padding:32px 24px; }
+  .form-row { grid-template-columns:1fr; }
+
+  /* Forms */
+  input, select { font-size:16px !important; } /* Prevents zoom on iOS */
+  .btn-primary { font-size:0.95rem; padding:14px 28px; }
+
+  /* Trust & Footer */
+  .trust-strip { padding:36px 0; }
+  .trust-item { font-size:0.85rem; }
+  .trust-divider { display:none; }
+  .trust-content { gap:20px; }
+  footer .container { flex-direction:column; gap:16px; text-align:center; }
+  footer { padding:36px 0; }
+}
+
+/* Assessment Modal */
+.assessment-modal-backdrop { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999; opacity:0; transition:opacity 0.3s; justify-content:center; align-items:center; }
+.assessment-modal-backdrop.active { display:flex; opacity:1; }
+.assessment-modal { background:var(--white); border-radius:16px; max-width:520px; width:90%; padding:48px; box-shadow:0 20px 80px rgba(0,0,0,0.3); transform:scale(0.9); transition:transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+.assessment-modal-backdrop.active .assessment-modal { transform:scale(1); }
+.modal-title { font-family:var(--serif); font-size:1.75rem; color:var(--ink); margin-bottom:12px; }
+.modal-subtitle { color:var(--ink-light); font-size:1rem; margin-bottom:32px; }
+.modal-choices { display:flex; flex-direction:column; gap:16px; }
+.modal-choice { display:flex; flex-direction:column; padding:24px; border:2px solid var(--sand-dark); border-radius:12px; cursor:pointer; transition:all 0.2s; text-decoration:none; color:var(--ink); }
+.modal-choice:hover { border-color:var(--accent); background:var(--accent-light); transform:translateY(-2px); }
+.modal-choice-title { font-weight:600; font-size:1.1rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+.modal-choice-desc { font-size:0.9rem; color:var(--ink-muted); }
+@media (max-width:768px) { .assessment-modal { padding:32px 24px; } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="/static/govtech-logo-dark.svg" alt="GovTech Diagnostic" height="40">
+    </a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="/resources">Resources</a>
+      <a href="#assessment">Assessment</a>
+      <a href="#consultants" class="nav-consultant">For consultants <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg></a>
+      <a href="#start" class="nav-cta">Join the waitlist</a>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU BACKDROP -->
+<div class="menu-backdrop" id="menuBackdrop"></div>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-content">
+    <a href="#how-it-works">How it works</a>
+    <a href="/resources">Resources</a>
+    <a href="#assessment">Assessment</a>
+    <a href="#consultants" class="nav-consultant">
+      For consultants
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+    </a>
+    <a href="#start" class="nav-cta">
+      Join the waitlist
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-text">
+      <div class="hero-badge">Free playbook · No vendor affiliation · No sales pitch</div>
+      <h1>Is your city ready for a <em>modern</em> ERP system?</h1>
+      <p class="hero-sub">Download our free 32-page Municipal ERP Replacement Playbook—a practical guide from requirements gathering to go-live, built from patterns we've seen across hundreds of projects.</p>
+      <div class="hero-actions">
+        <a href="/resources" class="btn-primary">Download Free Playbook <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        <a href="#how-it-works" class="btn-secondary">See what's inside</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust-strip">
+  <div class="container">
+    <div class="trust-content">
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> No vendor affiliation</div>
+      <div class="trust-divider"></div>
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 100% free for municipalities</div>
+      <div class="trust-divider"></div>
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> AI-powered analysis</div>
+      <div class="trust-divider"></div>
+      <div class="trust-item"><svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 100% vendor-neutral</div>
+    </div>
+  </div>
+</section>
+
+<!-- COMING SOON: ASSESSMENT -->
+<section class="coming-soon" id="how-it-works">
+  <div class="container">
+    <div class="section-label reveal" style="text-align:center;">Coming soon</div>
+    <h2 class="reveal stagger-1" style="text-align:center;">AI-Powered ERP Readiness Assessment</h2>
+    <p class="coming-soon-sub reveal stagger-2">Answer questions about your municipality's financial operations and receive an AI-generated readiness report—identifying gaps, compliance risks, and modernization priorities before you talk to vendors.</p>
+
+    <div class="assessment-preview-full reveal stagger-3">
+      <div class="preview-mockup">
+        <div class="report-topbar">
+          <div class="report-dot r"></div>
+          <div class="report-dot y"></div>
+          <div class="report-dot g"></div>
+          <span class="report-topbar-title">ERP Readiness Report</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-header">
+            <div>
+              <div class="preview-muni-name">Sample Municipality</div>
+              <div class="preview-muni-meta">Population 12,450 · February 2026</div>
+            </div>
+            <div class="preview-overall-score">
+              <div class="preview-score-num">68</div>
+              <div class="preview-score-label">Readiness Score</div>
+            </div>
+          </div>
+
+          <div class="preview-findings">
+            <div class="finding-card critical">
+              <div class="finding-header">
+                <span class="finding-icon">⚠️</span>
+                <span class="finding-title">3 Duplicate Payroll Codes Detected</span>
+              </div>
+              <div class="finding-body">AI identified "REG-1" and "REG-1A" performing identical functions—common migration blocker causing data reconciliation issues.</div>
+            </div>
+
+            <div class="finding-card warning">
+              <div class="finding-header">
+                <span class="finding-icon">📊</span>
+                <span class="finding-title">GL Structure Misalignment</span>
+              </div>
+              <div class="finding-body">Fund 250 (Capital Projects) missing required GASB 54 sub-classifications—may require chart restructure before migration.</div>
+            </div>
+
+            <div class="finding-card success">
+              <div class="finding-header">
+                <span class="finding-icon">✓</span>
+                <span class="finding-title">Compliance: Strong</span>
+              </div>
+              <div class="finding-body">State pension reporting (PERS/URS) correctly configured. W-2 box mappings validated against IRS Publication 15-A.</div>
+            </div>
+          </div>
+
+          <div class="preview-categories-summary">
+            <div class="cat-sum-item">
+              <div class="cat-sum-label">Payroll Codes</div>
+              <div class="cat-sum-bar"><div class="cat-sum-fill" style="width:65%;background:#F59E0B;"></div></div>
+              <div class="cat-sum-score">65</div>
+            </div>
+            <div class="cat-sum-item">
+              <div class="cat-sum-label">GL Structure</div>
+              <div class="cat-sum-bar"><div class="cat-sum-fill" style="width:58%;background:#F59E0B;"></div></div>
+              <div class="cat-sum-score">58</div>
+            </div>
+            <div class="cat-sum-item">
+              <div class="cat-sum-label">Compliance</div>
+              <div class="cat-sum-bar"><div class="cat-sum-fill" style="width:89%;background:var(--success);"></div></div>
+              <div class="cat-sum-score">89</div>
+            </div>
+            <div class="cat-sum-item">
+              <div class="cat-sum-label">Data Quality</div>
+              <div class="cat-sum-bar"><div class="cat-sum-fill" style="width:72%;background:var(--accent);"></div></div>
+              <div class="cat-sum-score">72</div>
+            </div>
+            <div class="cat-sum-item">
+              <div class="cat-sum-label">Integration</div>
+              <div class="cat-sum-bar"><div class="cat-sum-fill" style="width:45%;background:#DC2626;"></div></div>
+              <div class="cat-sum-score">45</div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-badge">Preview</div>
+      </div>
+
+      <div class="preview-benefits">
+        <h3>What the assessment will analyze</h3>
+        <ul class="preview-checklist">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <div><strong>Payroll code complexity</strong> — Identifies duplicates, FICA calculation errors, and outdated benefit structures</div>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <div><strong>GL structure health</strong> — Validates fund accounting against GASB 54, checks department/account hierarchy depth</div>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <div><strong>State-specific compliance</strong> — Benchmarks pension reporting, W-2 configurations, and statutory requirements by state</div>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <div><strong>Data quality indicators</strong> — Flags inconsistent vendor records, inactive accounts, and historical audit findings</div>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <div><strong>Integration readiness</strong> — Evaluates API capabilities, third-party connections (Tyler, CentralSquare, etc.)</div>
+          </li>
+        </ul>
+        <a href="#waitlist" class="btn-primary" style="margin-top:28px;">Join the Waitlist <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAYBOOK CTA -->
+<section class="playbook-cta">
+  <div class="container">
+    <div class="playbook-content reveal-left">
+      <div class="section-label">Free Resource</div>
+      <h2>Get the Municipal ERP Replacement Playbook</h2>
+      <p class="playbook-sub">A comprehensive 32-page guide from pain point to go-live. Learn the framework used by hundreds of municipalities to successfully navigate ERP replacement projects.</p>
+
+      <div class="playbook-stats">
+        <div class="playbook-stat">
+          <div class="playbook-stat-number">9</div>
+          <div class="playbook-stat-label">Implementation phases</div>
+        </div>
+        <div class="playbook-stat">
+          <div class="playbook-stat-number">6</div>
+          <div class="playbook-stat-label">Real case studies</div>
+        </div>
+        <div class="playbook-stat">
+          <div class="playbook-stat-number">5</div>
+          <div class="playbook-stat-label">Practical appendices</div>
+        </div>
+      </div>
+
+      <a href="/resources" class="btn-playbook">
+        <span>Download Free Playbook</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="playbook-visual reveal-right">
+      <img src="/static/playbook-cover-flat.png" alt="Municipal ERP Replacement Playbook Cover" class="playbook-cover">
+    </div>
+  </div>
+</section>
+
+<!-- ASSESSMENT DETAIL -->
+<section class="assessment-detail" id="assessment">
+  <div class="container">
+    <div class="detail-content reveal-left">
+      <div class="section-label">Your report</div>
+      <h2>A diagnostic built for government finance</h2>
+      <p class="section-sub">Not a generic IT survey. Every question, benchmark, and recommendation is designed for municipal financial operations — from fund accounting to state-specific compliance.</p>
+      <ul class="check-list">
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Payroll code analysis across all pay types, deductions, and benefits</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> GL structure review — chart of accounts, fund hierarchy, department coding</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> State-specific compliance validation against current requirements</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Integration readiness — API capabilities, data export, third-party connections</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Vendor-neutral modernization roadmap with prioritized recommendations</li>
+      </ul>
+      <a href="#start" class="btn-primary">Get notified when it launches <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+    </div>
+    <div class="detail-visual reveal-right">
+      <div class="report-mockup">
+        <div class="report-topbar"><div class="report-dot r"></div><div class="report-dot y"></div><div class="report-dot g"></div><span class="report-topbar-title">ERP Readiness Report</span></div>
+        <div class="report-body">
+          <div class="report-header-row">
+            <div><div class="report-title">Cedar Hills, UT</div><div class="report-meta">Population 10,272 &middot; Utah County &middot; Feb 2026</div></div>
+            <div class="report-overall">
+              <div class="report-overall-score">65</div>
+              <div class="report-overall-label">Readiness Score</div>
+            </div>
+          </div>
+
+          <div class="report-tabs">
+            <span class="report-tab active">Payroll Codes</span>
+            <span class="report-tab">GL Structure</span>
+            <span class="report-tab">Compliance</span>
+            <span class="report-tab">Migration</span>
+          </div>
+
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Description</th>
+                <th style="text-align:right">Amount</th>
+                <th>Type</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="code-col">REG-1</td>
+                <td>Regular Pay</td>
+                <td class="amt-col">Hourly</td>
+                <td class="type-col">Earnings</td>
+                <td><span class="tbl-flag dup">Duplicate</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">REG-1A</td>
+                <td>Regular Pay — Alt</td>
+                <td class="amt-col">Hourly</td>
+                <td class="type-col">Earnings</td>
+                <td><span class="tbl-flag dup">Duplicate</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">OT-COMP</td>
+                <td>Overtime Composite</td>
+                <td class="amt-col">1.5x</td>
+                <td class="type-col">Earnings</td>
+                <td><span class="tbl-flag miss">FICA error</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">HLT-A</td>
+                <td>Health — Employee</td>
+                <td class="amt-col">$284.50</td>
+                <td class="type-col">Deduction</td>
+                <td><span class="tbl-flag review">4 tiers</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">HLT-B</td>
+                <td>Health — Family</td>
+                <td class="amt-col">$612.00</td>
+                <td class="type-col">Deduction</td>
+                <td><span class="tbl-flag review">4 tiers</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">401-DEF</td>
+                <td>Deferred Comp</td>
+                <td class="amt-col">% of Gross</td>
+                <td class="type-col">Deduction</td>
+                <td><span class="tbl-flag ok">Clean</span></td>
+              </tr>
+              <tr>
+                <td class="code-col">PERS-ER</td>
+                <td>URS Employer</td>
+                <td class="amt-col">18.47%</td>
+                <td class="type-col">Benefit</td>
+                <td><span class="tbl-flag ok">Clean</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="report-summary">
+            <div class="summary-stat"><span class="s-val">14</span><span class="s-label">Pay Codes</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:#856404">3</span><span class="s-label">Duplicates</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:#842029">1</span><span class="s-label">Tax Error</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:var(--accent)">2</span><span class="s-label">Table-Level</span></div>
+            <div class="summary-stat"><span class="s-val" style="color:#0F5132">8</span><span class="s-label">Clean</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR CONSULTANTS -->
+<section class="consultant-cta" id="consultants">
+  <div class="container">
+    <div class="consultant-content reveal-left">
+      <div class="section-label">For ERP consultants</div>
+      <h2>Find municipalities ready for modernization</h2>
+      <p>Access scored leads from finance directors who've assessed their systems and are open to expert guidance. No cold calls — just warm introductions to decision-makers.</p>
+      <div class="consultant-features">
+        <div class="con-feature">
+          <div class="con-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div><h4>Opt-in warm leads</h4><p>Only see finance directors who've chosen to be contacted</p></div>
+        </div>
+        <div class="con-feature">
+          <div class="con-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div><h4>Assessment insights</h4><p>See readiness scores, gaps, and pain points before your first call</p></div>
+        </div>
+        <div class="con-feature">
+          <div class="con-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+          <div><h4>Municipal Intel Scanner</h4><p>Scan public documents for RFPs, procurement signals, and competitor activity</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="consultant-card reveal-right">
+      <h3>Request enterprise access</h3>
+      <p class="card-sub">For ERP consultants, resellers, and implementation firms.</p>
+      <form id="consultantForm" onsubmit="return handleConsultantSubmit(event)">
+        <div class="form-group"><label for="conName">Your name</label><input type="text" id="conName" placeholder="Jane Smith" required></div>
+        <div class="form-group"><label for="conEmail">Work email</label><input type="email" id="conEmail" placeholder="jane@erpfirm.com" required></div>
+        <div class="form-group"><label for="conCompany">Company</label><input type="text" id="conCompany" placeholder="Your firm name"></div>
+        <div class="form-group"><label for="conRole">I'm interested in</label><select id="conRole"><option value="leads">Warm leads from assessments</option><option value="scanner">Municipal Intel Scanner</option><option value="both">Both</option></select></div>
+        <button type="submit" class="btn-primary">Request access</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="start">
+  <div class="container">
+    <div class="cta-layout">
+      <div class="cta-text reveal-left">
+        <div class="section-label">Early access</div>
+        <h2>Be the first to know where your city stands</h2>
+        <p class="cta-sub">We're launching the free ERP readiness assessment soon. Join the waitlist and we'll notify you the moment it's live.</p>
+        <div class="cta-perks">
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Free for all municipalities — always</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Complete at your own pace</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Vendor-neutral — no sales pressure</div>
+          <div class="cta-perk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Your data stays private unless you choose to share</div>
+        </div>
+      </div>
+      <div class="municipality-card reveal-right">
+        <h3>Join the waitlist</h3>
+        <p class="card-sub">Get notified when the assessment launches. Optional details help us tailor your experience.</p>
+        <form id="waitlistForm" onsubmit="return handleWaitlistSubmit(event)">
+          <div class="form-group"><label for="munEmail">Work email <span class="required">*</span></label><input type="email" id="munEmail" placeholder="you@cityof.gov" required></div>
+          <div class="form-row">
+            <div class="form-group"><label for="munName">Your name</label><input type="text" id="munName" placeholder="Jane Smith"></div>
+            <div class="form-group"><label for="munTitle">Title</label><input type="text" id="munTitle" placeholder="Finance Director"></div>
+          </div>
+          <div class="form-group"><label for="munCity">Municipality</label><input type="text" id="munCity" placeholder="City of Cedar Hills"></div>
+          <div class="form-group"><label for="munState">State</label><select id="munState"><option value="">Select state</option><option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option></select></div>
+          <div class="form-group"><label for="munERP">Current ERP system</label><input type="text" id="munERP" placeholder="e.g. Caselle, Tyler, SAP, Excel"></div>
+          <div class="form-check">
+            <input type="checkbox" id="munContact">
+            <label for="munContact">I'm open to hearing from ERP implementation specialists about my results</label>
+          </div>
+          <button type="submit" class="btn-primary">Join the waitlist</button>
+          <p class="form-note">No commitment. No spam. Just a heads-up when we launch.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-left">&copy; 2026 GovTech Diagnostic</div>
+    <div class="footer-links">
+      <a href="mailto:hello@govtechdiagnostic.com">hello@govtechdiagnostic.com</a>
+      <a href="#consultants">For consultants</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const reveals = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+reveals.forEach(el => observer.observe(el));
+
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+
+function handleWaitlistSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const orig = btn.innerHTML;
+  const data = {
+    email: document.getElementById('munEmail').value,
+    name: document.getElementById('munName').value,
+    title: document.getElementById('munTitle').value,
+    municipality: document.getElementById('munCity').value,
+    state: document.getElementById('munState').value,
+    current_erp: document.getElementById('munERP').value,
+    open_to_contact: document.getElementById('munContact').checked,
+    source: 'municipality'
+  };
+  fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
+  .then(() => { btn.innerHTML = '&#10003; You\'re on the list!'; btn.style.background='#1B7A4E'; setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';},5000); })
+  .catch(() => { btn.innerHTML = '&#10003; You\'re on the list!'; btn.style.background='#1B7A4E'; setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';},5000); });
+  return false;
+}
+
+function handleConsultantSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const data = { name:document.getElementById('conName').value, email:document.getElementById('conEmail').value, company:document.getElementById('conCompany').value, interest:document.getElementById('conRole').value, source:'consultant' };
+  fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
+  .then(() => { btn.innerHTML = '&#10003; Request submitted'; btn.style.background='#1B7A4E'; })
+  .catch(() => { btn.innerHTML = '&#10003; Request submitted'; btn.style.background='#1B7A4E'; });
+  return false;
+}
+
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => { e.preventDefault(); const t=document.querySelector(a.getAttribute('href')); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); });
+});
+
+// Mobile menu toggle
+const menuToggle = document.getElementById('menuToggle');
+const mobileMenu = document.getElementById('mobileMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+
+function openMobileMenu() {
+  menuToggle.classList.add('active');
+  mobileMenu.classList.add('active');
+  menuBackdrop.classList.add('active');
+  menuToggle.setAttribute('aria-expanded', 'true');
+  menuToggle.setAttribute('aria-label', 'Close menu');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileMenu() {
+  menuToggle.classList.remove('active');
+  mobileMenu.classList.remove('active');
+  menuBackdrop.classList.remove('active');
+  menuToggle.setAttribute('aria-expanded', 'false');
+  menuToggle.setAttribute('aria-label', 'Open menu');
+  document.body.style.overflow = '';
+}
+
+menuToggle.addEventListener('click', () => {
+  const isOpen = mobileMenu.classList.contains('active');
+  if (isOpen) {
+    closeMobileMenu();
+  } else {
+    openMobileMenu();
+  }
+});
+
+// Close mobile menu when clicking backdrop
+menuBackdrop.addEventListener('click', closeMobileMenu);
+
+// Close mobile menu when clicking a link
+mobileMenuLinks.forEach(link => {
+  link.addEventListener('click', closeMobileMenu);
+});
+
+// Close mobile menu on escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+    closeMobileMenu();
+  }
+});
+
+// Assessment modal functions
+function showAssessmentModal() {
+  document.getElementById('assessmentModalBackdrop').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideAssessmentModal() {
+  document.getElementById('assessmentModalBackdrop').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// Close modal on backdrop click
+document.addEventListener('DOMContentLoaded', () => {
+  const backdrop = document.getElementById('assessmentModalBackdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) hideAssessmentModal();
+    });
+  }
+});
+
+// Close modal on escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideAssessmentModal();
+});
+</script>
+
+<!-- Assessment Modal -->
+<div id="assessmentModalBackdrop" class="assessment-modal-backdrop">
+  <div class="assessment-modal">
+    <h2 class="modal-title">Start your assessment</h2>
+    <p class="modal-subtitle">Choose how you'd like to proceed</p>
+    <div class="modal-choices">
+      <a href="#waitlist" class="modal-choice" onclick="hideAssessmentModal(); setTimeout(() => document.getElementById('waitlist').scrollIntoView({behavior:'smooth'}), 100)">
+        <div class="modal-choice-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Sign in
+        </div>
+        <div class="modal-choice-desc">Join the waitlist for early access when we launch</div>
+      </a>
+      <a href="/assessment/start" class="modal-choice">
+        <div class="modal-choice-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Continue without account
+        </div>
+        <div class="modal-choice-desc">Take the assessment now, save your results later (optional)</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -22,6 +22,7 @@ import os
 import uuid as _uuid
 import base64
 import resend
+import hashlib
 
 from src.database import init_db, get_db, Scan, Lead, Municipality, MunicipalSource, User, Watchlist, Territory
 from src.discovery import SourceDiscovery
@@ -236,39 +237,71 @@ def run_scan(scan_id: str, config: dict):
                             )
 
                             if result:
-                                # Create lead record
-                                lead = Lead(
-                                    scan_id=scan_id,
-                                    municipality=result.municipality,
-                                    state=result.state,
-                                    population=result.population,
-                                    title=result.title,
-                                    url=result.url,
-                                    date=result.date,
-                                    source_type=result.source_type,
-                                    relevance_score=result.relevance_score,
-                                    lead_type=result.lead_type,
-                                    customer_status=result.customer_status,
-                                    recommended_action=result.recommended_action,
-                                    signal_matches_json={
-                                        m.signal_type: {
-                                            "keyword": m.keyword,
-                                            "context": m.context,
-                                            "weight": m.weight
-                                        }
-                                        for m in result.signal_matches
-                                    }
-                                )
-                                db.add(lead)
-                                db.commit()
+                                # Calculate document hash for deduplication
+                                doc_hash = hashlib.md5(result.document_text.encode()).hexdigest()
 
-                                # Update lead counts
-                                if lead.lead_type == "hot":
-                                    leads_hot += 1
-                                elif lead.lead_type == "warm":
-                                    leads_warm += 1
+                                # Check if we've seen this exact document before
+                                existing_lead = db.query(Lead).filter(
+                                    Lead.document_hash == doc_hash
+                                ).first()
+
+                                if existing_lead:
+                                    # Update existing lead - mark as seen again
+                                    existing_lead.last_seen = datetime.utcnow()
+                                    existing_lead.times_seen += 1
+
+                                    # Update relevance score if this scan found higher score
+                                    if result.relevance_score > existing_lead.relevance_score:
+                                        existing_lead.relevance_score = result.relevance_score
+                                        existing_lead.lead_type = result.lead_type
+
+                                    db.commit()
+
+                                    # Still count for this scan's stats
+                                    if existing_lead.lead_type == "hot":
+                                        leads_hot += 1
+                                    elif existing_lead.lead_type == "warm":
+                                        leads_warm += 1
+                                    else:
+                                        leads_cold += 1
                                 else:
-                                    leads_cold += 1
+                                    # Create new lead record
+                                    lead = Lead(
+                                        scan_id=scan_id,
+                                        municipality=result.municipality,
+                                        state=result.state,
+                                        population=result.population,
+                                        title=result.title,
+                                        url=result.url,
+                                        date=result.date,
+                                        source_type=result.source_type,
+                                        relevance_score=result.relevance_score,
+                                        lead_type=result.lead_type,
+                                        customer_status=result.customer_status,
+                                        recommended_action=result.recommended_action,
+                                        signal_matches_json={
+                                            m.signal_type: {
+                                                "keyword": m.keyword,
+                                                "context": m.context,
+                                                "weight": m.weight
+                                            }
+                                            for m in result.signal_matches
+                                        },
+                                        document_hash=doc_hash,
+                                        first_seen=datetime.utcnow(),
+                                        last_seen=datetime.utcnow(),
+                                        times_seen=1
+                                    )
+                                    db.add(lead)
+                                    db.commit()
+
+                                    # Update lead counts
+                                    if lead.lead_type == "hot":
+                                        leads_hot += 1
+                                    elif lead.lead_type == "warm":
+                                        leads_warm += 1
+                                    else:
+                                        leads_cold += 1
 
                     except Exception as e:
                         print(f"Error scraping source {source.url}: {str(e)}")
@@ -923,6 +956,7 @@ async def get_feed(
     lead_type: Optional[str] = None,
     customer_status: Optional[str] = None,
     days: Optional[int] = None,
+    new_only: bool = False,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -938,6 +972,7 @@ async def get_feed(
     - state: Filter by state code (optional)
     - lead_type: Filter by lead_type: hot | warm | cold (optional)
     - customer_status: Filter by customer_status: existing_customer | new_opportunity (optional)
+    - new_only: If true, only show leads seen once (newly discovered, default false)
 
     **Requires authentication.**
     """
@@ -969,6 +1004,9 @@ async def get_feed(
         from datetime import datetime, timedelta
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         query = query.filter(Scan.completed_at >= cutoff_date)
+    if new_only:
+        # Only show leads discovered once (not duplicates)
+        query = query.filter(Lead.times_seen == 1)
 
     # Get total count for pagination metadata
     total_count = query.count()
@@ -1000,7 +1038,11 @@ async def get_feed(
             "recommended_action": lead.recommended_action,
             "signal_matches": lead.signal_matches_json,
             "notes": lead.notes,
-            "scan_id": lead.scan_id
+            "scan_id": lead.scan_id,
+            "first_seen": lead.first_seen.isoformat() if lead.first_seen else None,
+            "last_seen": lead.last_seen.isoformat() if lead.last_seen else None,
+            "times_seen": lead.times_seen if lead.times_seen else 1,
+            "is_new": lead.times_seen == 1 if lead.times_seen else True
         })
 
     return {
