@@ -16,9 +16,12 @@
         .scanning { animation: pulse-border 2s ease-in-out infinite; }
         .tab-button {
             @apply px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent transition-colors;
+            background-color: transparent;
         }
         .tab-button.active {
             @apply text-blue-600 border-blue-600;
+            background-color: rgb(239, 246, 255);
+            font-weight: 600;
         }
         .modal {
             display: none;
@@ -845,13 +848,26 @@
         async function loadWatchlist() {
             try {
                 const response = await fetch('/api/watchlist');
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 const container = document.getElementById('watchlist-results');
                 container.innerHTML = '';
 
-                if (data.watchlist.length === 0) {
-                    container.innerHTML = '<p class="text-sm text-gray-500">No municipalities on your watchlist yet.</p>';
+                if (!data.watchlist || data.watchlist.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">Your watchlist is empty</h3>
+                            <p class="mt-1 text-sm text-gray-500">Mark municipalities during scans to track them here.</p>
+                        </div>
+                    `;
                     return;
                 }
 
@@ -861,7 +877,15 @@
                 });
             } catch (error) {
                 console.error('Failed to load watchlist:', error);
-                document.getElementById('watchlist-results').innerHTML = '<p class="text-sm text-red-600">Failed to load watchlist. Please try again.</p>';
+                document.getElementById('watchlist-results').innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Watchlist feature coming soon</h3>
+                        <p class="mt-1 text-sm text-gray-500">This feature is currently being developed.</p>
+                    </div>
+                `;
             }
         }
 
@@ -1057,7 +1081,9 @@
                 const response = await fetch('/api/states');
                 const data = await response.json();
                 const statsEl = document.getElementById('coverage-stats');
-                statsEl.textContent = `${data.states.length} states, ${data.total_sources} sources`;
+                const stateCount = data.states.length;
+                const sourceCount = data.total_sources || data.states.reduce((sum, s) => sum + (s.source_count || 0), 0);
+                statsEl.textContent = `${stateCount} states, ${sourceCount.toLocaleString()} sources`;
             } catch (error) {
                 console.error('Failed to refresh coverage:', error);
             }

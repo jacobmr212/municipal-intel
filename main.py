@@ -1020,6 +1020,24 @@ async def get_covered_states(
     Used to populate the scanner state selector with only covered states.
     """
     from sqlalchemy import func
+
+    # State code to name mapping
+    STATE_NAMES = {
+        "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas",
+        "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware",
+        "DC": "District of Columbia", "FL": "Florida", "GA": "Georgia", "HI": "Hawaii",
+        "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+        "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine",
+        "MD": "Maryland", "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota",
+        "MS": "Mississippi", "MO": "Missouri", "MT": "Montana", "NE": "Nebraska",
+        "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey", "NM": "New Mexico",
+        "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+        "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "PR": "Puerto Rico",
+        "RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota", "TN": "Tennessee",
+        "TX": "Texas", "UT": "Utah", "VT": "Vermont", "VA": "Virginia",
+        "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"
+    }
+
     rows = (
         db.query(Municipality.state, func.count(MunicipalSource.id).label("source_count"))
         .join(MunicipalSource, MunicipalSource.municipality_id == Municipality.id)
@@ -1027,7 +1045,23 @@ async def get_covered_states(
         .order_by(Municipality.state)
         .all()
     )
-    return {"states": [{"code": row.state, "source_count": row.source_count} for row in rows]}
+
+    states = []
+    total_sources = 0
+    for row in rows:
+        state_code = row.state
+        source_count = row.source_count
+        total_sources += source_count
+        states.append({
+            "abbr": state_code,
+            "name": STATE_NAMES.get(state_code, state_code),
+            "source_count": source_count
+        })
+
+    return {
+        "states": states,
+        "total_sources": total_sources
+    }
 
 
 @app.get("/api/feed")
