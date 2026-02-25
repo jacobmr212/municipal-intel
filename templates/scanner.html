@@ -405,12 +405,36 @@
                 </div>
 
                 <div id="watchlist-results" class="space-y-3">
-                    <div class="text-center py-12">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-                        </svg>
-                        <h3 class="mt-2 text-sm font-medium text-gray-900">Your watchlist is empty</h3>
-                        <p class="mt-1 text-sm text-gray-500">Mark municipalities during scans to track them here.</p>
+                    <div class="text-center py-12 px-6 max-w-2xl mx-auto">
+                        <div class="bg-blue-50 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
+                            <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Your Watchlist is Empty</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            Build a personalized watchlist of high-priority municipalities you're tracking.
+                            Get instant notifications when new opportunities appear in your watched cities.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left mt-6">
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <div class="text-blue-600 font-semibold text-sm mb-1">📍 Track Key Cities</div>
+                                <p class="text-xs text-gray-600">Monitor specific municipalities where you have relationships or ongoing opportunities</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <div class="text-blue-600 font-semibold text-sm mb-1">🔔 Get Alerted</div>
+                                <p class="text-xs text-gray-600">Receive priority notifications when watched municipalities post new documents</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <div class="text-blue-600 font-semibold text-sm mb-1">📊 Track History</div>
+                                <p class="text-xs text-gray-600">See all past activity and signal changes for your most important prospects</p>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button onclick="switchTab('feed')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                Browse Feed to Add Cities
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -444,15 +468,47 @@
                 </div>
 
                 <div id="territories-results" class="space-y-2">
-                    <div class="text-center py-12">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                        </svg>
-                        <h3 class="mt-2 text-sm font-medium text-gray-900">No territories assigned</h3>
-                        <p class="mt-1 text-sm text-gray-500">Add states to filter your feed automatically.</p>
+                    <div class="text-center py-12 px-6 max-w-3xl mx-auto">
+                        <div class="bg-green-50 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
+                            <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Define Your Sales Territory</h3>
+                        <p class="text-sm text-gray-600 mb-6">
+                            Set your assigned states to automatically filter your feed to only show leads from your territory.
+                            This ensures you focus on the opportunities that matter to you.
+                        </p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                            <div class="p-3 bg-gray-50 rounded-lg text-sm">
+                                <div class="font-semibold text-gray-900 mb-1">Auto-Filtered Feed</div>
+                                <p class="text-xs text-gray-600">Only see leads from your states</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg text-sm">
+                                <div class="font-semibold text-gray-900 mb-1">Focused Scans</div>
+                                <p class="text-xs text-gray-600">Run scans limited to your territory</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg text-sm">
+                                <div class="font-semibold text-gray-900 mb-1">Track Coverage</div>
+                                <p class="text-xs text-gray-600">See source counts per state</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg text-sm">
+                                <div class="font-semibold text-gray-900 mb-1">Team Coordination</div>
+                                <p class="text-xs text-gray-600">Prevent lead overlap with teammates</p>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <div class="text-sm font-semibold text-blue-900 mb-2">💡 Common Territory Examples:</div>
+                            <div class="flex flex-wrap gap-2 justify-center">
+                                <span class="px-3 py-1 bg-white text-blue-800 text-xs rounded-full border border-blue-200">Western Region (CA, WA, OR)</span>
+                                <span class="px-3 py-1 bg-white text-blue-800 text-xs rounded-full border border-blue-200">Mountain States (CO, UT, WY)</span>
+                                <span class="px-3 py-1 bg-white text-blue-800 text-xs rounded-full border border-blue-200">Northeast (NY, PA, NJ, MA)</span>
+                                <span class="px-3 py-1 bg-white text-blue-800 text-xs rounded-full border border-blue-200">Gulf Coast (TX, LA, FL)</span>
+                            </div>
+                        </div>
                         <div class="mt-6">
-                            <button onclick="showAddTerritoryForm()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                                + Add State
+                            <button onclick="showAddTerritoryForm()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                                + Add Your First State
                             </button>
                         </div>
                     </div>
