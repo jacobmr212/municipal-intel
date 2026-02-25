@@ -256,6 +256,41 @@
                 </div>
             </div>
 
+            <!-- Scan Configuration Summary -->
+            <div id="scan-summary" class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">📋 Scan Summary</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-sm text-gray-600 mb-1">States Selected</div>
+                        <div id="summary-states" class="text-xl font-bold text-gray-900">0 states</div>
+                        <div id="summary-state-list" class="text-xs text-gray-500 mt-1 max-h-16 overflow-y-auto">
+                            No states selected
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600 mb-1">Population Tiers</div>
+                        <div id="summary-tiers" class="text-xl font-bold text-gray-900">1 tier</div>
+                        <div id="summary-tier-list" class="text-xs text-gray-500 mt-1">
+                            Small (2.5K – 10K)
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600 mb-1">Source Types</div>
+                        <div id="summary-sources" class="text-xl font-bold text-gray-900">2 sources</div>
+                        <div id="summary-source-list" class="text-xs text-gray-500 mt-1">
+                            Meeting Minutes, Procurement Portals
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600 mb-1">Estimated Scope</div>
+                        <div id="summary-municipalities" class="text-xl font-bold text-indigo-600">~ 0 cities</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            Est. time: <span id="summary-time" class="font-medium">Unknown</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Scan Progress (Hidden initially) -->
             <div id="scan-progress" class="hidden bg-white shadow rounded-lg p-6 mb-6 border-2 scanning">
                 <div class="flex items-center justify-between mb-4">
@@ -466,6 +501,17 @@
 
             // Update state count when selection changes
             document.getElementById('state-select').addEventListener('change', updateStateCount);
+
+            // Update summary when tier/source checkboxes change
+            document.querySelectorAll('.tier-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateScanSummary);
+            });
+            document.querySelectorAll('.source-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateScanSummary);
+            });
+
+            // Initial summary update
+            updateScanSummary();
         });
 
         // =============================================================================
@@ -1154,6 +1200,62 @@
             const select = document.getElementById('state-select');
             const count = select.selectedOptions.length;
             document.getElementById('state-count').textContent = count;
+            updateScanSummary();
+        }
+
+        function updateScanSummary() {
+            // Get selected states
+            const stateSelect = document.getElementById('state-select');
+            const selectedStates = Array.from(stateSelect.selectedOptions);
+            const stateCount = selectedStates.length;
+            const stateNames = selectedStates.map(opt => opt.textContent.split('(')[0].trim());
+
+            // Get selected tiers
+            const tierCheckboxes = document.querySelectorAll('.tier-checkbox:checked');
+            const tierLabels = {
+                'micro': 'Micro (< 2.5K)',
+                'small': 'Small (2.5K – 10K)',
+                'small-mid': 'Small-Mid (10K – 25K)',
+                'mid': 'Mid (25K – 50K)',
+                'large': 'Large (50K+)'
+            };
+            const selectedTiers = Array.from(tierCheckboxes).map(cb => tierLabels[cb.value]);
+
+            // Get selected sources
+            const sourceCheckboxes = document.querySelectorAll('.source-checkbox:checked');
+            const sourceLabels = {
+                'meeting_minutes': 'Meeting Minutes',
+                'procurement': 'Procurement Portals',
+                'state_portal': 'State Portals'
+            };
+            const selectedSources = Array.from(sourceCheckboxes).map(cb => sourceLabels[cb.value]);
+
+            // Update summary card
+            document.getElementById('summary-states').textContent = `${stateCount} ${stateCount === 1 ? 'state' : 'states'}`;
+            document.getElementById('summary-state-list').textContent = stateCount > 0 ? stateNames.join(', ') : 'No states selected';
+
+            document.getElementById('summary-tiers').textContent = `${selectedTiers.length} ${selectedTiers.length === 1 ? 'tier' : 'tiers'}`;
+            document.getElementById('summary-tier-list').textContent = selectedTiers.length > 0 ? selectedTiers.join(', ') : 'No tiers selected';
+
+            document.getElementById('summary-sources').textContent = `${selectedSources.length} ${selectedSources.length === 1 ? 'source' : 'sources'}`;
+            document.getElementById('summary-source-list').textContent = selectedSources.length > 0 ? selectedSources.join(', ') : 'No sources selected';
+
+            // Estimate municipalities (rough calculation)
+            // Avg ~28 municipalities per state (1,376 sources / 49 states)
+            const estimatedMunicipalities = stateCount * 28 * selectedTiers.length;
+            document.getElementById('summary-municipalities').textContent = `~ ${estimatedMunicipalities.toLocaleString()} cities`;
+
+            // Estimate time (rough: 1-2 minutes per municipality)
+            const estimatedMinutes = Math.round(estimatedMunicipalities * 1.5);
+            let timeDisplay = 'Unknown';
+            if (estimatedMinutes < 60) {
+                timeDisplay = `${estimatedMinutes} min`;
+            } else {
+                const hours = Math.floor(estimatedMinutes / 60);
+                const mins = estimatedMinutes % 60;
+                timeDisplay = `${hours}h ${mins}m`;
+            }
+            document.getElementById('summary-time').textContent = timeDisplay;
         }
 
         function selectAllStates() {
