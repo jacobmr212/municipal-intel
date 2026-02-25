@@ -1962,6 +1962,152 @@ async def update_notification_settings(
     }
 
 
+@app.post("/api/send-weekly-digest")
+async def send_weekly_digest_endpoint(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate and send weekly digest email for the current user.
+
+    This would typically be called by a cron job/scheduler, but can also
+    be manually triggered for testing or on-demand reports.
+
+    Requires authentication.
+    """
+    from datetime import datetime, timedelta
+    from sqlalchemy import func
+    from collections import Counter
+
+    try:
+        user_email = user["email"]
+
+        # Get user's territories
+        territories = db.query(Territory).filter(Territory.user_id == user["user_id"]).all()
+        territory_states = [t.state for t in territories] if territories else None
+
+        # Calculate date ranges
+        now = datetime.utcnow()
+        week_ago = now - timedelta(days=7)
+        two_weeks_ago = now - timedelta(days=14)
+
+        # Query this week's leads
+        this_week_query = (
+            db.query(Lead)
+            .join(Scan, Lead.scan_id == Scan.id)
+            .filter(
+                Scan.user_id == user["user_id"],
+                Scan.completed_at >= week_ago,
+                Scan.completed_at <= now,
+                Lead.times_seen == 1  # Only new leads
+            )
+        )
+
+        # Filter by territories if exist
+        if territory_states:
+            this_week_query = this_week_query.filter(Lead.state.in_(territory_states))
+
+        this_week_leads = this_week_query.all()
+
+        # Query previous week's leads for trend comparison
+        prev_week_count = (
+            db.query(Lead)
+            .join(Scan, Lead.scan_id == Scan.id)
+            .filter(
+                Scan.user_id == user["user_id"],
+                Scan.completed_at >= two_weeks_ago,
+                Scan.completed_at < week_ago,
+                Lead.times_seen == 1
+            )
+        )
+        if territory_states:
+            prev_week_count = prev_week_count.filter(Lead.state.in_(territory_states))
+        prev_week_total = prev_week_count.count()
+
+        # Calculate stats
+        total_leads = len(this_week_leads)
+        hot_leads = sum(1 for l in this_week_leads if l.lead_type == "hot")
+        warm_leads = sum(1 for l in this_week_leads if l.lead_type == "warm")
+        cold_leads = sum(1 for l in this_week_leads if l.lead_type == "cold")
+        urgent_leads = sum(1 for l in this_week_leads if l.urgency_score >= 60)
+
+        # Deadline analysis
+        critical_deadlines = sum(1 for l in this_week_leads if l.days_until_deadline and l.days_until_deadline < 7)
+        approaching_deadlines = sum(1 for l in this_week_leads if l.days_until_deadline and 7 <= l.days_until_deadline <= 30)
+
+        # Competitor analysis
+        all_competitors = []
+        for lead in this_week_leads:
+            if lead.competitors_mentioned:
+                all_competitors.extend(lead.competitors_mentioned)
+
+        competitor_counts = Counter(all_competitors)
+        total_unique_competitors = len(competitor_counts)
+        top_competitors = competitor_counts.most_common(5)  # [(vendor, count), ...]
+
+        # Territory breakdown
+        territory_counts = Counter(l.state for l in this_week_leads)
+
+        # Top leads (by relevance score)
+        top_leads = sorted(this_week_leads, key=lambda l: l.relevance_score, reverse=True)[:10]
+        top_leads_dicts = [
+            {
+                "id": l.id,
+                "municipality": l.municipality,
+                "state": l.state,
+                "title": l.title,
+                "url": l.url,
+                "relevance_score": l.relevance_score,
+                "lead_type": l.lead_type,
+                "urgency_score": l.urgency_score,
+                "days_until_deadline": l.days_until_deadline,
+                "decision_stage": l.decision_stage,
+                "signal_matches": l.signal_matches_json,
+            }
+            for l in top_leads
+        ]
+
+        # Build weekly summary
+        weekly_summary = {
+            "total_leads": total_leads,
+            "hot_leads": hot_leads,
+            "warm_leads": warm_leads,
+            "cold_leads": cold_leads,
+            "urgent_leads": urgent_leads,
+            "prev_week_total": prev_week_total,
+            "critical_deadlines": critical_deadlines,
+            "approaching_deadlines": approaching_deadlines,
+            "competitor_summary": {
+                "total_competitors": total_unique_competitors,
+                "top_competitors": top_competitors,
+            },
+            "territory_breakdown": dict(territory_counts),
+            "top_leads": top_leads_dicts,
+        }
+
+        # Send email
+        from src.notifications import send_weekly_digest
+        result = await send_weekly_digest(user_email, weekly_summary, territory_states)
+
+        if result:
+            return {
+                "success": True,
+                "message": f"Weekly digest sent to {user_email}",
+                "email_id": result.get("id"),
+                "summary": {
+                    "total_leads": total_leads,
+                    "hot_leads": hot_leads,
+                    "urgent_leads": urgent_leads,
+                }
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send weekly digest")
+
+    except Exception as e:
+        logger.error(f"Error sending weekly digest: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/municipalities")
 async def get_municipalities(
     state: Optional[str] = None,

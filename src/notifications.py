@@ -316,3 +316,208 @@ async def send_daily_digest(user_email: str, leads_summary: Dict, territory_stat
     except Exception as e:
         logger.error(f"Failed to send daily digest to {user_email}: {e}")
         return None
+
+
+async def send_weekly_digest(user_email: str, weekly_summary: Dict, territory_states: List[str] = None):
+    """
+    Send comprehensive weekly digest with trends and insights.
+
+    Summary includes:
+    - Weekly totals by lead type
+    - Week-over-week trends
+    - Top 10 leads by relevance
+    - Competitor intelligence summary
+    - Territory breakdown
+    - Deadline urgency overview
+    - Action items for the week
+    """
+    if not weekly_summary or weekly_summary.get("total_leads", 0) == 0:
+        return
+
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+
+        total = weekly_summary.get("total_leads", 0)
+        hot = weekly_summary.get("hot_leads", 0)
+        warm = weekly_summary.get("warm_leads", 0)
+        cold = weekly_summary.get("cold_leads", 0)
+        urgent = weekly_summary.get("urgent_leads", 0)
+        top_leads = weekly_summary.get("top_leads", [])
+
+        # Trends
+        prev_week_total = weekly_summary.get("prev_week_total", 0)
+        trend_direction = "📈" if total > prev_week_total else "📉" if total < prev_week_total else "➡️"
+        trend_pct = round(((total - prev_week_total) / prev_week_total * 100)) if prev_week_total > 0 else 0
+        trend_text = f"{abs(trend_pct)}% {'increase' if total > prev_week_total else 'decrease'}" if trend_pct != 0 else "no change"
+
+        # Competitor insights
+        competitor_summary = weekly_summary.get("competitor_summary", {})
+        total_competitors = competitor_summary.get("total_competitors", 0)
+        top_competitors = competitor_summary.get("top_competitors", [])  # [(vendor, count), ...]
+
+        # Territory breakdown
+        territory_breakdown = weekly_summary.get("territory_breakdown", {})  # {state: count}
+
+        # Deadline urgency
+        critical_deadlines = weekly_summary.get("critical_deadlines", 0)  # < 7 days
+        approaching_deadlines = weekly_summary.get("approaching_deadlines", 0)  # 7-30 days
+
+        # Build weekly stats card
+        stats_html = f"""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;">
+            <div style="text-align: center; color: white; margin-bottom: 20px;">
+                <div style="font-size: 48px; font-weight: bold;">{total}</div>
+                <div style="font-size: 18px; opacity: 0.9;">New Leads This Week</div>
+                <div style="font-size: 14px; opacity: 0.8; margin-top: 8px;">{trend_direction} {trend_text} vs. last week</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: bold; color: white;">{hot}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.9);">Hot</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: bold; color: white;">{warm}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.9);">Warm</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: bold; color: white;">{cold}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.9);">Cold</div>
+                </div>
+            </div>
+        </div>
+        """
+
+        # Urgency alert section
+        urgency_html = ""
+        if critical_deadlines > 0 or approaching_deadlines > 0:
+            urgency_html = f"""
+            <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                <h3 style="margin: 0 0 8px 0; color: #dc2626; font-size: 16px;">⏰ Deadline Urgency</h3>
+                <p style="margin: 0; color: #991b1b;">
+                    <strong>{critical_deadlines}</strong> lead{'s' if critical_deadlines != 1 else ''} with critical deadlines (< 7 days)<br>
+                    <strong>{approaching_deadlines}</strong> lead{'s' if approaching_deadlines != 1 else ''} with approaching deadlines (7-30 days)
+                </p>
+            </div>
+            """
+
+        # Competitor intelligence section
+        competitor_html = ""
+        if total_competitors > 0:
+            competitor_items = "".join([
+                f"<li style='margin: 4px 0;'>{vendor}: {count} mention{'s' if count > 1 else ''}</li>"
+                for vendor, count in top_competitors[:5]
+            ])
+            competitor_html = f"""
+            <div style="background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                <h3 style="margin: 0 0 8px 0; color: #1e40af; font-size: 16px;">🎯 Competitive Intelligence</h3>
+                <p style="margin: 0 0 8px 0; color: #1e3a8a;"><strong>{total_competitors}</strong> competitor{'s' if total_competitors > 1 else ''} mentioned this week:</p>
+                <ul style="margin: 0; padding-left: 20px; color: #1e40af;">{competitor_items}</ul>
+            </div>
+            """
+
+        # Territory breakdown section
+        territory_html = ""
+        if territory_breakdown:
+            territory_items = "".join([
+                f"<div style='display: flex; justify-content: space-between; margin: 4px 0;'><span>{state}</span><strong>{count}</strong></div>"
+                for state, count in sorted(territory_breakdown.items(), key=lambda x: x[1], reverse=True)[:5]
+            ])
+            territory_html = f"""
+            <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                <h3 style="margin: 0 0 8px 0; color: #065f46; font-size: 16px;">📍 Territory Activity</h3>
+                <div style="color: #065f46;">{territory_items}</div>
+            </div>
+            """
+
+        # Top leads section
+        top_leads_html = ""
+        if top_leads:
+            cards = "\n".join([build_lead_card_html(lead) for lead in top_leads[:10]])
+            top_leads_html = f"""
+            <h2 style="color: #111827; margin: 32px 0 16px 0; font-size: 20px;">🔥 Top Leads This Week</h2>
+            {cards}
+            """
+
+        # Action items
+        action_items = []
+        if critical_deadlines > 0:
+            action_items.append(f"⚡ <strong>URGENT:</strong> Review {critical_deadlines} lead{'s' if critical_deadlines > 1 else ''} with critical deadlines")
+        if hot > 0:
+            action_items.append(f"🔥 Follow up on {hot} hot lead{'s' if hot > 1 else ''}")
+        if total_competitors > 0:
+            action_items.append(f"🎯 Review competitive positioning for {total_competitors} competitor mention{'s' if total_competitors > 1 else ''}")
+
+        action_items_html = ""
+        if action_items:
+            action_list = "".join([f"<li style='margin: 8px 0;'>{item}</li>" for item in action_items])
+            action_items_html = f"""
+            <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                <h3 style="margin: 0 0 8px 0; color: #92400e; font-size: 16px;">✅ Action Items</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #78350f;">{action_list}</ul>
+            </div>
+            """
+
+        territory_info = ""
+        if territory_states:
+            territory_info = f"<p style='color: #6b7280; margin: 8px 0 16px 0; text-align: center;'>Your territories: {', '.join(territory_states)}</p>"
+
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #111827; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+
+            <div style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 28px;">📊 Weekly Intelligence Report</h1>
+                    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">{datetime.now().strftime("%B %d, %Y")}</p>
+                    {territory_info}
+                </div>
+
+                <div style="padding: 24px;">
+                    {stats_html}
+
+                    {urgency_html}
+
+                    {competitor_html}
+
+                    {territory_html}
+
+                    {action_items_html}
+
+                    {top_leads_html}
+
+                    <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                        <a href="{APP_URL}/scanner" style="display: inline-block; background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">View All Leads →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 24px; color: #6b7280; font-size: 12px;">
+                <p>Weekly digest · Municipal Intel</p>
+                <p><a href="{APP_URL}/settings/notifications" style="color: #6b7280; text-decoration: none;">Manage notification preferences</a></p>
+            </div>
+
+        </body>
+        </html>
+        """
+
+        params = {
+            "from": RESEND_FROM_EMAIL,
+            "to": [user_email],
+            "subject": f"📊 Weekly Report: {total} Leads ({hot} Hot, {urgent} Urgent) • {trend_direction} {trend_text}",
+            "html": html_body,
+        }
+
+        response = resend.Emails.send(params)
+        logger.info(f"Sent weekly digest to {user_email}: {total} leads, {hot} hot (email_id: {response.get('id')})")
+        return response
+
+    except Exception as e:
+        logger.error(f"Failed to send weekly digest to {user_email}: {e}")
+        return None
