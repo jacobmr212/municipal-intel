@@ -156,6 +156,16 @@
                 <div id="feed-results" class="space-y-3">
                     <p class="text-sm text-gray-500">Loading feed...</p>
                 </div>
+
+                <!-- Load More Button -->
+                <div id="load-more-container" class="hidden mt-6 text-center">
+                    <button id="load-more-btn" onclick="loadMoreFeed()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Load More
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2">
+                        Showing <span id="feed-count">0</span> of <span id="feed-total">0</span> leads
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -479,6 +489,9 @@
         let allLeads = [];
         let allStates = [];
         let scanStartTime = null;
+        let feedOffset = 0;
+        let feedLimit = 20;
+        let feedTotalCount = 0;
 
         // Tab switching
         function switchTab(tab) {
@@ -532,7 +545,7 @@
             label.textContent = slider.value;
         }
 
-        async function loadFeed() {
+        async function loadFeed(append = false) {
             const typeFilter = document.getElementById('feed-type-filter').value;
             const daysFilter = document.getElementById('feed-days-filter').value;
             const urgentOnly = document.getElementById('feed-urgent-only').checked;
@@ -540,9 +553,16 @@
             const hasCompetitors = document.getElementById('feed-has-competitors').checked;
             const minUrgency = document.getElementById('feed-urgency-slider').value;
 
+            // Reset offset if not appending (new query)
+            if (!append) {
+                feedOffset = 0;
+            }
+
             // Build query parameters
             const params = new URLSearchParams();
             params.append('days', daysFilter);
+            params.append('limit', feedLimit);
+            params.append('offset', feedOffset);
             if (typeFilter !== 'all') {
                 params.append('lead_type', typeFilter);
             }
@@ -567,11 +587,16 @@
                 }
 
                 const data = await response.json();
+                feedTotalCount = data.total || 0;
 
                 const container = document.getElementById('feed-results');
-                container.innerHTML = '';
 
-                if (data.leads.length === 0) {
+                // Clear container if not appending
+                if (!append) {
+                    container.innerHTML = '';
+                }
+
+                if (data.leads.length === 0 && !append) {
                     container.innerHTML = `
                         <div class="text-center py-12">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -589,6 +614,7 @@
                             </div>
                         </div>
                     `;
+                    document.getElementById('load-more-container').classList.add('hidden');
                     return;
                 }
 
@@ -596,6 +622,21 @@
                     const leadCard = createLeadCard(lead);
                     container.appendChild(leadCard);
                 });
+
+                // Update offset for next load
+                feedOffset += data.leads.length;
+
+                // Update pagination UI
+                document.getElementById('feed-count').textContent = feedOffset;
+                document.getElementById('feed-total').textContent = feedTotalCount;
+
+                // Show/hide load more button
+                if (feedOffset < feedTotalCount) {
+                    document.getElementById('load-more-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('load-more-container').classList.add('hidden');
+                }
+
             } catch (error) {
                 console.error('Failed to load feed:', error);
                 document.getElementById('feed-results').innerHTML = `
@@ -613,6 +654,18 @@
                     </div>
                 `;
             }
+        }
+
+        async function loadMoreFeed() {
+            const btn = document.getElementById('load-more-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+
+            await loadFeed(true); // append = true
+
+            btn.textContent = originalText;
+            btn.disabled = false;
         }
 
         function createLeadCard(lead) {
