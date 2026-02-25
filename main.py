@@ -1034,31 +1034,80 @@ async def get_covered_states(
 async def get_feed(
     limit: int = 50,
     offset: int = 0,
+    # Basic filters
     state: Optional[str] = None,
     lead_type: Optional[str] = None,
     customer_status: Optional[str] = None,
+    source_type: Optional[str] = None,
+    # Temporal filters
     days: Optional[int] = None,
     new_only: bool = False,
     urgent_only: bool = False,
     min_urgency: Optional[int] = None,
+    max_urgency: Optional[int] = None,
+    decision_stage: Optional[str] = None,
+    has_deadline: Optional[bool] = None,
+    deadline_within_days: Optional[int] = None,
+    # Population filters
+    min_population: Optional[int] = None,
+    max_population: Optional[int] = None,
+    # Score filters
+    min_score: Optional[float] = None,
+    max_score: Optional[float] = None,
+    # Competitor filters
+    has_competitors: Optional[bool] = None,
+    competitor: Optional[str] = None,
+    existing_vendor: Optional[str] = None,
+    # ROI/Status filters
+    status: Optional[str] = None,
+    has_deal_value: Optional[bool] = None,
+    # Sorting
+    sort_by: Optional[str] = "relevance",  # relevance | urgency | deadline | population | date
+    sort_order: Optional[str] = "desc",  # asc | desc
+    # Search
+    search: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Feed API endpoint - returns recent leads from all scans.
+    Advanced Feed API endpoint - returns leads with comprehensive filtering.
 
-    Filters by user's territories if any exist.
-    Supports pagination and filtering.
+    **Basic Filters:**
+    - state: Filter by state code (e.g., "CA", "TX")
+    - lead_type: hot | warm | cold
+    - customer_status: existing_customer | new_opportunity
+    - source_type: meeting_minutes | procurement | budget | job_posting | agenda_packet | audit
 
-    Query parameters:
-    - limit: Number of results to return (default 50, max 200)
-    - offset: Pagination offset (default 0)
-    - state: Filter by state code (optional)
-    - lead_type: Filter by lead_type: hot | warm | cold (optional)
-    - customer_status: Filter by customer_status: existing_customer | new_opportunity (optional)
-    - new_only: If true, only show leads seen once (newly discovered, default false)
-    - urgent_only: If true, only show leads with urgency_score >= 60 (default false)
-    - min_urgency: Minimum urgency score (0-100, optional)
+    **Temporal Filters:**
+    - days: Leads discovered in last N days
+    - new_only: Only newly discovered leads (times_seen == 1)
+    - urgent_only: Urgency score >= 60
+    - min_urgency / max_urgency: Urgency score range (0-100)
+    - decision_stage: exploration | evaluation | procurement | implementation
+    - has_deadline: true = only leads with deadlines
+    - deadline_within_days: Only leads with deadlines in next N days
+
+    **Population Filters:**
+    - min_population / max_population: Population range
+
+    **Score Filters:**
+    - min_score / max_score: Relevance score range (0-100)
+
+    **Competitor Filters:**
+    - has_competitors: true = only leads mentioning competitors
+    - competitor: Filter by specific competitor name (e.g., "Tyler Technologies")
+    - existing_vendor: Filter by current vendor
+
+    **ROI/Status Filters:**
+    - status: new | contacted | qualified | proposal | won | lost
+    - has_deal_value: true = only leads with deal values
+
+    **Sorting:**
+    - sort_by: relevance | urgency | deadline | population | date
+    - sort_order: asc | desc
+
+    **Search:**
+    - search: Full-text search in municipality name or title
 
     **Requires authentication.**
     """
@@ -1078,39 +1127,117 @@ async def get_feed(
         territory_states = [t.state for t in territories]
         query = query.filter(Lead.state.in_(territory_states))
 
-    # Apply optional filters
+    # Apply basic filters
     if state:
         query = query.filter(Lead.state == state.upper())
     if lead_type:
         query = query.filter(Lead.lead_type == lead_type.lower())
     if customer_status:
         query = query.filter(Lead.customer_status == customer_status.lower())
+    if source_type:
+        query = query.filter(Lead.source_type == source_type.lower())
+
+    # Apply temporal filters
     if days:
-        # Filter by scan completion date within last N days
         from datetime import datetime, timedelta
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         query = query.filter(Scan.completed_at >= cutoff_date)
     if new_only:
-        # Only show leads discovered once (not duplicates)
         query = query.filter(Lead.times_seen == 1)
     if urgent_only:
-        # Only show leads with high urgency (60+)
         query = query.filter(Lead.urgency_score >= 60)
     if min_urgency is not None:
-        # Filter by minimum urgency score
         query = query.filter(Lead.urgency_score >= min_urgency)
+    if max_urgency is not None:
+        query = query.filter(Lead.urgency_score <= max_urgency)
+    if decision_stage:
+        query = query.filter(Lead.decision_stage == decision_stage.lower())
+    if has_deadline is not None:
+        if has_deadline:
+            query = query.filter(Lead.deadline_date.isnot(None))
+        else:
+            query = query.filter(Lead.deadline_date.is_(None))
+    if deadline_within_days is not None:
+        query = query.filter(
+            Lead.days_until_deadline.isnot(None),
+            Lead.days_until_deadline <= deadline_within_days,
+            Lead.days_until_deadline >= 0  # Future deadlines only
+        )
+
+    # Apply population filters
+    if min_population is not None:
+        query = query.filter(Lead.population >= min_population)
+    if max_population is not None:
+        query = query.filter(Lead.population <= max_population)
+
+    # Apply score filters
+    if min_score is not None:
+        query = query.filter(Lead.relevance_score >= min_score)
+    if max_score is not None:
+        query = query.filter(Lead.relevance_score <= max_score)
+
+    # Apply competitor filters
+    if has_competitors is not None:
+        if has_competitors:
+            # PostgreSQL: Check if JSON array is not null and not empty
+            from sqlalchemy import func, cast, String
+            query = query.filter(
+                Lead.competitors_mentioned.isnot(None),
+                func.json_array_length(cast(Lead.competitors_mentioned, String)) > 0
+            )
+        else:
+            query = query.filter(
+                (Lead.competitors_mentioned.is_(None)) |
+                (func.json_array_length(cast(Lead.competitors_mentioned, String)) == 0)
+            )
+    if competitor:
+        # Filter by specific competitor (case-insensitive partial match in JSON array)
+        from sqlalchemy import func, cast, String
+        query = query.filter(
+            func.lower(cast(Lead.competitors_mentioned, String)).contains(competitor.lower())
+        )
+    if existing_vendor:
+        query = query.filter(Lead.existing_vendor == existing_vendor)
+
+    # Apply ROI/Status filters
+    if status:
+        query = query.filter(Lead.status == status.lower())
+    if has_deal_value is not None:
+        if has_deal_value:
+            query = query.filter(Lead.deal_value.isnot(None), Lead.deal_value > 0)
+        else:
+            query = query.filter((Lead.deal_value.is_(None)) | (Lead.deal_value == 0))
+
+    # Apply search
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Lead.municipality.ilike(search_term)) |
+            (Lead.title.ilike(search_term))
+        )
 
     # Get total count for pagination metadata
     total_count = query.count()
 
-    # Order by relevance score descending and apply pagination
-    leads = (
-        query
-        .order_by(Lead.relevance_score.desc())
-        .limit(limit)
-        .offset(offset)
-        .all()
-    )
+    # Apply sorting
+    if sort_by == "urgency":
+        order_col = Lead.urgency_score
+    elif sort_by == "deadline":
+        order_col = Lead.days_until_deadline
+    elif sort_by == "population":
+        order_col = Lead.population
+    elif sort_by == "date":
+        order_col = Lead.first_seen
+    else:  # relevance (default)
+        order_col = Lead.relevance_score
+
+    if sort_order == "asc":
+        query = query.order_by(order_col.asc())
+    else:
+        query = query.order_by(order_col.desc())
+
+    # Apply pagination
+    leads = query.limit(limit).offset(offset).all()
 
     # Format response
     results = []
@@ -1162,11 +1289,183 @@ async def get_feed(
             "has_more": (offset + limit) < total_count
         },
         "filters": {
-            "state": state,
-            "lead_type": lead_type,
-            "customer_status": customer_status,
+            # Active filters (for UI to show what's applied)
+            "basic": {
+                "state": state,
+                "lead_type": lead_type,
+                "customer_status": customer_status,
+                "source_type": source_type,
+            },
+            "temporal": {
+                "days": days,
+                "new_only": new_only,
+                "urgent_only": urgent_only,
+                "min_urgency": min_urgency,
+                "max_urgency": max_urgency,
+                "decision_stage": decision_stage,
+                "has_deadline": has_deadline,
+                "deadline_within_days": deadline_within_days,
+            },
+            "population": {
+                "min_population": min_population,
+                "max_population": max_population,
+            },
+            "score": {
+                "min_score": min_score,
+                "max_score": max_score,
+            },
+            "competitor": {
+                "has_competitors": has_competitors,
+                "competitor": competitor,
+                "existing_vendor": existing_vendor,
+            },
+            "roi": {
+                "status": status,
+                "has_deal_value": has_deal_value,
+            },
+            "sort": {
+                "sort_by": sort_by,
+                "sort_order": sort_order,
+            },
+            "search": search,
             "territories": [t.state for t in territories] if territories else None
         }
+    }
+
+
+@app.get("/api/feed/filter-options")
+async def get_filter_options(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get available filter options for the feed.
+
+    Returns distinct values for filterable fields based on user's data.
+    Useful for building dynamic filter UI components.
+
+    **Requires authentication.**
+    """
+    from sqlalchemy import func, distinct
+
+    # Get user's territories
+    territories = db.query(Territory).filter(Territory.user_id == user["user_id"]).all()
+    territory_states = [t.state for t in territories] if territories else None
+
+    # Base query for user's leads
+    base_query = (
+        db.query(Lead)
+        .join(Scan, Lead.scan_id == Scan.id)
+        .filter(Scan.user_id == user["user_id"])
+    )
+
+    # Filter by territories if exist
+    if territory_states:
+        base_query = base_query.filter(Lead.state.in_(territory_states))
+
+    # Get distinct states
+    states_query = base_query.with_entities(distinct(Lead.state)).order_by(Lead.state)
+    states = [s[0] for s in states_query.all() if s[0]]
+
+    # Get distinct source types
+    source_types_query = base_query.with_entities(distinct(Lead.source_type)).order_by(Lead.source_type)
+    source_types = [s[0] for s in source_types_query.all() if s[0]]
+
+    # Get distinct decision stages
+    decision_stages_query = base_query.with_entities(distinct(Lead.decision_stage)).order_by(Lead.decision_stage)
+    decision_stages = [s[0] for s in decision_stages_query.all() if s[0] and s[0] != "unknown"]
+
+    # Get distinct competitors (flatten JSON arrays)
+    from collections import Counter
+    all_competitors = []
+    leads_with_competitors = base_query.filter(Lead.competitors_mentioned.isnot(None)).all()
+    for lead in leads_with_competitors:
+        if lead.competitors_mentioned:
+            all_competitors.extend(lead.competitors_mentioned)
+    competitor_counts = Counter(all_competitors)
+    competitors = [{"name": comp, "count": count} for comp, count in competitor_counts.most_common(20)]
+
+    # Get distinct existing vendors
+    vendors_query = (
+        base_query
+        .with_entities(Lead.existing_vendor, func.count(Lead.id).label('count'))
+        .filter(Lead.existing_vendor.isnot(None))
+        .group_by(Lead.existing_vendor)
+        .order_by(func.count(Lead.id).desc())
+    )
+    existing_vendors = [{"name": v[0], "count": v[1]} for v in vendors_query.all()]
+
+    # Get score ranges
+    score_stats = (
+        base_query
+        .with_entities(
+            func.min(Lead.relevance_score).label('min_score'),
+            func.max(Lead.relevance_score).label('max_score'),
+            func.avg(Lead.relevance_score).label('avg_score')
+        )
+        .first()
+    )
+
+    # Get urgency ranges
+    urgency_stats = (
+        base_query
+        .with_entities(
+            func.min(Lead.urgency_score).label('min_urgency'),
+            func.max(Lead.urgency_score).label('max_urgency'),
+            func.avg(Lead.urgency_score).label('avg_urgency')
+        )
+        .first()
+    )
+
+    # Get population ranges
+    pop_stats = (
+        base_query
+        .with_entities(
+            func.min(Lead.population).label('min_pop'),
+            func.max(Lead.population).label('max_pop'),
+            func.avg(Lead.population).label('avg_pop')
+        )
+        .first()
+    )
+
+    return {
+        "categorical": {
+            "states": states,
+            "lead_types": ["hot", "warm", "cold"],
+            "customer_statuses": ["existing_customer", "new_opportunity"],
+            "source_types": source_types,
+            "decision_stages": decision_stages,
+            "statuses": ["new", "contacted", "qualified", "proposal", "won", "lost"],
+        },
+        "competitors": {
+            "all": competitors,
+            "existing_vendors": existing_vendors,
+        },
+        "ranges": {
+            "score": {
+                "min": float(score_stats.min_score) if score_stats.min_score else 0,
+                "max": float(score_stats.max_score) if score_stats.max_score else 100,
+                "avg": float(score_stats.avg_score) if score_stats.avg_score else 50,
+            },
+            "urgency": {
+                "min": int(urgency_stats.min_urgency) if urgency_stats.min_urgency else 0,
+                "max": int(urgency_stats.max_urgency) if urgency_stats.max_urgency else 100,
+                "avg": int(urgency_stats.avg_urgency) if urgency_stats.avg_urgency else 0,
+            },
+            "population": {
+                "min": int(pop_stats.min_pop) if pop_stats.min_pop else 0,
+                "max": int(pop_stats.max_pop) if pop_stats.max_pop else 1000000,
+                "avg": int(pop_stats.avg_pop) if pop_stats.avg_pop else 50000,
+            }
+        },
+        "sort_options": [
+            {"value": "relevance", "label": "Relevance Score"},
+            {"value": "urgency", "label": "Urgency Score"},
+            {"value": "deadline", "label": "Deadline (Soonest First)"},
+            {"value": "population", "label": "Population"},
+            {"value": "date", "label": "Date Discovered"},
+        ],
+        "territories": territory_states
     }
 
 
