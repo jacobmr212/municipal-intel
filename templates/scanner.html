@@ -1554,7 +1554,7 @@
             // Start scan
             const config = {
                 states: selectedStates,
-                tiers: selectedTiers,
+                population_tier: selectedTiers[0],  // Backend expects single tier
                 source_types: selectedSources
             };
 
