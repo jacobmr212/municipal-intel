@@ -2,7 +2,7 @@
 Competitor Intelligence Analysis
 
 Extracts and analyzes competitor mentions from municipal documents.
-Helps sales teams understand competitive landscape and position Caselle effectively.
+Helps sales teams understand competitive landscape and position their ERP vendor effectively.
 """
 
 import re

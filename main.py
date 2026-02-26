@@ -172,16 +172,25 @@ def run_scan(scan_id: str, config: dict):
     from src.database import SessionLocal
     db = SessionLocal()
 
-    # Initialize scraper and analyzer
-    scraper = MunicipalScraper(delay=1.5, timeout=8, max_docs=10, db_session=db, use_cache=True)
-    analyzer = DocumentAnalyzer(use_llm=False)  # Disable LLM for speed
-    discovery = SourceDiscovery(request_delay=1.0, timeout=8)
-
     try:
         # Get scan record
         scan = db.query(Scan).filter(Scan.id == scan_id).first()
         if not scan:
             return
+
+        # Get user's vendor configuration
+        user = db.query(User).filter(User.id == scan.user_id).first()
+        vendor_name = user.vendor_name if user else None
+        vendor_competitors = user.vendor_competitors if user else None
+
+        # Initialize scraper and analyzer with vendor config
+        scraper = MunicipalScraper(delay=1.5, timeout=8, max_docs=10, db_session=db, use_cache=True)
+        analyzer = DocumentAnalyzer(
+            use_llm=False,  # Disable LLM for speed
+            vendor_name=vendor_name,
+            vendor_competitors=vendor_competitors
+        )
+        discovery = SourceDiscovery(request_delay=1.0, timeout=8)
 
         # Update status to running
         scan.status = "running"
