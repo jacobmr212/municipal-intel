@@ -13,6 +13,7 @@ from datetime import datetime
 from urllib.parse import urljoin
 from typing import Optional
 from io import BytesIO
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 from bs4 import BeautifulSoup
@@ -185,6 +186,14 @@ class MunicipalScraper:
                 except (ValueError, ImportError):
                     continue
         return None
+
+    def _is_recent_document(self, doc_date: Optional[datetime]) -> bool:
+        """Check if document is from current year (2026) or has no date."""
+        if doc_date is None:
+            return True  # Keep documents without dates (can't filter them)
+
+        current_year = datetime.now().year
+        return doc_date.year == current_year
 
     def _is_meeting_link(self, text: str, href: str) -> bool:
         """Check if a link likely points to meeting content."""
@@ -638,20 +647,59 @@ class MunicipalScraper:
 
         return docs
 
-    def scrape_all(self, sources: list, progress_callback=None) -> list[ScrapedDocument]:
-        """Scrape all discovered sources."""
+    def scrape_all(self, sources: list, progress_callback=None, max_workers: int = 10) -> list[ScrapedDocument]:
+        """Scrape all discovered sources in parallel with date filtering.
+
+        Args:
+            sources: List of municipal sources to scrape
+            progress_callback: Optional callback for progress updates
+            max_workers: Number of parallel workers (default: 10)
+
+        Returns:
+            List of scraped documents from current year (2026)
+        """
         all_docs = []
         total = len(sources)
+        completed = 0
+        filtered_old = 0
 
-        for i, source in enumerate(sources):
-            if progress_callback:
-                progress_callback(i, total, f"Scraping: {source.municipality}, {source.state}")
-
+        def scrape_single_source(source):
+            """Helper to scrape one source and filter by date."""
             try:
                 docs = self.scrape_source(source)
-                all_docs.extend(docs)
+                # Filter to only current year documents
+                recent_docs = []
+                for doc in docs:
+                    if self._is_recent_document(doc.date):
+                        recent_docs.append(doc)
+                    else:
+                        nonlocal filtered_old
+                        filtered_old += 1
+                        logger.debug(f"  ⏭️  Filtered old doc from {doc.date.year if doc.date else 'unknown'}: {doc.title[:50]}")
+                return recent_docs
             except Exception as e:
                 logger.error(f"  Error scraping {source.url}: {e}")
+                return []
 
-        logger.info(f"Total documents scraped: {len(all_docs)}")
+        # Parallel scraping with ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all scraping tasks
+            future_to_source = {executor.submit(scrape_single_source, src): src for src in sources}
+
+            # Process results as they complete
+            for future in as_completed(future_to_source):
+                source = future_to_source[future]
+                completed += 1
+
+                if progress_callback:
+                    progress_callback(completed, total, f"Scraped: {source.municipality}, {source.state}")
+
+                try:
+                    docs = future.result()
+                    all_docs.extend(docs)
+                except Exception as e:
+                    logger.error(f"  Exception processing {source.municipality}: {e}")
+
+        logger.info(f"📄 Total documents scraped: {len(all_docs)} (filtered {filtered_old} old docs)")
+        logger.info(f"⚡ Scraped {len(sources)} sources in parallel with {max_workers} workers")
         return all_docs
