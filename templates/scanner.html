@@ -970,8 +970,10 @@
                                 '<span class="px-2 py-1 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">NEW OPPORTUNITY</span>'}
                         </div>
                         <div class="flex items-baseline gap-2 mb-1">
-                            <h3 class="text-sm font-semibold text-gray-900">
-                                ${lead.municipality}, ${lead.state}
+                            <h3 class="text-sm font-semibold">
+                                <a href="/lead/${lead.id}" class="text-gray-900 hover:text-blue-600 hover:underline" onclick="event.stopPropagation()">
+                                    ${lead.municipality}, ${lead.state}
+                                </a>
                             </h3>
                             ${lead.population ? `<span class="text-xs text-gray-500">(Pop. ${lead.population.toLocaleString()})</span>` : ''}
                         </div>
@@ -993,6 +995,9 @@
                     </div>
                     <div class="ml-4 flex flex-col items-end space-y-2">
                         <span class="text-sm font-semibold text-gray-900">${Math.round(lead.relevance_score)}</span>
+                        <a href="/lead/${lead.id}" class="px-3 py-1 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded font-medium" onclick="event.stopPropagation()">
+                            View Details
+                        </a>
                         <a href="${lead.url}" target="_blank" class="px-3 py-1 text-xs text-gray-600 hover:text-gray-800 border border-gray-300 rounded hover:border-gray-400" onclick="event.stopPropagation()">
                             View Source →
                         </a>
@@ -1568,9 +1573,21 @@
                     body: JSON.stringify(config)
                 });
 
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP ${response.status}`);
+                }
+
                 const data = await response.json();
+
+                if (!data.scan_id) {
+                    throw new Error('Server did not return a scan ID');
+                }
+
                 currentScanId = data.scan_id;
                 scanStartTime = Date.now(); // Track scan start for time estimates
+
+                console.log('Scan started with ID:', currentScanId);
 
                 // Show progress section
                 document.getElementById('scan-progress').classList.remove('hidden');
@@ -1601,11 +1618,21 @@
         }
 
         async function pollScanStatus() {
-            if (!currentScanId) return;
+            if (!currentScanId) {
+                console.warn('pollScanStatus called but currentScanId is not set');
+                return;
+            }
 
             try {
                 const response = await fetch(`/api/scans/${currentScanId}`);
+
+                if (!response.ok) {
+                    console.error(`Poll failed: HTTP ${response.status}`);
+                    return;
+                }
+
                 const data = await response.json();
+                console.log('Poll response:', data.status, `${data.progress_pct}%`, data.progress_phase);
 
                 // Update progress
                 document.getElementById('progress-phase').textContent = data.progress_phase || 'Processing';
