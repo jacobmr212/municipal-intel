@@ -103,12 +103,45 @@ RELATIONSHIP_PATTERNS = {
 class CompetitorAnalyzer:
     """Analyzes competitor mentions and competitive landscape."""
 
-    def __init__(self):
+    def __init__(self, vendor_name: str = None, vendor_competitors: list = None):
+        """
+        Initialize competitor analyzer with optional vendor configuration.
+
+        Args:
+            vendor_name: User's vendor name (e.g. "Caselle", "Tyler Technologies")
+            vendor_competitors: List of competitor names to track (e.g. ["Tyler Technologies", "CentralSquare"])
+        """
+        self.vendor_name = vendor_name
+        self.vendor_competitors = vendor_competitors or []
+
         # Build unified keyword → vendor mapping
+        # If vendor_competitors is specified, only track those competitors
+        # Otherwise, track all competitors from COMPETITORS dict
         self.keyword_to_vendor = {}
-        for vendor, keywords in COMPETITORS.items():
-            for keyword in keywords:
-                self.keyword_to_vendor[keyword.lower()] = vendor
+
+        if self.vendor_competitors:
+            # Use configured competitor list
+            for competitor_name in self.vendor_competitors:
+                # Check if this competitor exists in COMPETITORS database
+                if competitor_name in COMPETITORS:
+                    for keyword in COMPETITORS[competitor_name]:
+                        # Skip if this keyword matches the user's own vendor
+                        if self.vendor_name and keyword.lower() == self.vendor_name.lower():
+                            continue
+                        self.keyword_to_vendor[keyword.lower()] = competitor_name
+                else:
+                    # Custom competitor not in database - add it directly
+                    self.keyword_to_vendor[competitor_name.lower()] = competitor_name
+        else:
+            # Use full competitor database
+            for vendor, keywords in COMPETITORS.items():
+                # Skip the user's own vendor
+                if self.vendor_name and vendor == self.vendor_name:
+                    continue
+                for keyword in keywords:
+                    if self.vendor_name and keyword.lower() == self.vendor_name.lower():
+                        continue
+                    self.keyword_to_vendor[keyword.lower()] = vendor
 
         # Compile relationship patterns
         self.relationship_regex = {}
@@ -221,7 +254,8 @@ class CompetitorAnalyzer:
 
         if summary["evaluating"]:
             vendors = ", ".join(summary["evaluating"])
-            lines.append(f"  • EVALUATING: {vendors} (get Caselle in the mix)")
+            vendor_display = self.vendor_name or "your product"
+            lines.append(f"  • EVALUATING: {vendors} (get {vendor_display} in the mix)")
 
         if summary["rfp_respondents"]:
             vendors = ", ".join(summary["rfp_respondents"])

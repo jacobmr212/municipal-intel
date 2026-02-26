@@ -104,18 +104,25 @@ class AnalysisResult:
 class DocumentAnalyzer:
     """Analyzes scraped documents for sales-relevant signals."""
 
-    def __init__(self, use_llm: bool = False, llm_model: str = "claude-sonnet-4-20250514"):
+    def __init__(self, use_llm: bool = False, llm_model: str = "claude-sonnet-4-20250514",
+                 vendor_name: str = None, vendor_competitors: list = None):
         self.use_llm = use_llm
         self.llm_model = llm_model
+        self.vendor_name = vendor_name
+        self.vendor_competitors = vendor_competitors or []
 
         # Initialize analyzers
         self.temporal_analyzer = TemporalAnalyzer()
         from .competitor import CompetitorAnalyzer
-        self.competitor_analyzer = CompetitorAnalyzer()
+        self.competitor_analyzer = CompetitorAnalyzer(vendor_name=vendor_name, vendor_competitors=vendor_competitors)
+
+        # Get vendor-specific signals
+        from .signals import get_signals
+        signals = get_signals(vendor_name=vendor_name, vendor_competitors=vendor_competitors)
 
         # Pre-compile patterns
         self._compiled = {}
-        for sig_type, sig_cfg in SIGNALS.items():
+        for sig_type, sig_cfg in signals.items():
             patterns = []
             for kw in sig_cfg["keywords"]:
                 pattern = re.compile(r'\b' + re.escape(kw) + r'\b', re.IGNORECASE)
@@ -223,7 +230,7 @@ class DocumentAnalyzer:
         Factors:
         - Signal weights: Base score from keyword matches
         - Signal diversity: More signal types = higher confidence
-        - Direct mentions: Caselle/Clarity = existing customer
+        - Direct mentions: Vendor name mentioned = existing customer
         - Source quality: Procurement > Budget > Meeting Minutes
         - Population factor: Larger cities = potentially larger deals
         - Temporal urgency: Deadlines boost priority
@@ -292,12 +299,14 @@ class DocumentAnalyzer:
                 for m in matches[:8]
             ])
 
+            vendor_context = f"for {self.vendor_name}" if self.vendor_name else "(vendor-neutral analysis)"
+
             response = client.messages.create(
                 model=self.llm_model,
                 max_tokens=400,
                 messages=[{
                     "role": "user",
-                    "content": f"""You are a government ERP sales intelligence analyst for Caselle Inc.
+                    "content": f"""You are a government ERP sales intelligence analyst {vendor_context}.
 
 Analyze this municipal meeting excerpt from {municipality}. Provide a 3-4 sentence sales brief covering:
 1. What's happening that's relevant to government ERP software?
@@ -342,7 +351,7 @@ Reply with ONLY the sales brief."""
 
         signal_types = {m.signal_type for m in matches}
         high_confidence_signals = {m.signal_type for m in matches if m.confidence == "high"}
-        lead_type, action = classify_lead(score, signal_types, source_type, high_confidence_signals, temporal.urgency_score)
+        lead_type, action = classify_lead(score, signal_types, source_type, self.vendor_name, high_confidence_signals, temporal.urgency_score)
 
         # Determine customer status based on direct mentions
         customer_status = "existing_customer" if "direct_mentions" in signal_types else "new_opportunity"

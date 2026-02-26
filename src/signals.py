@@ -78,46 +78,16 @@ def get_signals(vendor_name=None, vendor_competitors=None):
             "description": f"{vendor_name or 'Your vendor'} or its products mentioned by name" if vendor_name else "ERP vendor mentioned by name",
             "keywords": _get_vendor_keywords(vendor_name) if vendor_name else [],
         },
-    "competitor_mentions": {
-        "label": "Competitor",
-        "weight": 8,
-        "description": "Competitor vendors mentioned — they're actively shopping",
-        "keywords": [
-            "tyler technologies",
-            "tyler tech",
-            "munis",
-            "incode",
-            "central square",
-            "centralsquare",
-            "bs&a",
-            "bs&a software",
-            "bsa software",
-            "springbrook",
-            "springbrook software",
-            "edmunds govtech",
-            "govstar",
-            "harris local government",
-            "harris computers",
-            "freebalance",
-            "accufund",
-            "sage intacct",
-            "opengov",
-            "workday",
-            "oracle netsuite",
-            "sap",
-            "superion",
-            "new world systems",
-            "sungard",
-            "civic systems",
-            "banyon data",
-            "banyon",
-            "black mountain software",
-            "black mountain",
-            "municipay",
-            "govolution",
-            "gus software",
-        ],
-    },
+        "competitor_mentions": {
+            "label": "Competitor",
+            "weight": 8,
+            "description": "Competitor vendors mentioned — they're actively shopping",
+            "keywords": _get_competitor_keywords(vendor_competitors),
+        },
+    }
+
+    # Continue with the other signal categories below
+    signals.update({
     "erp_signals": {
         "label": "ERP/Software",
         "weight": 7,
@@ -491,13 +461,21 @@ URL_PATTERNS = [
     "/residents/agendas-minutes",
     "/about/agendas-minutes",
     "/services/agendas-minutes",
-]
+]    })
+
+    return signals
+
+
+# Backward compatibility: Export SIGNALS as default (Caselle configuration)
+SIGNALS = get_signals(vendor_name="Caselle", vendor_competitors=["Tyler Technologies", "CentralSquare", "Infor"])
+
 
 # ============================================================
 # LEAD CLASSIFICATION RULES
 # ============================================================
 
 def classify_lead(score: float, signal_types: set, source_type: str = "meeting_minutes",
+                  vendor_name: str = None,
                   high_confidence_signals: set = None, urgency_score: int = 0) -> tuple[str, str]:
     """
     Classify a lead based on score, signal types, source type, signal confidence, and urgency.
@@ -529,11 +507,12 @@ def classify_lead(score: float, signal_types: set, source_type: str = "meeting_m
     if urgency_score >= 60 and ("budget_signals" in signal_types or source_type == "procurement"):
         return "hot", "URGENT: Deadline approaching (30 days or less) — prioritize immediate outreach"
 
-    # HOT: Direct Caselle mention
+    # HOT: Direct vendor mention
     if "direct_mentions" in signal_types:
+        vendor_display = vendor_name or "Your company"
         if "budget_signals" in signal_types or "erp_signals" in signal_types:
-            return "hot", "IMMEDIATE ACTION: Caselle mentioned in budget/ERP context — contact city IT director and account manager ASAP"
-        return "hot", "IMMEDIATE ACTION: Caselle mentioned directly — review full document and coordinate with account team"
+            return "hot", f"IMMEDIATE ACTION: {vendor_display} mentioned in budget/ERP context — contact city IT director and account manager ASAP"
+        return "hot", f"IMMEDIATE ACTION: {vendor_display} mentioned directly — review full document and coordinate with account team"
 
     # HOT: Procurement source with ERP signals
     if source_type == "procurement" and "erp_signals" in signal_types:
@@ -541,7 +520,8 @@ def classify_lead(score: float, signal_types: set, source_type: str = "meeting_m
 
     # HOT: Competitor + procurement activity
     if "competitor_mentions" in signal_types and ("budget_signals" in signal_types or "erp_signals" in signal_types):
-        return "hot", "HIGH PRIORITY: Active vendor evaluation in progress — competitors being considered. Engage immediately to get Caselle into the mix"
+        vendor_display = vendor_name or "your product"
+        return "hot", f"HIGH PRIORITY: Active vendor evaluation in progress — competitors being considered. Engage immediately to get {vendor_display} into the mix"
 
     # HOT: Active RFP (even without competitor names)
     if "budget_signals" in signal_types and "erp_signals" in signal_types and score >= 50:

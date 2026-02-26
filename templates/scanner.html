@@ -186,6 +186,44 @@
                 </div>
             </div>
 
+            <!-- Vendor Configuration -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Vendor Configuration</h2>
+                    <span class="px-3 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">100% Vendor-Neutral</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">
+                    Configure which ERP vendor you represent and which competitors you want to track. This personalizes signal detection and lead classification.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Vendor</label>
+                        <input type="text" id="vendor-name" placeholder="e.g., Caselle, Tyler Technologies"
+                               class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2">
+                        <p class="mt-1 text-xs text-gray-500">Leave blank for vendor-neutral scanning</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Competitors to Track</label>
+                        <input type="text" id="vendor-competitors" placeholder="Tyler Technologies, CentralSquare, Infor"
+                               class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2">
+                        <p class="mt-1 text-xs text-gray-500">Comma-separated list</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex items-center justify-between">
+                    <div id="vendor-config-status" class="text-sm text-gray-600">
+                        <span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
+                        Not configured
+                    </div>
+                    <button onclick="saveVendorConfig()"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors">
+                        Save Configuration
+                    </button>
+                </div>
+            </div>
+
             <!-- Scan Configuration -->
             <div class="bg-white shadow rounded-lg p-6 mb-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">Configure Scan</h2>
@@ -571,6 +609,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadStates();
             loadFeed(); // Load feed by default
+            loadVendorConfig(); // Load vendor configuration
             updateStateCount();
 
             // Auto-refresh coverage every 30 seconds
@@ -590,6 +629,104 @@
             // Initial summary update
             updateScanSummary();
         });
+
+        // =============================================================================
+        // VENDOR CONFIGURATION FUNCTIONS
+        // =============================================================================
+
+        async function loadVendorConfig() {
+            try {
+                const response = await fetch('/api/vendor-config');
+                if (!response.ok) {
+                    console.error('Failed to load vendor config:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Populate form fields
+                document.getElementById('vendor-name').value = data.vendor_name || '';
+
+                // Convert competitors array to comma-separated string
+                if (data.vendor_competitors && data.vendor_competitors.length > 0) {
+                    document.getElementById('vendor-competitors').value = data.vendor_competitors.join(', ');
+                } else {
+                    document.getElementById('vendor-competitors').value = '';
+                }
+
+                // Update status indicator
+                updateVendorConfigStatus(data.vendor_name, data.vendor_competitors);
+            } catch (error) {
+                console.error('Failed to load vendor config:', error);
+            }
+        }
+
+        async function saveVendorConfig() {
+            const vendorName = document.getElementById('vendor-name').value.trim();
+            const competitorsInput = document.getElementById('vendor-competitors').value.trim();
+
+            // Parse comma-separated competitors
+            const competitors = competitorsInput
+                ? competitorsInput.split(',').map(c => c.trim()).filter(c => c.length > 0)
+                : [];
+
+            try {
+                const response = await fetch('/api/vendor-config', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vendor_name: vendorName || null,
+                        vendor_competitors: competitors
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(`Failed to save configuration: ${error.detail || 'Unknown error'}`);
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Update status indicator
+                updateVendorConfigStatus(data.vendor_name, data.vendor_competitors);
+
+                // Show success message
+                const statusEl = document.getElementById('vendor-config-status');
+                const originalHTML = statusEl.innerHTML;
+                statusEl.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>Saved successfully!';
+
+                setTimeout(() => {
+                    updateVendorConfigStatus(data.vendor_name, data.vendor_competitors);
+                }, 2000);
+
+            } catch (error) {
+                console.error('Failed to save vendor config:', error);
+                alert('Failed to save configuration: ' + error.message);
+            }
+        }
+
+        function updateVendorConfigStatus(vendorName, competitors) {
+            const statusEl = document.getElementById('vendor-config-status');
+
+            if (vendorName) {
+                const competitorCount = (competitors && competitors.length) || 0;
+                statusEl.innerHTML = `
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                    Configured: ${vendorName} (tracking ${competitorCount} competitor${competitorCount !== 1 ? 's' : ''})
+                `;
+            } else if (competitors && competitors.length > 0) {
+                statusEl.innerHTML = `
+                    <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                    Vendor-neutral mode (tracking ${competitors.length} vendor${competitors.length !== 1 ? 's' : ''})
+                `;
+            } else {
+                statusEl.innerHTML = `
+                    <span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
+                    Not configured
+                `;
+            }
+        }
 
         // =============================================================================
         // FEED TAB FUNCTIONS
@@ -760,7 +897,7 @@
                     } else if (signalTypes.includes('budget_signals')) {
                         summary = 'Budget document mentions software procurement';
                     } else if (signalTypes.includes('direct_mentions')) {
-                        summary = 'Document mentions Caselle or ERP systems';
+                        summary = 'Document mentions vendor or ERP systems';
                     } else {
                         summary = 'Relevant municipal document found';
                     }
