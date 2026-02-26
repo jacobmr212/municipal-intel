@@ -7,7 +7,17 @@
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/static/govtech-logo-dark.svg">
     <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress production warning
+        window.tailwindConfig = { corePlugins: { preflight: true } };
+        // Hide console warning
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0]?.includes?.('cdn.tailwindcss.com')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
 </head>
 <body class="bg-gray-50">
     <!-- Navigation Header -->
