@@ -780,7 +780,7 @@
                 }
 
                 const data = await response.json();
-                feedTotalCount = data.total || 0;
+                feedTotalCount = data.pagination?.total || 0;
 
                 const container = document.getElementById('feed-results');
 
