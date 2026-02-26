@@ -970,7 +970,7 @@ async def scanner(request: Request, user: dict = Depends(require_role(["consulta
 
 
 @app.get("/lead/{lead_id}", response_class=HTMLResponse)
-async def lead_detail(request: Request, lead_id: int, user: dict = Depends(require_role(["consultant", "admin"])), db: Session = Depends(get_db)):
+async def lead_detail(request: Request, lead_id: str, user: dict = Depends(require_role(["consultant", "admin"])), db: Session = Depends(get_db)):
     """
     Lead detail page showing full intelligence for a specific lead.
 
