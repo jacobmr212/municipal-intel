@@ -1562,7 +1562,7 @@
                 document.getElementById('start-scan-btn').disabled = true;
                 document.getElementById('start-scan-btn').textContent = 'Starting...';
 
-                const response = await fetch('/api/scan/start', {
+                const response = await fetch('/api/scans', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -1604,7 +1604,7 @@
             if (!currentScanId) return;
 
             try {
-                const response = await fetch(`/api/scan/status/${currentScanId}`);
+                const response = await fetch(`/api/scans/${currentScanId}`);
                 const data = await response.json();
 
                 // Update progress
@@ -1660,7 +1660,7 @@
 
         async function loadResults(scanId) {
             try {
-                const response = await fetch(`/api/scan/results/${scanId}`);
+                const response = await fetch(`/api/scans/${scanId}/leads`);
                 const data = await response.json();
                 allLeads = data.leads || [];
 
