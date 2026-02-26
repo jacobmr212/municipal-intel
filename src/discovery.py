@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
 
-from .signals import URL_PATTERNS, PROCUREMENT_PATTERNS
+from .signals import URL_PATTERNS, PROCUREMENT_PATTERNS, BUDGET_PATTERNS
 
 logger = logging.getLogger(__name__)
 
@@ -184,20 +184,10 @@ class SourceDiscovery:
 
         checked_count = 0
 
-        # First: Try own domain with common patterns (adaptive limit based on city size)
-        # Larger cities have more complex site structures, so check more patterns
-        if population >= 50000:
-            max_patterns_to_check = 16  # Large cities
-        elif population >= 10000:
-            max_patterns_to_check = 12  # Medium cities
-        else:
-            max_patterns_to_check = 8   # Small cities
+        # First: Try own domain with ALL patterns (no artificial limits)
+        # This ensures we find ALL available sources per municipality
         for base_url in base_urls:
             for pattern in ordered_patterns:
-                # Stop after reaching population-based pattern limit
-                if checked_count >= max_patterns_to_check:
-                    logger.info(f"  Checked {checked_count} patterns — moving on")
-                    break
 
                 url = f"{base_url}{pattern}"
 
@@ -231,61 +221,46 @@ class SourceDiscovery:
                     )
                     discovered.append(source)
                     logger.info(f"  ✓ Found: {found_url} ({source_type}) — pattern: {pattern}")
+                    # Continue checking all patterns to find multiple sources per city
 
-                    # If we found a high-confidence source, stop immediately
-                    if confidence >= 0.85:
-                        logger.info(f"  High confidence source found — stopping search for {name}")
-                        return discovered
+        # Second: ALWAYS check third-party platforms (cities often have BOTH own site + Granicus/BoardDocs)
+        logger.info(f"  Checking third-party platforms for {name}...")
+        for platform_url in third_party_platforms:
+            if checked_count > 0:
+                time.sleep(self.delay)
+            checked_count += 1
 
-                    # If we found any source and checked 5+ patterns, stop
-                    if len(discovered) >= 1 and checked_count >= 5:
-                        logger.info(f"  Source found after {checked_count} checks — stopping")
-                        return discovered
+            result = self._check_url(platform_url)
+            if result:
+                found_url, source_type = result
 
-            # Break outer loop too if we hit the limit
-            if checked_count >= max_patterns_to_check:
-                break
+                # Third-party platforms are high confidence
+                confidence = 0.9
+                source = DiscoveredSource(
+                    municipality=name,
+                    state=state,
+                    url=found_url,
+                    source_type=source_type,
+                    confidence=confidence,
+                    population=population,
+                )
+                discovered.append(source)
+                logger.info(f"  ✓ Found on third-party platform: {found_url}")
+                # Continue checking remaining platforms
 
-        # Second: Try third-party platforms if nothing found on own domain
+        # Third: Try JS rendering fallback for ALL cities (not just large ones)
+        # Many small cities use modern platforms like CivicPlus that require JavaScript
         if not discovered:
-            logger.info(f"  Checking third-party platforms for {name}...")
-            for platform_url in third_party_platforms:
-                if checked_count > 0:
-                    time.sleep(self.delay)
-                checked_count += 1
-
-                result = self._check_url(platform_url)
-                if result:
-                    found_url, source_type = result
-
-                    # Third-party platforms are high confidence
-                    confidence = 0.9
-                    source = DiscoveredSource(
-                        municipality=name,
-                        state=state,
-                        url=found_url,
-                        source_type=source_type,
-                        confidence=confidence,
-                        population=population,
-                    )
-                    discovered.append(source)
-                    logger.info(f"  ✓ Found on third-party platform: {found_url}")
-                    return discovered
-
-        # Third: Try JS rendering fallback for larger cities (pop >= 10K)
-        # Tech-forward cities often have JavaScript-heavy sites that fail with static requests
-        # This runs BEFORE domain root fallback to ensure JS gets tested before settling for homepage
-        if not discovered and population >= 10000:
-            logger.info(f"  Trying JavaScript rendering fallback for {name} (pop {population:,})...")
+            logger.info(f"  Trying JavaScript rendering fallback for {name}...")
 
             try:
                 # Lazy import to avoid Playwright dependency if not needed
                 from .discovery_js import check_urls_with_js
 
-                # Build list of URLs to retry with JS (top priority patterns only)
+                # Build list of URLs to retry with JS (expanded pattern set)
                 js_retry_urls = []
                 for base_url in base_urls[:1]:  # Just primary base URL
-                    for pattern in priority_patterns[:5]:  # Top 5 patterns only
+                    for pattern in priority_patterns[:10]:  # Top 10 patterns (was 5)
                         js_retry_urls.append(f"{base_url}{pattern}")
 
                 # Try JS rendering in batch
@@ -406,6 +381,71 @@ class SourceDiscovery:
 
         if not discovered:
             logger.info(f"  ✗ No procurement portal found for {name}, {state}")
+
+        return discovered
+
+    def discover_budget(self, name: str, state: str, domain: str,
+                        population: int = 0) -> list[DiscoveredSource]:
+        """
+        Discover budget and financial transparency pages for a municipality.
+        Returns list of budget sources found.
+        """
+        discovered = []
+        base_urls = [
+            f"https://www.{domain}",
+            f"https://{domain}",
+        ]
+
+        checked_count = 0
+        for base_url in base_urls:
+            for pattern in BUDGET_PATTERNS:
+                url = f"{base_url}{pattern}"
+
+                if checked_count > 0:
+                    time.sleep(self.delay)
+                checked_count += 1
+
+                try:
+                    response = self.session.get(url, timeout=self.timeout, allow_redirects=True)
+                    if response.status_code != 200:
+                        continue
+
+                    content_type = response.headers.get("content-type", "")
+                    if "html" not in content_type:
+                        continue
+
+                    html_lower = response.text.lower()
+
+                    # Check for budget-related content
+                    budget_indicators = [
+                        "budget", "financial", "fiscal", "revenue", "expenditure",
+                        "appropriation", "transparency", "cafr", "acfr",
+                    ]
+
+                    indicator_count = sum(1 for ind in budget_indicators if ind in html_lower)
+                    if indicator_count < 2:
+                        continue
+
+                    # Found a budget page
+                    source = DiscoveredSource(
+                        municipality=name,
+                        state=state,
+                        url=response.url,
+                        source_type="budget",
+                        confidence=0.8,
+                        population=population,
+                    )
+                    discovered.append(source)
+                    logger.info(f"  ✓ Found budget portal: {response.url}")
+
+                    # Continue checking for more budget sources (some cities have multiple)
+                    # e.g., separate budget page + CAFR page + transparency portal
+
+                except (requests.exceptions.RequestException, Exception):
+                    continue
+
+        if not discovered:
+            logger.info(f"  ✗ No budget portal found for {name}, {state}")
 
         return discovered
 
