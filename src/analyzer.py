@@ -116,9 +116,8 @@ class DocumentAnalyzer:
         from .competitor import CompetitorAnalyzer
         self.competitor_analyzer = CompetitorAnalyzer(vendor_name=vendor_name, vendor_competitors=vendor_competitors)
 
-        # Get vendor-specific signals
-        from .signals import get_signals
-        signals = get_signals(vendor_name=vendor_name, vendor_competitors=vendor_competitors)
+        # Get signals (vendor neutrality temporarily disabled - using static SIGNALS)
+        signals = SIGNALS
 
         # Pre-compile patterns
         self._compiled = {}
@@ -351,7 +350,7 @@ Reply with ONLY the sales brief."""
 
         signal_types = {m.signal_type for m in matches}
         high_confidence_signals = {m.signal_type for m in matches if m.confidence == "high"}
-        lead_type, action = classify_lead(score, signal_types, source_type, self.vendor_name, high_confidence_signals, temporal.urgency_score)
+        lead_type, action = classify_lead(score, signal_types, source_type, high_confidence_signals, temporal.urgency_score)
 
         # Determine customer status based on direct mentions
         customer_status = "existing_customer" if "direct_mentions" in signal_types else "new_opportunity"
