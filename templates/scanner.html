@@ -879,6 +879,13 @@
                 lead.title === 'Document' ||
                 lead.title.includes('Meeting Document') ||
                 lead.title.includes('Agenda') ||
+                lead.title.includes('Bid Postings') ||  // CivicEngage procurement portals
+                lead.title.includes('RFP Listing') ||
+                lead.title.includes('Procurement Portal') ||
+                lead.title.includes('Current Bids') ||
+                lead.title.includes('Open Bids') ||
+                lead.title.includes('Opportunities') ||
+                lead.title.match(/.*·.*·.*/) ||  // Pattern like "X · Y · Z" (source metadata)
                 lead.title.length > 80
             );
 
