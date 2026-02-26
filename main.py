@@ -44,7 +44,7 @@ from src.auth import (
 from src.ai_client import analyze_coa_structure, analyze_pay_codes
 
 # Initialize FastAPI app
-app = FastAPI(title="Municipal Intel", version="2.0")
+app = FastAPI(title="Municipal Intel", version="2.1")
 
 # Initialize database
 init_db()
@@ -474,7 +474,7 @@ async def apple_touch_icon():
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    return {"status": "ok", "version": "2.0.1"}
+    return {"status": "ok", "version": "2.1.0"}
 
 
 # ============================================================
