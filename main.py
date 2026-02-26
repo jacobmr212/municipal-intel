@@ -2015,6 +2015,70 @@ async def update_lead(
     return {"success": True}
 
 
+@app.get("/api/vendor-config")
+async def get_vendor_config(
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's vendor configuration for vendor-neutral scanning.
+
+    Returns:
+    - vendor_name: User's ERP vendor (e.g. "Caselle", "Tyler Technologies", null for neutral)
+    - vendor_competitors: List of competitor vendors to track
+    """
+    user_record = db.query(User).filter(User.id == user["user_id"]).first()
+    if not user_record:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "vendor_name": user_record.vendor_name,
+        "vendor_competitors": user_record.vendor_competitors or []
+    }
+
+
+@app.patch("/api/vendor-config")
+async def update_vendor_config(
+    config: dict,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update user's vendor configuration.
+
+    Body:
+    - vendor_name: string | null (e.g. "Caselle", "Tyler Technologies")
+    - vendor_competitors: string[] (e.g. ["Tyler", "CentralSquare"])
+    """
+    user_record = db.query(User).filter(User.id == user["user_id"]).first()
+    if not user_record:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update vendor configuration
+    if "vendor_name" in config:
+        vendor_name = config["vendor_name"]
+        if vendor_name and len(vendor_name) > 100:
+            raise HTTPException(status_code=400, detail="Vendor name too long (max 100 chars)")
+        user_record.vendor_name = vendor_name if vendor_name else None
+
+    if "vendor_competitors" in config:
+        competitors = config["vendor_competitors"]
+        if not isinstance(competitors, list):
+            raise HTTPException(status_code=400, detail="vendor_competitors must be an array")
+        # Validate each competitor is a string
+        if not all(isinstance(c, str) for c in competitors):
+            raise HTTPException(status_code=400, detail="All competitors must be strings")
+        user_record.vendor_competitors = competitors
+
+    db.commit()
+
+    return {
+        "success": True,
+        "vendor_name": user_record.vendor_name,
+        "vendor_competitors": user_record.vendor_competitors or []
+    }
+
+
 @app.get("/api/roi-analytics")
 async def get_roi_analytics(
     user: dict = Depends(get_current_user),

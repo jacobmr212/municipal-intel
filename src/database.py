@@ -171,6 +171,10 @@ class User(Base):
     daily_digest_enabled = Column(Integer, nullable=False, default=0)  # Daily summary email
     min_urgency_for_alert = Column(Integer, nullable=False, default=60)  # Minimum urgency score to trigger alert
 
+    # Vendor configuration (for vendor-neutral scanning)
+    vendor_name = Column(String(100), nullable=True)  # e.g. "Caselle", "Tyler Technologies", None for neutral
+    vendor_competitors = Column(JSON, nullable=True)  # ["Tyler", "CentralSquare", "Infor"] - tracked competitors
+
     # Relationships
     scans = relationship("Scan", back_populates="user")
     magic_links = relationship("MagicLink", back_populates="user", cascade="all, delete-orphan")

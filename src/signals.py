@@ -1,7 +1,58 @@
 """
 Signal definitions for municipal meeting intelligence.
 Centralized configuration of all keyword categories, weights, and lead classification rules.
+
+VENDOR-NEUTRAL: Signals now support dynamic vendor configuration.
+Pass vendor_name and vendor_competitors to get_signals() to customize direct_mentions.
 """
+
+def _get_vendor_keywords(vendor_name):
+    """Generate keywords for a given vendor name."""
+    if not vendor_name:
+        return []
+
+    keywords = [vendor_name.lower()]
+
+    # Add common variations
+    if "caselle" in vendor_name.lower():
+        keywords.extend(["caselle", "caselle inc", "caselle clarity", "clarity erp", "clarity software"])
+    elif "tyler" in vendor_name.lower():
+        keywords.extend(["tyler technologies", "tyler tech", "munis", "incode"])
+    elif "centralsquare" in vendor_name.lower() or "central square" in vendor_name.lower():
+        keywords.extend(["central square", "centralsquare"])
+    # Add more vendor-specific keywords as needed
+
+    return keywords
+
+def _get_competitor_keywords(vendor_competitors):
+    """Generate competitor keywords from configured list."""
+    if not vendor_competitors:
+        # Default comprehensive list if no competitors configured
+        return [
+            "tyler technologies", "tyler tech", "munis", "incode",
+            "central square", "centralsquare",
+            "bs&a", "bs&a software", "bsa software",
+            "springbrook", "springbrook software",
+            "edmunds govtech", "govstar",
+            "harris local government", "harris computers",
+            "freebalance", "accufund", "sage intacct", "opengov",
+            "workday", "oracle netsuite", "sap",
+            "superion", "new world systems", "sungard",
+            "civic systems", "banyon data", "infor", "questica"
+        ]
+
+    # Generate keywords from configured competitors
+    keywords = []
+    for comp in vendor_competitors:
+        keywords.append(comp.lower())
+        # Add common variations
+        if "tyler" in comp.lower():
+            keywords.extend(["tyler technologies", "tyler tech", "munis"])
+        elif "central" in comp.lower():
+            keywords.extend(["central square", "centralsquare"])
+        # Add more as needed
+
+    return keywords
 
 # ============================================================
 # SIGNAL CATEGORIES
@@ -9,19 +60,24 @@ Centralized configuration of all keyword categories, weights, and lead classific
 # Higher weight = stronger sales signal.
 # ============================================================
 
-SIGNALS = {
-    "direct_mentions": {
-        "label": "Direct Mention",
-        "weight": 10,
-        "description": "Caselle or its products mentioned by name",
-        "keywords": [
-            "caselle",
-            "caselle inc",
-            "caselle clarity",
-            "clarity erp",
-            "clarity software",
-        ],
-    },
+def get_signals(vendor_name=None, vendor_competitors=None):
+    """
+    Get signal definitions with optional vendor customization.
+
+    Args:
+        vendor_name (str): User's vendor (e.g. "Caselle", "Tyler Technologies", None for neutral)
+        vendor_competitors (list): List of competitor vendors to track
+
+    Returns:
+        dict: Signal definitions with vendor-specific keywords
+    """
+    signals = {
+        "direct_mentions": {
+            "label": "Direct Mention",
+            "weight": 10,
+            "description": f"{vendor_name or 'Your vendor'} or its products mentioned by name" if vendor_name else "ERP vendor mentioned by name",
+            "keywords": _get_vendor_keywords(vendor_name) if vendor_name else [],
+        },
     "competitor_mentions": {
         "label": "Competitor",
         "weight": 8,
