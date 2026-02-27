@@ -52,8 +52,8 @@
             </div>
             <p class="text-lg text-gray-700 mb-3">{{ lead.title }}</p>
             <div class="flex items-center space-x-4 text-sm text-gray-600">
-                <span>📅 {{ lead.first_seen.strftime('%m/%d/%Y') if lead.first_seen else lead.created_at.strftime('%m/%d/%Y') }}</span>
-                <span>📄 {{ lead.source_type or 'Unknown' }}</span>
+                <span>{{ lead.first_seen.strftime('%m/%d/%Y') if lead.first_seen else lead.created_at.strftime('%m/%d/%Y') }}</span>
+                <span>{{ lead.source_type or 'Unknown' }}</span>
                 {% if lead.customer_status == 'existing_customer' %}
                 <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">EXISTING CUSTOMER</span>
                 {% else %}
@@ -69,7 +69,7 @@
             {% if urgency >= 70 %}border-red-500
             {% elif urgency >= 40 %}border-yellow-500
             {% else %}border-gray-300{% endif %}">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">⏰ Temporal Intelligence</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Temporal Intelligence</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div>
                     <div class="text-sm text-gray-600 mb-1">Urgency Score</div>
@@ -104,7 +104,7 @@
 
         <!-- Section 3: Signal Analysis -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">🎯 Signals Detected</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Signals Detected</h3>
             <div class="space-y-3">
                 {% if lead.signal_matches_json %}
                     {% for signal, data in lead.signal_matches_json.items() %}
@@ -121,7 +121,7 @@
 
         <!-- Section 4: Competitor Intelligence -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">🏢 Competitor Intelligence</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Competitor Intelligence</h3>
             <div class="mb-3">
                 {% if lead.competitors_mentioned and lead.competitors_mentioned|length > 0 %}
                     {% for competitor in lead.competitors_mentioned %}
@@ -146,13 +146,13 @@
 
         <!-- Section 5: Recommended Action -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">💡 Recommended Action</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Recommended Action</h3>
             <p class="text-gray-700">{{ lead.recommended_action or 'No specific recommendation available' }}</p>
         </div>
 
         <!-- Section 6: Source Documents -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">📄 Source Documents</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Source Documents</h3>
             <a href="{{ lead.url }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -163,7 +163,7 @@
 
         <!-- Section 7: Status & ROI Tracking -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">📊 Status & ROI</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Status & ROI</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                 <div>
                     <div class="text-sm text-gray-600 mb-1">Status</div>
@@ -199,7 +199,7 @@
 
         <!-- Section 8: Notes -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">📝 Notes</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Notes</h3>
             <form id="notes-form" class="space-y-3">
                 <textarea id="lead-notes" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="5" placeholder="Add notes about this lead...">{{ lead.notes or '' }}</textarea>
                 <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
@@ -228,7 +228,7 @@
                 });
 
                 if (response.ok) {
-                    statusDiv.textContent = '✓ Notes saved successfully';
+                    statusDiv.textContent = 'Notes saved successfully';
                     statusDiv.className = 'text-sm text-green-600';
                     setTimeout(() => {
                         statusDiv.textContent = '';
