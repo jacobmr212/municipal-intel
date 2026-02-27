@@ -1234,7 +1234,12 @@
 
             try {
                 const response = await fetch('/api/scans/' + currentScanId + '/progress');
-                if (!response.ok) return;
+                if (!response.ok) {
+                    // Stop polling if scan not found (404) or other error
+                    console.warn('Scan progress endpoint returned', response.status, '- stopping poll');
+                    stopPolling();
+                    return;
+                }
 
                 const data = await response.json();
 
