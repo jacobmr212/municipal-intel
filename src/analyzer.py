@@ -10,6 +10,7 @@ from typing import Optional
 
 from .signals import SIGNALS, classify_lead
 from .temporal import TemporalAnalyzer
+from .ai_validator import AIValidator
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,7 @@ class DocumentAnalyzer:
 
         # Initialize analyzers
         self.temporal_analyzer = TemporalAnalyzer()
+        self.ai_validator = AIValidator()
         from .competitor import CompetitorAnalyzer
         self.competitor_analyzer = CompetitorAnalyzer(vendor_name=vendor_name, vendor_competitors=vendor_competitors)
 
@@ -358,6 +360,19 @@ Reply with ONLY the sales brief."""
         # Build summary
         unique_kws = list(dict.fromkeys(m.keyword for m in matches))[:6]
         summary = f"{len(matches)} signal(s): {', '.join(unique_kws)}"
+
+        # AI validation - filter out irrelevant documents
+        if self.ai_validator.client:  # Only if AI is available
+            validation = self.ai_validator.validate_relevance(
+                doc_text=doc.text,
+                signals=matches,
+                title=doc.title
+            )
+
+            # If not relevant with high confidence, skip this document
+            if not validation["is_relevant"] and validation["confidence"] > 0.7:
+                logger.info(f"  Filtered out by AI: {doc.title[:50]} - {validation['reason']}")
+                return None  # Don't create a lead
 
         # LLM enhancement for hot/warm leads
         llm_text = ""

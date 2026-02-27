@@ -9,7 +9,7 @@ import hashlib
 import logging
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urljoin
 from typing import Optional
 from io import BytesIO
@@ -188,12 +188,15 @@ class MunicipalScraper:
         return None
 
     def _is_recent_document(self, doc_date: Optional[datetime]) -> bool:
-        """Check if document is from current year (2026) or has no date."""
+        """Check if document is from last 18 months (still relevant)."""
         if doc_date is None:
-            return True  # Keep documents without dates (can't filter them)
+            return True  # Keep documents without dates
 
-        current_year = datetime.now().year
-        return doc_date.year == current_year
+        now = datetime.now()
+        months_ago_18 = now - timedelta(days=547)  # ~18 months
+
+        # Document is recent if it's from last 18 months
+        return doc_date >= months_ago_18
 
     def _is_meeting_link(self, text: str, href: str) -> bool:
         """Check if a link likely points to meeting content."""
@@ -667,7 +670,7 @@ class MunicipalScraper:
             """Helper to scrape one source and filter by date."""
             try:
                 docs = self.scrape_source(source)
-                # Filter to only current year documents
+                # Filter to only recent documents (last 18 months)
                 recent_docs = []
                 for doc in docs:
                     if self._is_recent_document(doc.date):
@@ -675,7 +678,8 @@ class MunicipalScraper:
                     else:
                         nonlocal filtered_old
                         filtered_old += 1
-                        logger.debug(f"  ⏭️  Filtered old doc from {doc.date.year if doc.date else 'unknown'}: {doc.title[:50]}")
+                        doc_date_str = doc.date.strftime("%Y-%m-%d") if doc.date else "unknown"
+                        logger.info(f"  Filtered out old document: {doc.title[:60]} (date: {doc_date_str})")
                 return recent_docs
             except Exception as e:
                 logger.error(f"  Error scraping {source.url}: {e}")
