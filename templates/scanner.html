@@ -1233,7 +1233,7 @@
             if (!currentScanId) return;
 
             try {
-                const response = await fetch('/api/scans/' + currentScanId + '/progress');
+                const response = await fetch('/api/scans/' + currentScanId);
                 if (!response.ok) {
                     // Stop polling if scan not found (404) or other error
                     console.warn('Scan progress endpoint returned', response.status, '- stopping poll');
